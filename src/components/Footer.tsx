@@ -10,7 +10,17 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-maroon-deep text-cream">
+    <footer className="relative bg-maroon-deep text-cream overflow-hidden">
+      <div className="h-1 w-full bg-gradient-to-r from-transparent via-gold to-transparent" />
+      <svg viewBox="0 0 200 200" className="pointer-events-none absolute -right-32 -top-20 h-[28rem] w-[28rem] text-gold/5" fill="none" stroke="currentColor" strokeWidth="0.4" aria-hidden="true">
+        <circle cx="100" cy="100" r="95" />
+        <circle cx="100" cy="100" r="70" />
+        <circle cx="100" cy="100" r="45" />
+        {Array.from({ length: 16 }).map((_, k) => (
+          <line key={k} x1="100" y1="5" x2="100" y2="195" transform={`rotate(${k * 11.25} 100 100)`} />
+        ))}
+      </svg>
+      <div className="hidden">
       {/* Lotus divider */}
       <div className="flex justify-center pt-10">
         <svg width="120" height="20" viewBox="0 0 120 20" fill="none">
