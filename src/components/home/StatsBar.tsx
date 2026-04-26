@@ -43,8 +43,10 @@ const Counter = ({ to, decimal = false }: { to: number; decimal?: boolean }) => 
 };
 
 const StatsBar = () => (
-  <section className="border-y border-gold/50 bg-cream">
-    <div className="container grid grid-cols-2 gap-y-6 py-8 md:grid-cols-5 md:gap-0">
+  <section className="relative border-y-2 border-gold/40 bg-gradient-to-b from-ivory via-cream to-ivory">
+    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-saffron to-transparent" />
+    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-saffron to-transparent" />
+    <div className="container grid grid-cols-2 gap-y-8 py-10 md:grid-cols-5 md:gap-0">
       {stats.map((s, i) => (
         <div
           key={s.label}
@@ -52,12 +54,12 @@ const StatsBar = () => (
             i !== 0 ? "md:border-l md:border-gold/40" : ""
           }`}
         >
-          <span className="text-2xl">{s.icon}</span>
-          <span className="font-display text-3xl text-saffron md:text-4xl">
+          <span className="text-3xl mb-2 flicker">{s.icon}</span>
+          <span className="font-display text-3xl text-saffron md:text-4xl drop-shadow-sm">
             <Counter to={s.value} decimal={s.decimal} />
             {s.suffix}
           </span>
-          <span className="mt-1 text-xs text-brown/60">{s.label}</span>
+          <span className="mt-1.5 text-xs font-medium uppercase tracking-wider text-brown/70">{s.label}</span>
         </div>
       ))}
     </div>

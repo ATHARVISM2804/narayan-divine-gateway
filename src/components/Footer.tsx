@@ -10,13 +10,25 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-maroon-deep text-cream">
+    <footer className="relative bg-maroon-deep text-cream overflow-hidden">
+      <div className="h-1 w-full bg-gradient-to-r from-transparent via-gold to-transparent" />
+      <svg viewBox="0 0 200 200" className="pointer-events-none absolute -right-32 -top-20 h-[28rem] w-[28rem] text-gold/5" fill="none" stroke="currentColor" strokeWidth="0.4" aria-hidden="true">
+        <circle cx="100" cy="100" r="95" />
+        <circle cx="100" cy="100" r="70" />
+        <circle cx="100" cy="100" r="45" />
+        {Array.from({ length: 16 }).map((_, k) => (
+          <line key={k} x1="100" y1="5" x2="100" y2="195" transform={`rotate(${k * 11.25} 100 100)`} />
+        ))}
+      </svg>
       {/* Lotus divider */}
-      <div className="flex justify-center pt-10">
-        <svg width="120" height="20" viewBox="0 0 120 20" fill="none">
-          <line x1="0" y1="10" x2="45" y2="10" stroke="hsl(var(--gold))" strokeWidth="1" />
-          <path d="M60 4 C 54 10, 54 14, 60 18 C 66 14, 66 10, 60 4 Z" fill="hsl(var(--gold))" />
-          <line x1="75" y1="10" x2="120" y2="10" stroke="hsl(var(--gold))" strokeWidth="1" />
+      <div className="flex justify-center pt-12">
+        <svg width="160" height="24" viewBox="0 0 160 24" fill="none">
+          <line x1="0" y1="12" x2="60" y2="12" stroke="hsl(var(--gold))" strokeWidth="0.8" />
+          <circle cx="68" cy="12" r="2" fill="hsl(var(--gold))" />
+          <path d="M80 4 C 72 12, 72 16, 80 22 C 88 16, 88 12, 80 4 Z" fill="hsl(var(--gold))" />
+          <circle cx="80" cy="13" r="1.5" fill="hsl(var(--saffron))" />
+          <circle cx="92" cy="12" r="2" fill="hsl(var(--gold))" />
+          <line x1="100" y1="12" x2="160" y2="12" stroke="hsl(var(--gold))" strokeWidth="0.8" />
         </svg>
       </div>
 

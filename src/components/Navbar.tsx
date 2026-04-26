@@ -25,10 +25,19 @@ const Navbar = () => {
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-        scrolled ? "bg-cream/95 backdrop-blur shadow-md" : "bg-cream/80 backdrop-blur-sm"
+        scrolled ? "bg-cream/95 backdrop-blur shadow-md" : "bg-cream/85 backdrop-blur-sm"
       }`}
     >
+      {/* Top sacred ribbon */}
+      <div className="hidden md:block bg-gradient-to-r from-maroon via-maroon-deep to-maroon text-gold/90 text-[11px]">
+        <div className="container flex h-7 items-center justify-between font-serif italic tracking-wide">
+          <span>ॐ  सर्वे भवन्तु सुखिनः  •  May all beings be happy</span>
+          <span className="hidden lg:inline">📞 +91 98765 43210  •  🕐 Mon–Sat, 9 AM – 7 PM IST</span>
+        </div>
+      </div>
+
       <nav className="container flex h-16 items-center justify-between md:h-20">
+
         <Logo />
 
         {/* Desktop nav */}
