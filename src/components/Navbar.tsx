@@ -1,0 +1,103 @@
+import { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
+import { Menu, X } from "lucide-react";
+import Logo from "./Logo";
+
+const links = [
+  { to: "/", label: "Home" },
+  { to: "/puja", label: "Puja" },
+  { to: "/chadhava", label: "Chadhava" },
+  { to: "/astrology", label: "Astrology" },
+  { to: "/temples", label: "Temples" },
+  { to: "/contact", label: "Contact" },
+];
+
+const Navbar = () => {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        scrolled ? "bg-cream/95 backdrop-blur shadow-md" : "bg-cream/80 backdrop-blur-sm"
+      }`}
+    >
+      <nav className="container flex h-16 items-center justify-between md:h-20">
+        <Logo />
+
+        {/* Desktop nav */}
+        <ul className="hidden items-center gap-8 md:flex">
+          {links.map((l) => (
+            <li key={l.to}>
+              <NavLink
+                to={l.to}
+                end={l.to === "/"}
+                className={({ isActive }) =>
+                  isActive
+                    ? "font-semibold text-brown border-b-2 border-saffron pb-1 transition-colors"
+                    : "text-brown hover:text-saffron transition-colors"
+                }
+              >
+                {l.label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+
+        <div className="hidden items-center gap-3 md:flex">
+          <button className="rounded-full border border-gold px-5 py-2 text-sm font-medium text-maroon transition-colors hover:bg-gold/20">
+            Login
+          </button>
+          <button className="rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-maroon hover:shadow-lg">
+            Book Now
+          </button>
+        </div>
+
+        {/* Mobile toggle */}
+        <button
+          className="md:hidden rounded-md p-2 text-maroon"
+          onClick={() => setOpen((o) => !o)}
+          aria-label="Toggle menu"
+        >
+          {open ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </nav>
+
+      {/* Mobile drawer */}
+      {open && (
+        <div className="md:hidden border-t border-gold/40 bg-cream animate-fadeIn">
+          <ul className="container flex flex-col gap-1 py-4">
+            {links.map((l) => (
+              <li key={l.to}>
+                <NavLink
+                  to={l.to}
+                  end={l.to === "/"}
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) =>
+                    `block rounded-md px-3 py-3 text-base ${
+                      isActive ? "bg-saffron/10 text-saffron font-semibold" : "text-brown hover:bg-gold/10"
+                    }`
+                  }
+                >
+                  {l.label}
+                </NavLink>
+              </li>
+            ))}
+            <li className="mt-2 flex gap-3 px-3">
+              <button className="flex-1 rounded-full border border-gold px-4 py-2 text-sm text-maroon">Login</button>
+              <button className="flex-1 rounded-full bg-saffron px-4 py-2 text-sm font-semibold text-white">Book Now</button>
+            </li>
+          </ul>
+        </div>
+      )}
+    </header>
+  );
+};
+
+export default Navbar;
