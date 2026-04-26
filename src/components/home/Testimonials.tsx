@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Star } from "lucide-react";
+import { Star, Quote } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 
 const items = [
@@ -23,24 +23,66 @@ const Testimonials = () => {
   const t = items[i];
 
   return (
-    <section className="bg-maroon py-16 text-cream">
-      <div className="container">
-        <SectionHeading title="Blessings Received. Lives Transformed." light />
+    <section className="relative overflow-hidden bg-twilight py-20 text-cream">
+      {/* Mandala background watermarks */}
+      <svg
+        viewBox="0 0 200 200"
+        className="pointer-events-none absolute -left-24 top-10 h-[28rem] w-[28rem] text-gold/10"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="0.4"
+      >
+        <circle cx="100" cy="100" r="95" />
+        <circle cx="100" cy="100" r="70" />
+        <circle cx="100" cy="100" r="45" />
+        {Array.from({ length: 16 }).map((_, k) => (
+          <line key={k} x1="100" y1="5" x2="100" y2="195" transform={`rotate(${k * 11.25} 100 100)`} />
+        ))}
+      </svg>
+      <svg
+        viewBox="0 0 200 200"
+        className="pointer-events-none absolute -right-32 bottom-0 h-[32rem] w-[32rem] text-gold/10"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="0.4"
+      >
+        <circle cx="100" cy="100" r="95" />
+        <circle cx="100" cy="100" r="70" />
+        <circle cx="100" cy="100" r="45" />
+        {Array.from({ length: 12 }).map((_, k) => (
+          <line key={k} x1="100" y1="5" x2="100" y2="195" transform={`rotate(${k * 15} 100 100)`} />
+        ))}
+      </svg>
 
-        <div className="relative mx-auto mt-10 max-w-3xl rounded-2xl border border-gold/30 bg-maroon-deep/40 p-8 md:p-12">
-          <span className="absolute left-4 top-2 font-display text-7xl leading-none text-gold/30">"</span>
-          <blockquote key={i} className="font-serif text-xl italic text-cream md:text-2xl animate-fadeIn">
-            {t.quote}
+      <div className="container relative">
+        <SectionHeading
+          eyebrow="Voices of Devotion"
+          title="Blessings Received. Lives Transformed."
+          subtitle="Hear from devotees whose lives have been touched by sacred service"
+          light
+        />
+
+        <div className="relative mx-auto mt-10 max-w-3xl rounded-3xl border border-gold/40 bg-maroon-deep/60 p-8 md:p-14 shadow-gold-glow backdrop-blur">
+          {/* Corner ornaments */}
+          <Quote className="absolute left-6 top-6 h-10 w-10 text-gold/40" />
+          <Quote className="absolute right-6 bottom-6 h-10 w-10 text-gold/40 rotate-180" />
+
+          <blockquote
+            key={i}
+            className="font-serif text-xl italic text-cream md:text-2xl leading-relaxed animate-fadeIn text-center"
+          >
+            "{t.quote}"
           </blockquote>
-          <div className="mt-6 flex items-center gap-3">
-            <div className="grid h-12 w-12 place-items-center rounded-full bg-gold font-semibold text-maroon">
+
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <div className="grid h-14 w-14 place-items-center rounded-full bg-gold-grad font-display text-lg font-bold text-maroon ring-sacred">
               {t.initials}
             </div>
-            <div>
-              <p className="font-semibold text-gold">{t.name}</p>
+            <div className="text-center">
+              <p className="font-display text-lg text-gold">{t.name}</p>
               <p className="text-xs text-cream/60">{t.city}</p>
             </div>
-            <div className="ml-auto flex">
+            <div className="flex">
               {Array.from({ length: t.rating }).map((_, k) => (
                 <Star key={k} size={16} fill="hsl(var(--gold))" stroke="hsl(var(--gold))" />
               ))}
@@ -48,25 +90,33 @@ const Testimonials = () => {
           </div>
         </div>
 
-        <div className="mt-6 flex justify-center gap-2">
+        <div className="mt-8 flex justify-center gap-2">
           {items.map((_, k) => (
             <button
               key={k}
               onClick={() => setI(k)}
               aria-label={`Testimonial ${k + 1}`}
-              className={`h-2.5 rounded-full transition-all ${k === i ? "w-8 bg-gold" : "w-2.5 border border-gold"}`}
+              className={`h-2 rounded-full transition-all ${k === i ? "w-10 bg-gradient-to-r from-saffron to-gold" : "w-2 bg-gold/40"}`}
             />
           ))}
         </div>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
+        <div className="mt-12 grid gap-5 md:grid-cols-3">
           {mini.map((m) => (
-            <div key={m.name} className="rounded-xl border border-gold/30 bg-ivory p-4 text-brown">
-              <p className="text-sm italic">"{m.quote}"</p>
-              <div className="mt-3 flex items-center justify-between text-xs">
-                <span className="font-semibold text-maroon">{m.name}, <span className="text-brown/60">{m.city}</span></span>
+            <div
+              key={m.name}
+              className="group relative overflow-hidden rounded-2xl border border-gold/40 bg-ivory/95 p-5 text-brown shadow-soft transition-transform hover:-translate-y-1"
+            >
+              <Quote size={22} className="text-gold/50 mb-2" />
+              <p className="font-serif italic text-sm leading-relaxed">"{m.quote}"</p>
+              <div className="mt-4 flex items-center justify-between border-t border-gold/30 pt-3 text-xs">
+                <span className="font-semibold text-maroon">
+                  {m.name}, <span className="font-normal text-brown/60">{m.city}</span>
+                </span>
                 <span className="flex">
-                  {Array.from({ length: 5 }).map((_, i) => <Star key={i} size={12} fill="hsl(var(--gold))" stroke="hsl(var(--gold))" />)}
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} size={11} fill="hsl(var(--gold))" stroke="hsl(var(--gold))" />
+                  ))}
                 </span>
               </div>
             </div>
