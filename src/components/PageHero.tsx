@@ -67,7 +67,7 @@ const PageHero = ({
   if (bgImage) {
     return (
       <section className="relative overflow-hidden">
-        <div className="relative h-[420px] md:h-[480px]">
+        <div className="relative h-[380px] sm:h-[420px] md:h-[480px]">
           {/* Background image */}
           <div
             className="absolute inset-0 bg-cover bg-center scale-105"
@@ -77,8 +77,8 @@ const PageHero = ({
           <div className="absolute inset-0 bg-gradient-to-r from-maroon-deep/90 via-maroon/70 to-maroon-deep/40" />
 
           {/* Mandalas */}
-          <Mandala className="pointer-events-none absolute -right-24 -top-24 h-[28rem] w-[28rem] text-gold/25" />
-          <Mandala className="pointer-events-none absolute -left-32 -bottom-32 h-[24rem] w-[24rem] text-gold/15" />
+          <Mandala className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 md:-right-24 md:-top-24 md:h-[28rem] md:w-[28rem] text-gold/25" />
+          <Mandala className="pointer-events-none absolute -left-16 -bottom-16 h-48 w-48 md:-left-32 md:-bottom-32 md:h-[24rem] md:w-[24rem] text-gold/15" />
 
           {/* Ornate gold border frame */}
           <div className="pointer-events-none absolute inset-4 md:inset-6 border border-gold/40 rounded-[2px]" />
@@ -124,12 +124,12 @@ const PageHero = ({
                 </span>
               </div>
 
-              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl leading-[1.1] text-cream drop-shadow-md">
+              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.1] text-cream drop-shadow-md">
                 {title}
               </h1>
 
               {subtitle && (
-                <p className="max-w-xl font-serif italic text-lg md:text-xl leading-relaxed text-cream/90">
+                <p className="max-w-xl font-serif italic text-base sm:text-lg md:text-xl leading-relaxed text-cream/90">
                   {subtitle}
                 </p>
               )}

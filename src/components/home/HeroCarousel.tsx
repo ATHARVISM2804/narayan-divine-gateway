@@ -171,7 +171,7 @@ const HeroCarousel = () => {
 
   return (
     <section className="relative overflow-hidden">
-      <div className="relative h-[640px] md:h-[680px]">
+      <div className="relative h-[560px] sm:h-[600px] md:h-[680px]">
         {slides.map((s, idx) => {
           const active = idx === current;
           return (
@@ -193,12 +193,12 @@ const HeroCarousel = () => {
               <div className={`absolute inset-0 ${s.overlay}`} />
               {/* Mandala watermark */}
               <Mandala
-                className={`pointer-events-none absolute -right-24 -top-24 h-[28rem] w-[28rem] ${
+                className={`pointer-events-none absolute -right-16 -top-16 h-64 w-64 md:-right-24 md:-top-24 md:h-[28rem] md:w-[28rem] ${
                   idx === 2 ? "text-maroon/15" : "text-gold/25"
                 }`}
               />
               <Mandala
-                className={`pointer-events-none absolute -left-32 -bottom-32 h-[24rem] w-[24rem] ${
+                className={`pointer-events-none absolute -left-16 -bottom-16 h-48 w-48 md:-left-32 md:-bottom-32 md:h-[24rem] md:w-[24rem] ${
                   idx === 2 ? "text-maroon/10" : "text-gold/15"
                 }`}
               />
@@ -262,7 +262,7 @@ const HeroCarousel = () => {
                   </div>
 
                   <h1
-                    className={`font-display text-4xl md:text-5xl lg:text-6xl leading-[1.05] drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] ${s.titleCls}`}
+                    className={`font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.05] drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] ${s.titleCls}`}
                   >
                     {s.title}{" "}
                     <span className="block mt-1 text-gold-shimmer">
@@ -271,20 +271,20 @@ const HeroCarousel = () => {
                   </h1>
 
                   <p
-                    className={`max-w-xl font-serif italic text-lg md:text-xl leading-relaxed ${s.subtitleCls}`}
+                    className={`max-w-xl font-serif italic text-base sm:text-lg md:text-xl leading-relaxed ${s.subtitleCls}`}
                   >
                     {s.subtitle}
                   </p>
 
                   <div className="flex flex-wrap gap-3 pt-2">
                     <button
-                      className={`rounded-full px-7 py-3.5 font-semibold shadow-sacred transition-all hover:-translate-y-0.5 ${s.ctaPrimaryCls}`}
+                      className={`rounded-full px-5 py-2.5 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold shadow-sacred transition-all hover:-translate-y-0.5 ${s.ctaPrimaryCls}`}
                     >
                       {s.primaryCta}
                     </button>
                     {s.secondaryCta && (
                       <button
-                        className={`rounded-full px-7 py-3.5 font-semibold backdrop-blur-sm bg-white/5 transition-all hover:-translate-y-0.5 ${s.ctaSecondaryCls}`}
+                        className={`rounded-full px-5 py-2.5 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold backdrop-blur-sm bg-white/5 transition-all hover:-translate-y-0.5 ${s.ctaSecondaryCls}`}
                       >
                         {s.secondaryCta}
                       </button>
@@ -363,16 +363,16 @@ const HeroCarousel = () => {
       <button
         onClick={prev}
         aria-label="Previous"
-        className="absolute left-4 top-1/2 z-20 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/60 bg-maroon-deep/40 text-gold backdrop-blur-md hover:bg-saffron hover:text-white transition-all hover:scale-110"
+        className="absolute left-2 sm:left-4 top-1/2 z-20 grid h-10 w-10 sm:h-12 sm:w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/60 bg-maroon-deep/40 text-gold backdrop-blur-md hover:bg-saffron hover:text-white transition-all hover:scale-110"
       >
-        <ChevronLeft size={22} />
+        <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
       </button>
       <button
         onClick={next}
         aria-label="Next"
-        className="absolute right-4 top-1/2 z-20 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/60 bg-maroon-deep/40 text-gold backdrop-blur-md hover:bg-saffron hover:text-white transition-all hover:scale-110"
+        className="absolute right-2 sm:right-4 top-1/2 z-20 grid h-10 w-10 sm:h-12 sm:w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/60 bg-maroon-deep/40 text-gold backdrop-blur-md hover:bg-saffron hover:text-white transition-all hover:scale-110"
       >
-        <ChevronRight size={22} />
+        <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
       </button>
 
       <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-gold/40 bg-maroon-deep/40 px-4 py-2 backdrop-blur-md">
@@ -415,18 +415,18 @@ const MuhuratCountdown = () => {
     return () => clearInterval(t);
   }, []);
   return (
-    <div className="inline-flex items-center gap-4 rounded-2xl border border-gold/50 bg-maroon-deep/60 backdrop-blur px-5 py-3 shadow-gold-glow">
-      <span className="text-xs uppercase tracking-widest text-gold/80">
+    <div className="inline-flex items-center gap-3 rounded-2xl border border-gold/50 bg-maroon-deep/60 backdrop-blur px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-3 shadow-gold-glow">
+      <span className="text-[10px] sm:text-xs uppercase tracking-widest text-gold/80">
         Next Muhurat
       </span>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         {(["h", "m", "s"] as const).map((k, i) => (
-          <div key={k} className="flex items-center gap-2">
+          <div key={k} className="flex items-center gap-1.5 sm:gap-2">
             <div className="text-center">
-              <div className="font-display text-2xl text-gold leading-none">
+              <div className="font-display text-xl sm:text-2xl text-gold leading-none">
                 {String(time[k]).padStart(2, "0")}
               </div>
-              <div className="mt-0.5 text-[9px] uppercase tracking-wider text-cream/60">
+              <div className="mt-0.5 text-[8px] sm:text-[9px] uppercase tracking-wider text-cream/60">
                 {k === "h" ? "Hrs" : k === "m" ? "Min" : "Sec"}
               </div>
             </div>
