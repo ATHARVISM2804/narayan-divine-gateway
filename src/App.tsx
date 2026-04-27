@@ -12,7 +12,7 @@ import Chadhava from "./pages/Chadhava";
 import Astrology from "./pages/Astrology";
 import Temples from "./pages/Temples";
 import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound.tsx";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 

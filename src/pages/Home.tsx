@@ -1,3 +1,4 @@
+import { usePageTitle } from "@/hooks/use-page-title";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import StatsBar from "@/components/home/StatsBar";
 import FeaturedPujas from "@/components/home/FeaturedPujas";
@@ -7,11 +8,10 @@ import Testimonials from "@/components/home/Testimonials";
 import AppDownload from "@/components/home/AppDownload";
 
 const Home = () => {
+  usePageTitle("Narayan Kripa — Pujas, Chadhava & Sacred Temple Services");
+
   return (
     <main>
-      <title>Narayan Kripa — Pujas, Chadhava & Sacred Temple Services</title>
-      <meta name="description" content="Book Vedic pujas, offer chadhava at 50+ sacred temples, consult expert pandits and watch live darshan — all from home. Trusted by 2 lakh+ devotees." />
-      <link rel="canonical" href="/" />
       <HeroCarousel />
       <StatsBar />
       <FeaturedPujas />

@@ -1,3 +1,4 @@
+import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 
@@ -25,10 +26,11 @@ const zodiacs = [
   { sign: "Pisces", symbol: "♓", line: "Creativity flows — channel it into devotion." },
 ];
 
-const Astrology = () => (
+const Astrology = () => {
+  usePageTitle("Vedic Astrology & Pandit Consultation — Narayan Kripa");
+
+  return (
   <main>
-    <title>Vedic Astrology & Pandit Consultation — Narayan Kripa</title>
-    <meta name="description" content="Kundali reading, marriage matching, career horoscope, vastu and tarot — by certified Vedic acharyas." />
     <PageHero title="Discover the Wisdom of the Stars" subtitle="Vedic guidance for life's most important decisions" variant="brown" breadcrumb="Astrology" />
 
     <section className="bg-background py-16">
@@ -71,6 +73,7 @@ const Astrology = () => (
       </div>
     </section>
   </main>
-);
+  );
+};
 
 export default Astrology;

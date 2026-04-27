@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MapPin, Phone, Mail, Clock, Plus, Minus, Facebook, Instagram, Youtube, Twitter } from "lucide-react";
+import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 
 const faqs = [
@@ -11,13 +12,12 @@ const faqs = [
 ];
 
 const Contact = () => {
+  usePageTitle("Contact Narayan Kripa — Get in Touch");
   const [open, setOpen] = useState<number | null>(0);
   const social = [Facebook, Instagram, Youtube, Twitter];
 
   return (
     <main>
-      <title>Contact Narayan Kripa — Get in Touch</title>
-      <meta name="description" content="Reach the Narayan Kripa team for puja bookings, partnerships and devotee support. Mon–Sat, 9 AM–7 PM IST." />
       <PageHero title="Get in Touch" subtitle="We are here to help you walk the path of devotion" variant="ivory" breadcrumb="Contact" />
 
       <section className="bg-background py-16">

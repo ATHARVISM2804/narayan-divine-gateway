@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, MapPin, Clock } from "lucide-react";
+import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 
@@ -27,10 +28,10 @@ const Temples = () => {
       (deity === "All" || t.deity === deity)
   );
 
+  usePageTitle("Sacred Temples of India — Narayan Kripa");
+
   return (
     <main>
-      <title>Sacred Temples of India — Narayan Kripa</title>
-      <meta name="description" content="Explore India's most revered temples. Book chadhava, view timings and live darshan from anywhere." />
       <PageHero title="Explore India's Most Sacred Temples" subtitle="From Himalayan shrines to coastal sanctums" breadcrumb="Temples" />
 
       <section className="bg-background py-12">

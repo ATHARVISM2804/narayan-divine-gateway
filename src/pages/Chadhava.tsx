@@ -1,4 +1,5 @@
 import { Check, Search, Heart, Gift } from "lucide-react";
+import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 
@@ -18,10 +19,11 @@ const benefits = [
   "Priority darshan booking",
 ];
 
-const Chadhava = () => (
+const Chadhava = () => {
+  usePageTitle("Offer Chadhava — Narayan Kripa");
+
+  return (
   <main>
-    <title>Offer Chadhava — Narayan Kripa</title>
-    <meta name="description" content="Send sacred offerings to India's most revered temples. Flowers, prasad and seva delivered with full Vedic devotion." />
     <PageHero title="Offer Chadhava at Sacred Temples" subtitle="Your devotion, our sacred delivery" variant="saffron" breadcrumb="Chadhava" />
 
     {/* What is Chadhava */}
@@ -101,6 +103,7 @@ const Chadhava = () => (
       </div>
     </section>
   </main>
-);
+  );
+};
 
 export default Chadhava;

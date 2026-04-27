@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Star, Clock, Award } from "lucide-react";
+import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 
 const allPujas = [
@@ -22,6 +23,8 @@ const purposes = ["All", "Prosperity", "Health", "Marriage", "Protection", "Care
 const languages = ["All", "Hindi", "Sanskrit"];
 
 const Puja = () => {
+  usePageTitle("Sacred Pujas — Narayan Kripa");
+
   const [deity, setDeity] = useState("All");
   const [purpose, setPurpose] = useState("All");
   const [lang, setLang] = useState("All");
@@ -43,8 +46,6 @@ const Puja = () => {
 
   return (
     <main>
-      <title>Sacred Pujas — Narayan Kripa</title>
-      <meta name="description" content="Browse 50+ Vedic pujas by deity, purpose, language and price. Performed by certified pandits at sacred temples across India." />
       <PageHero title="Sacred Pujas for Every Need" subtitle="Verified pandits, authentic rituals, divine blessings" breadcrumb="Pujas" />
 
       <section className="bg-background py-12">
