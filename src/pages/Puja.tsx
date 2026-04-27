@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Star, Clock, Award } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
+import heroPuja from "@/assets/hero-puja-page.png";
 
 const allPujas = [
   { name: "Ganesh Puja", deity: "Ganesh", purpose: "Prosperity", price: 1100, dur: "2 hrs", lang: "Hindi" },
@@ -46,7 +47,7 @@ const Puja = () => {
 
   return (
     <main>
-      <PageHero title="Sacred Pujas for Every Need" subtitle="Verified pandits, authentic rituals, divine blessings" breadcrumb="Pujas" />
+      <PageHero title="Sacred Pujas for Every Need" subtitle="Verified pandits, authentic rituals, divine blessings" breadcrumb="Pujas" bgImage={heroPuja} />
 
       <section className="bg-background py-12">
         <div className="container grid gap-8 lg:grid-cols-[260px_1fr]">

@@ -1,6 +1,7 @@
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
+import heroAstrology from "@/assets/hero-astrology-page.png";
 
 const services = [
   { name: "Kundali Reading", desc: "Detailed birth chart analysis", icon: "📜" },
@@ -31,7 +32,7 @@ const Astrology = () => {
 
   return (
   <main>
-    <PageHero title="Discover the Wisdom of the Stars" subtitle="Vedic guidance for life's most important decisions" variant="brown" breadcrumb="Astrology" />
+    <PageHero title="Discover the Wisdom of the Stars" subtitle="Vedic guidance for life's most important decisions" variant="brown" breadcrumb="Astrology" bgImage={heroAstrology} />
 
     <section className="bg-background py-16">
       <div className="container">

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MapPin, Phone, Mail, Clock, Plus, Minus, Facebook, Instagram, Youtube, Twitter } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
+import heroContact from "@/assets/hero-contact-page.png";
 
 const faqs = [
   { q: "How do I book a puja?", a: "Choose a puja from our catalogue, share your sankalp details, and select a date — verified pandits handle the rest." },
@@ -18,7 +19,7 @@ const Contact = () => {
 
   return (
     <main>
-      <PageHero title="Get in Touch" subtitle="We are here to help you walk the path of devotion" variant="ivory" breadcrumb="Contact" />
+      <PageHero title="Get in Touch" subtitle="We are here to help you walk the path of devotion" variant="ivory" breadcrumb="Contact" bgImage={heroContact} />
 
       <section className="bg-background py-16">
         <div className="container grid gap-10 lg:grid-cols-2">

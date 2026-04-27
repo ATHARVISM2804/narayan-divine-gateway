@@ -3,6 +3,7 @@ import { Search, MapPin, Clock } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
+import heroTemples from "@/assets/hero-temples-page.png";
 
 const temples = [
   { name: "Kashi Vishwanath", state: "Uttar Pradesh", deity: "Shiva", timings: "4 AM – 11 PM", emoji: "🕉️" },
@@ -32,7 +33,7 @@ const Temples = () => {
 
   return (
     <main>
-      <PageHero title="Explore India's Most Sacred Temples" subtitle="From Himalayan shrines to coastal sanctums" breadcrumb="Temples" />
+      <PageHero title="Explore India's Most Sacred Temples" subtitle="From Himalayan shrines to coastal sanctums" breadcrumb="Temples" bgImage={heroTemples} />
 
       <section className="bg-background py-12">
         <div className="container">

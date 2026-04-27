@@ -2,6 +2,7 @@ import { Check, Search, Heart, Gift } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
+import heroChadhava from "@/assets/hero-chadhava-page.png";
 
 const offerings = [
   { temple: "Kashi Vishwanath", item: "Bel Patra & Dhatura", price: 251 },
@@ -24,7 +25,7 @@ const Chadhava = () => {
 
   return (
   <main>
-    <PageHero title="Offer Chadhava at Sacred Temples" subtitle="Your devotion, our sacred delivery" variant="saffron" breadcrumb="Chadhava" />
+    <PageHero title="Offer Chadhava at Sacred Temples" subtitle="Your devotion, our sacred delivery" variant="saffron" breadcrumb="Chadhava" bgImage={heroChadhava} />
 
     {/* What is Chadhava */}
     <section className="bg-background py-16">
