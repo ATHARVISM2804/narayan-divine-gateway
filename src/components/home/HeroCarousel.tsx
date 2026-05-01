@@ -73,7 +73,7 @@ const slides: Slide[] = [
     titleAccent: "Anytime, Anywhere",
     titleCls: "text-maroon",
     subtitle:
-      "Get personalised puja guidance, kundali reading, vastu & Vedic remedies from certified acharyas with decades of experience.",
+      "Get personalised pooja guidance according to your kundali, and let our expert pandits suggest the most auspicious puja for you.",
     subtitleCls: "text-brown/80",
     primaryCta: "Consult a Pandit  →",
     secondaryCta: "View Services",
