@@ -171,7 +171,7 @@ const HeroCarousel = () => {
 
   return (
     <section className="relative overflow-hidden">
-      <div className="relative h-[560px] sm:h-[600px] md:h-[680px]">
+      <div className="relative h-[100dvh] min-h-[620px] max-h-[850px] sm:h-[600px] sm:min-h-0 sm:max-h-none md:h-[680px]">
         {slides.map((s, idx) => {
           const active = idx === current;
           return (
@@ -241,10 +241,10 @@ const HeroCarousel = () => {
               ))}
 
               {/* Content */}
-              <div className="container relative z-10 grid h-full items-center gap-10 py-10 md:grid-cols-12">
-                <div className="md:col-span-8 lg:col-span-7 space-y-6">
+              <div className="container relative z-10 flex h-full flex-col justify-center pb-20 pt-24 sm:grid sm:items-center sm:py-10 md:grid-cols-12 md:gap-10">
+                <div className="space-y-4 sm:space-y-6 md:col-span-8 lg:col-span-7 px-4 sm:px-0">
                   <span
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide shadow-md ${s.pill.cls}`}
+                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-[10px] sm:text-xs font-semibold tracking-wide shadow-md ${s.pill.cls}`}
                   >
                     {s.pill.text}
                   </span>
@@ -262,7 +262,7 @@ const HeroCarousel = () => {
                   </div>
 
                   <h1
-                    className={`font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.05] drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] ${s.titleCls}`}
+                    className={`font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.1] drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] ${s.titleCls}`}
                   >
                     {s.title}{" "}
                     <span className="block mt-1 text-gold-shimmer">
@@ -276,15 +276,15 @@ const HeroCarousel = () => {
                     {s.subtitle}
                   </p>
 
-                  <div className="flex flex-wrap gap-3 pt-2">
+                  <div className="flex flex-wrap gap-2.5 sm:gap-3 pt-1 sm:pt-2">
                     <button
-                      className={`rounded-full px-5 py-2.5 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold shadow-sacred transition-all hover:-translate-y-0.5 ${s.ctaPrimaryCls}`}
+                      className={`rounded-full px-4 py-2 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold shadow-sacred transition-all hover:-translate-y-0.5 ${s.ctaPrimaryCls}`}
                     >
                       {s.primaryCta}
                     </button>
                     {s.secondaryCta && (
                       <button
-                        className={`rounded-full px-5 py-2.5 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold backdrop-blur-sm bg-white/5 transition-all hover:-translate-y-0.5 ${s.ctaSecondaryCls}`}
+                        className={`rounded-full px-4 py-2 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold backdrop-blur-sm bg-white/5 transition-all hover:-translate-y-0.5 ${s.ctaSecondaryCls}`}
                       >
                         {s.secondaryCta}
                       </button>
@@ -363,19 +363,19 @@ const HeroCarousel = () => {
       <button
         onClick={prev}
         aria-label="Previous"
-        className="absolute left-2 sm:left-4 top-1/2 z-20 grid h-10 w-10 sm:h-12 sm:w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/60 bg-maroon-deep/40 text-gold backdrop-blur-md hover:bg-saffron hover:text-white transition-all hover:scale-110"
+        className="absolute left-2 sm:left-4 top-1/2 z-20 grid h-8 w-8 sm:h-12 sm:w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/60 bg-maroon-deep/40 text-gold backdrop-blur-md hover:bg-saffron hover:text-white transition-all hover:scale-110"
       >
-        <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
+        <ChevronLeft className="h-4 w-4 sm:h-6 sm:w-6" />
       </button>
       <button
         onClick={next}
         aria-label="Next"
-        className="absolute right-2 sm:right-4 top-1/2 z-20 grid h-10 w-10 sm:h-12 sm:w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/60 bg-maroon-deep/40 text-gold backdrop-blur-md hover:bg-saffron hover:text-white transition-all hover:scale-110"
+        className="absolute right-2 sm:right-4 top-1/2 z-20 grid h-8 w-8 sm:h-12 sm:w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/60 bg-maroon-deep/40 text-gold backdrop-blur-md hover:bg-saffron hover:text-white transition-all hover:scale-110"
       >
-        <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
+        <ChevronRight className="h-4 w-4 sm:h-6 sm:w-6" />
       </button>
 
-      <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-gold/40 bg-maroon-deep/40 px-4 py-2 backdrop-blur-md">
+      <div className="absolute bottom-4 sm:bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 sm:gap-2 rounded-full border border-gold/40 bg-maroon-deep/40 px-3 py-1.5 sm:px-4 sm:py-2 backdrop-blur-md">
         {slides.map((_, i) => (
           <button
             key={i}
@@ -416,14 +416,14 @@ const MuhuratCountdown = () => {
   }, []);
   return (
     <div className="inline-flex items-center gap-3 rounded-2xl border border-gold/50 bg-maroon-deep/60 backdrop-blur px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-3 shadow-gold-glow">
-      <span className="text-[10px] sm:text-xs uppercase tracking-widest text-gold/80">
+      <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-gold/80">
         Next Muhurat
       </span>
       <div className="flex items-center gap-1.5 sm:gap-2">
         {(["h", "m", "s"] as const).map((k, i) => (
-          <div key={k} className="flex items-center gap-1.5 sm:gap-2">
+          <div key={k} className="flex items-center gap-1 sm:gap-1.5">
             <div className="text-center">
-              <div className="font-display text-xl sm:text-2xl text-gold leading-none">
+              <div className="font-display text-lg sm:text-xl md:text-2xl text-gold leading-none">
                 {String(time[k]).padStart(2, "0")}
               </div>
               <div className="mt-0.5 text-[8px] sm:text-[9px] uppercase tracking-wider text-cream/60">
