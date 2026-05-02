@@ -34,16 +34,17 @@ const Footer = () => {
 
       <div className="container grid gap-10 py-12 md:grid-cols-4">
         <div>
-          <div className="mb-3 flex items-center gap-2">
-            <svg width="36" height="36" viewBox="0 0 64 64" fill="none">
-              <g stroke="hsl(var(--gold))" strokeWidth="2" fill="none">
-                <path d="M32 50 C 18 38, 18 22, 32 14 C 46 22, 46 38, 32 50 Z" />
-                <path d="M32 50 C 22 44, 14 30, 18 18 C 28 22, 34 34, 32 50 Z" />
-                <path d="M32 50 C 42 44, 50 30, 46 18 C 36 22, 30 34, 32 50 Z" />
-              </g>
-              <circle cx="32" cy="34" r="3" fill="hsl(var(--saffron))" />
-            </svg>
-            <span className="font-display text-xl text-cream">Narayan Kripa</span>
+          <div className="mb-3 flex items-center gap-2 sm:gap-3">
+            <img 
+              src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712834/favicon-removebg-preview_kx4s41.png" 
+              alt="Narayan Kripa Logo Icon" 
+              className="h-14 w-auto object-contain"
+            />
+            <img 
+              src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712826/Screenshot_2026-05-02_143432-removebg-preview_vqcmpo.png" 
+              alt="Narayan Kripa Text" 
+              className="h-10 w-auto object-contain brightness-0 invert -ml-1"
+            />
           </div>
           <p className="font-serif italic text-gold">Where Devotion Meets Tradition</p>
           <div className="mt-5 flex gap-3">
