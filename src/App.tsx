@@ -12,6 +12,9 @@ import Chadhava from "./pages/Chadhava";
 import Astrology from "./pages/Astrology";
 import Temples from "./pages/Temples";
 import Contact from "./pages/Contact";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Grievance from "./pages/Grievance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +42,9 @@ const App = () => (
           <Route path="/astrology" element={<Astrology />} />
           <Route path="/temples" element={<Temples />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy-policy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/grievance" element={<Grievance />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

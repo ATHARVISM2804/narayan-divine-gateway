@@ -100,9 +100,9 @@ const Footer = () => {
         <div className="container flex flex-col items-center justify-between gap-2 py-5 text-xs text-cream/60 md:flex-row">
           <p>© 2025 Narayan Kripa. All rights reserved.</p>
           <div className="flex gap-5">
-            <a href="#" className="hover:text-gold">Privacy Policy</a>
-            <a href="#" className="hover:text-gold">Terms</a>
-            <a href="#" className="hover:text-gold">Grievance</a>
+            <Link to="/privacy-policy" className="hover:text-gold">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-gold">Terms</Link>
+            <Link to="/grievance" className="hover:text-gold">Grievance</Link>
           </div>
         </div>
       </div>
