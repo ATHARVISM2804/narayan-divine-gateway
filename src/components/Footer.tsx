@@ -87,7 +87,7 @@ const Footer = () => {
           <h4 className="mb-4 font-display text-lg text-gold">Connect</h4>
           <ul className="space-y-3 text-sm text-cream/80">
             <li className="flex items-start gap-2"><Mail size={16} className="mt-0.5 text-gold" /> hello@narayankripa.com</li>
-            <li className="flex items-start gap-2"><Phone size={16} className="mt-0.5 text-gold" /> +91 98765 43210</li>
+            <li className="flex items-start gap-2"><Phone size={16} className="mt-0.5 text-gold" /> +91 92863 45941</li>
             <li className="flex items-start gap-2"><MapPin size={16} className="mt-0.5 text-gold" /> Varanasi, India</li>
           </ul>
           <button className="mt-5 rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white hover:bg-gold transition-colors">

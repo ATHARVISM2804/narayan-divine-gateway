@@ -18,7 +18,7 @@ const Grievance = () => {
               <p>Narayan Kripa Spiritual Services</p>
               <p>Varanasi, Uttar Pradesh, India</p>
               <p>Email: grievance@narayankripa.com</p>
-              <p>Phone: +91 98765 43210 (Mon-Fri, 10 AM to 6 PM)</p>
+              <p>Phone: +91 92863 45941 (Mon-Fri, 10 AM to 6 PM)</p>
             </div>
           </div>
           <div>

@@ -62,7 +62,7 @@ const Contact = () => {
           <div className="space-y-4">
             {[
               { Icon: MapPin, title: "Address", text: "Narayan Kripa, Lanka, Varanasi 221005, India" },
-              { Icon: Phone, title: "Phone", text: "+91 98765 43210" },
+              { Icon: Phone, title: "Phone", text: "+91 92863 45941" },
               { Icon: Mail, title: "Email", text: "hello@narayankripa.com" },
               { Icon: Clock, title: "Support Hours", text: "Mon–Sat, 9 AM – 7 PM IST" },
             ].map((c) => (
