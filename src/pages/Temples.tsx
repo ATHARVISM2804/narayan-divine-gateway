@@ -5,14 +5,20 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 import heroTemples from "@/assets/hero-temples-page.png";
+import imgShiva from "@/assets/puja-shiva.jpg";
+import imgVishnu from "@/assets/puja-vishnu.jpg";
+import imgGanesh from "@/assets/puja-ganesh.jpg";
+import imgDurga from "@/assets/puja-durga.jpg";
+import imgDarshan from "@/assets/hero-darshan.jpg";
+import imgTemple from "@/assets/hero-temple.jpg";
 
 const temples = [
-  { name: "Kashi Vishwanath", state: "Uttar Pradesh", deity: "Shiva", timings: "4 AM – 11 PM", emoji: "🕉️" },
-  { name: "Tirupati Balaji", state: "Andhra Pradesh", deity: "Vishnu", timings: "3 AM – 10 PM", emoji: "🛕" },
-  { name: "Siddhivinayak", state: "Maharashtra", deity: "Ganesh", timings: "5:30 AM – 9:30 PM", emoji: "🐘" },
-  { name: "Vaishno Devi", state: "Jammu & Kashmir", deity: "Durga", timings: "5 AM – 12 AM", emoji: "🌺" },
-  { name: "Jagannath Puri", state: "Odisha", deity: "Vishnu", timings: "5 AM – 9 PM", emoji: "🛕" },
-  { name: "Mahakaleshwar", state: "Madhya Pradesh", deity: "Shiva", timings: "4 AM – 11 PM", emoji: "🕉️" },
+  { name: "Kashi Vishwanath", state: "Uttar Pradesh", deity: "Shiva", timings: "4 AM – 11 PM", image: imgDarshan },
+  { name: "Tirupati Balaji", state: "Andhra Pradesh", deity: "Vishnu", timings: "3 AM – 10 PM", image: imgVishnu },
+  { name: "Siddhivinayak", state: "Maharashtra", deity: "Ganesh", timings: "5:30 AM – 9:30 PM", image: imgGanesh },
+  { name: "Vaishno Devi", state: "Jammu & Kashmir", deity: "Durga", timings: "5 AM – 12 AM", image: imgDurga },
+  { name: "Jagannath Puri", state: "Odisha", deity: "Vishnu", timings: "5 AM – 9 PM", image: imgTemple },
+  { name: "Mahakaleshwar", state: "Madhya Pradesh", deity: "Shiva", timings: "4 AM – 11 PM", image: imgShiva },
 ];
 
 const states = ["All", "Uttar Pradesh", "Maharashtra", "Andhra Pradesh", "Odisha", "Madhya Pradesh", "Jammu & Kashmir"];
@@ -51,25 +57,18 @@ const Temples = () => {
             </select>
           </div>
 
-          {/* Map placeholder */}
-          <div className="relative mb-12 grid h-64 place-items-center overflow-hidden rounded-2xl border-2 border-dashed border-gold bg-gradient-to-br from-cream to-ivory">
-            <svg viewBox="0 0 200 220" className="absolute inset-0 m-auto h-full opacity-30 text-maroon" fill="currentColor">
-              <path d="M70 10 L130 15 L150 40 L160 80 L150 130 L120 180 L90 200 L70 180 L50 150 L40 100 L50 50 Z" />
-            </svg>
-            {[
-              [40, 30], [80, 60], [120, 90], [70, 110], [110, 140], [90, 170],
-            ].map(([x, y], i) => (
-              <span key={i} className="absolute h-3 w-3 rounded-full bg-saffron ring-4 ring-saffron/30 animate-pulse-slow" style={{ left: `${x}%`, top: `${y}%` }} />
-            ))}
-            <p className="relative font-serif italic text-maroon">Interactive Temple Map — Coming Soon</p>
-          </div>
+
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((t) => (
-              <article key={t.name} className="overflow-hidden rounded-2xl border border-gold/60 bg-ivory transition-all hover:-translate-y-1 hover:shadow-xl">
-                <div className="grid h-44 place-items-center bg-gradient-to-br from-saffron/30 to-maroon/40 text-7xl">{t.emoji}</div>
-                <div className="space-y-2 p-4">
-                  <h3 className="font-display text-lg text-maroon">{t.name}</h3>
+              <article key={t.name} className="group overflow-hidden rounded-2xl border border-gold/60 bg-ivory transition-all hover:-translate-y-1 hover:shadow-xl">
+                <div className="relative h-48 overflow-hidden">
+                  <img src={t.image} alt={t.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/60 to-transparent" />
+                  <span className="absolute bottom-3 left-3 font-display text-xl text-white drop-shadow-md">{t.name}</span>
+                </div>
+                <div className="space-y-3 p-4">
+
                   <div className="flex flex-wrap gap-2 text-[11px] text-brown/70">
                     <span className="inline-flex items-center gap-1 rounded-full bg-cream px-2 py-0.5"><MapPin size={10} /> {t.state}</span>
                     <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5">{t.deity}</span>
@@ -91,7 +90,10 @@ const Temples = () => {
         <div className="container">
           <SectionHeading title="Featured Temple Spotlight" />
           <div className="grid gap-6 overflow-hidden rounded-3xl border border-gold/60 bg-ivory md:grid-cols-2">
-            <div className="grid place-items-center bg-gradient-to-br from-maroon to-maroon-deep p-12 text-9xl">🕉️</div>
+            <div className="relative overflow-hidden h-64 md:h-full min-h-[300px]">
+               <img src={imgDarshan} alt="Kashi Vishwanath" className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
+               <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/60 via-maroon-deep/20 to-transparent" />
+            </div>
             <div className="p-8 md:p-10">
               <span className="inline-block rounded-full bg-gold px-3 py-1 text-xs font-bold text-maroon">JYOTIRLINGA</span>
               <h3 className="mt-3 font-display text-3xl text-maroon">Kashi Vishwanath</h3>
