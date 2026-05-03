@@ -4,14 +4,19 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 import heroChadhava from "@/assets/hero-chadhava-page.png";
+import imgShiva from "@/assets/puja-shiva.jpg";
+import imgVishnu from "@/assets/puja-vishnu.jpg";
+import imgGanesh from "@/assets/puja-ganesh.jpg";
+import imgDurga from "@/assets/puja-durga.jpg";
+import imgChadhavaHero from "@/assets/hero-chadhava.jpg";
 
 const offerings = [
-  { temple: "Kashi Vishwanath", item: "Bel Patra & Dhatura", price: 251 },
-  { temple: "Tirupati Balaji", item: "Tulsi Mala & Laddu Prasad", price: 501 },
-  { temple: "Siddhivinayak", item: "Modak & Red Hibiscus", price: 351 },
-  { temple: "Vaishno Devi", item: "Chunari & Sindoor", price: 451 },
-  { temple: "Mahakaleshwar", item: "Bhasma Aarti Offering", price: 1100 },
-  { temple: "Jagannath Puri", item: "Mahaprasad Offering", price: 651 },
+  { temple: "Kashi Vishwanath", item: "Bel Patra & Dhatura", price: 251, image: imgShiva },
+  { temple: "Tirupati Balaji", item: "Tulsi Mala & Laddu Prasad", price: 501, image: imgVishnu },
+  { temple: "Siddhivinayak", item: "Modak & Red Hibiscus", price: 351, image: imgGanesh },
+  { temple: "Vaishno Devi", item: "Chunari & Sindoor", price: 451, image: imgDurga },
+  { temple: "Mahakaleshwar", item: "Bhasma Aarti Offering", price: 1100, image: imgShiva },
+  { temple: "Jagannath Puri", item: "Mahaprasad Offering", price: 651, image: imgVishnu },
 ];
 
 const benefits = [
@@ -41,8 +46,9 @@ const Chadhava = () => {
             With Narayan Kripa, your offering reaches India's most revered shrines through verified temple priests, and the prasad returns to your home as a tangible blessing.
           </p>
         </div>
-        <div className="grid place-items-center rounded-2xl bg-ivory border border-gold/50 p-10 text-8xl">
-          🌺
+        <div className="relative h-64 md:h-full min-h-[300px] overflow-hidden rounded-2xl border border-gold/50 shadow-soft">
+          <img src={imgChadhavaHero} alt="Offering Chadhava" className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" />
+          <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/40 to-transparent" />
         </div>
       </div>
     </section>
@@ -54,7 +60,9 @@ const Chadhava = () => {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {offerings.map((o) => (
             <article key={o.temple + o.item} className="rounded-2xl border border-gold/50 bg-ivory p-5 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-gold/20">
-              <div className="mb-3 grid h-32 place-items-center rounded-xl bg-gradient-to-br from-saffron/20 to-gold/30 text-5xl">🛕</div>
+              <div className="mb-4 h-40 w-full overflow-hidden rounded-xl border border-gold/20">
+                <img src={o.image} alt={o.temple} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              </div>
               <h3 className="font-display text-maroon">{o.temple}</h3>
               <p className="text-sm text-brown/70">{o.item}</p>
               <div className="mt-4 flex items-center justify-between border-t border-gold/30 pt-3">
