@@ -213,3 +213,9 @@
 /* Marquee groups */
 .marquee-track { display: flex; width: max-content; animation: marquee 25s linear infinite; }
 .marquee-track-reverse { display: flex; width: max-content; animation: marquee 30s linear infinite reverse; }
+
+/* Admin panel toast animation */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}

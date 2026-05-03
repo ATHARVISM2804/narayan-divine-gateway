@@ -18,6 +18,7 @@ import Cart from "./pages/Cart";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Grievance from "./pages/Grievance";
+import AdminPanel from "./pages/admin/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,16 @@ const ScrollToTop = () => {
   return null;
 };
 
+/** Wraps public pages with Navbar + Footer; admin gets its own shell */
+const PublicLayout = ({ children }: { children: React.ReactNode }) => (
+  <>
+    <Navbar />
+    {children}
+    <Footer />
+    <MobileCartBar />
+  </>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -38,23 +49,24 @@ const App = () => (
       <CartProvider>
         <BrowserRouter>
           <ScrollToTop />
-          <Navbar />
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/puja" element={<Puja />} />
-            <Route path="/chadhava" element={<Chadhava />} />
-            <Route path="/astrology" element={<Astrology />} />
-            <Route path="/temples" element={<Temples />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/privacy-policy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/grievance" element={<Grievance />} />
+            {/* Admin — standalone, no Navbar/Footer */}
+            <Route path="/admin" element={<AdminPanel />} />
+
+            {/* Public pages — wrapped with Navbar + Footer */}
+            <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+            <Route path="/puja" element={<PublicLayout><Puja /></PublicLayout>} />
+            <Route path="/chadhava" element={<PublicLayout><Chadhava /></PublicLayout>} />
+            <Route path="/astrology" element={<PublicLayout><Astrology /></PublicLayout>} />
+            <Route path="/temples" element={<PublicLayout><Temples /></PublicLayout>} />
+            <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+            <Route path="/cart" element={<PublicLayout><Cart /></PublicLayout>} />
+            <Route path="/privacy-policy" element={<PublicLayout><Privacy /></PublicLayout>} />
+            <Route path="/terms" element={<PublicLayout><Terms /></PublicLayout>} />
+            <Route path="/grievance" element={<PublicLayout><Grievance /></PublicLayout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
           </Routes>
-          <Footer />
-          <MobileCartBar />
         </BrowserRouter>
       </CartProvider>
     </TooltipProvider>
