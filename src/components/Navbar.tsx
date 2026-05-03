@@ -78,7 +78,7 @@ const Navbar = () => {
           <NavLink to="/contact" className="rounded-full border border-gold px-5 py-2 text-sm font-medium text-maroon transition-colors hover:bg-gold/20">
             Login
           </NavLink>
-          <NavLink to="/puja" className="rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-maroon hover:shadow-lg">
+          <NavLink to="/temples" className="rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-maroon hover:shadow-lg">
             Book Now
           </NavLink>
         </div>
