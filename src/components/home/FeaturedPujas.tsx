@@ -1,28 +1,61 @@
-import { useState } from "react";
-import { Star, Clock, Award } from "lucide-react";
+import { MapPin, Calendar } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
-import imgGanesh from "@/assets/puja-ganesh.jpg";
 import imgLakshmi from "@/assets/puja-lakshmi.jpg";
-import imgShiva from "@/assets/puja-shiva.jpg";
 import imgVishnu from "@/assets/puja-vishnu.jpg";
 import imgNavgraha from "@/assets/puja-navgraha.jpg";
-import imgDurga from "@/assets/puja-durga.jpg";
 
 const pujas = [
-  { id: 1, name: "Ganesh Puja", deity: "Ganesh", purpose: "For Prosperity & New Beginnings", price: 1100, reviews: 124, badge: "POPULAR", image: imgGanesh, duration: "90 min" },
-  { id: 2, name: "Lakshmi Puja", deity: "Lakshmi", purpose: "For Wealth & Abundance", price: 2100, reviews: 98, badge: "SPECIAL", image: imgLakshmi, duration: "2 hrs" },
-  { id: 3, name: "Maha Rudrabhishek", deity: "Shiva", purpose: "For Health & Protection", price: 5100, reviews: 212, badge: "PREMIUM", image: imgShiva, duration: "3 hrs" },
-  { id: 4, name: "Satyanarayan Puja", deity: "Vishnu", purpose: "For Peace & Blessings", price: 1500, reviews: 156, badge: "POPULAR", image: imgVishnu, duration: "2 hrs" },
-  { id: 5, name: "Navgraha Shanti", deity: "Navgraha", purpose: "For Career & Remedies", price: 3100, reviews: 78, badge: "SPECIAL", image: imgNavgraha, duration: "2.5 hrs" },
-  { id: 6, name: "Durga Saptashati", deity: "Durga", purpose: "For Protection & Victory", price: 4100, reviews: 142, badge: "PREMIUM", image: imgDurga, duration: "3 hrs" },
+  { 
+    id: 1,
+    name: "Ekadashi Special Badrinarayan Rakshaya Ka Watch", 
+    deity: "Vishnu", 
+    purpose: "Badrinath Dham Shetra", 
+    price: 951, 
+    badge: "SPECIAL", 
+    image: imgVishnu, 
+    date: "13 May",
+    prices: [
+      { label: "Single", price: 951 },
+      { label: "Couple", price: 1551 },
+      { label: "4 Family", price: 2551 },
+      { label: "6 Members", price: 3551 }
+    ]
+  },
+  { 
+    id: 2,
+    name: "Shani Jayanti Special Nav Greh Shanti Pooja & Tel Abhishek", 
+    deity: "Navgraha", 
+    purpose: "Nav Greh Mandir Haridwar", 
+    price: 951, 
+    badge: "SPECIAL", 
+    image: imgNavgraha, 
+    date: "16 May",
+    prices: [
+      { label: "Single", price: 951 },
+      { label: "Couple", price: 1551 },
+      { label: "4 Family", price: 2551 },
+      { label: "6 Members", price: 3551 }
+    ]
+  },
+  { 
+    id: 3,
+    name: "Ganga Dussehra Special Maa Ganga Abhishek & Deep Daan", 
+    deity: "Ganga", 
+    purpose: "Har Ki Pauri", 
+    price: 951, 
+    badge: "SPECIAL", 
+    image: imgLakshmi, 
+    date: "25 May",
+    prices: [
+      { label: "Single", price: 951 },
+      { label: "Couple", price: 1551 },
+      { label: "4 Family", price: 2551 },
+      { label: "6 Members", price: 3551 }
+    ]
+  },
 ];
 
-const filters = ["All", "Ganesh", "Lakshmi", "Shiva", "Vishnu", "Durga", "Navgraha"];
-
 const FeaturedPujas = () => {
-  const [active, setActive] = useState("All");
-  const filtered = active === "All" ? pujas : pujas.filter((p) => p.deity === active);
-
   return (
     <section className="relative texture-parchment py-20">
       {/* decorative top border */}
@@ -34,37 +67,21 @@ const FeaturedPujas = () => {
           subtitle="Performed by verified pandits at partnered temples — ancient rituals delivered with modern care"
         />
 
-        <div className="mb-10 flex flex-wrap justify-center gap-2">
-          {filters.map((f) => (
-            <button
-              key={f}
-              onClick={() => setActive(f)}
-              className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${
-                active === f
-                  ? "bg-sacred text-white shadow-md scale-105"
-                  : "border border-gold/60 bg-ivory text-maroon hover:bg-gold/20 hover:border-gold"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => (
+        <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3 mt-10">
+          {pujas.map((p) => (
             <article
               key={p.id}
-              className="group relative overflow-hidden rounded-2xl border border-gold/50 bg-ivory shadow-soft transition-all duration-500 hover:-translate-y-2 hover:border-saffron hover:shadow-sacred"
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-gold/50 bg-ivory shadow-soft transition-all duration-500 hover:-translate-y-2 hover:border-saffron hover:shadow-sacred"
             >
               {/* Image */}
-              <div className="relative h-56 overflow-hidden">
+              <div className="relative h-56 overflow-hidden shrink-0">
                 <img
                   src={p.image}
                   alt={p.name}
                   loading="lazy"
                   width={1024}
                   height={768}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 {/* Gradient overlay for badges legibility */}
                 <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-maroon-deep/70 to-transparent" />
@@ -76,40 +93,45 @@ const FeaturedPujas = () => {
                 <span className="absolute right-3 top-3 rounded-full bg-gold-grad px-3 py-1 text-[10px] font-bold text-maroon shadow-md">
                   {p.deity}
                 </span>
-                <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-xs text-cream">
-                  <Clock size={12} className="text-gold" /> {p.duration}
-                  <span className="mx-1 text-gold/50">•</span>
-                  <Award size={12} className="text-gold" /> Certified Pandits
+                <div className="absolute bottom-3 left-3 flex items-center gap-2 text-xs text-cream drop-shadow-md">
+                  <span className="flex items-center gap-1.5 font-medium"><Calendar size={13} className="text-gold" /> {p.date}</span>
                 </div>
               </div>
 
               {/* Body */}
-              <div className="space-y-3 p-5">
+              <div className="flex flex-col flex-1 p-5 bg-gradient-to-b from-ivory to-cream/30">
                 <div>
-                  <h3 className="font-display text-xl text-maroon">{p.name}</h3>
-                  <p className="font-serif italic text-sm text-brown/70">{p.purpose}</p>
+                  <h3 className="font-display text-[22px] text-maroon leading-tight mb-2 drop-shadow-sm">{p.name}</h3>
+                  <p className="flex items-center gap-1.5 font-serif italic text-sm text-brown/90 font-medium">
+                    <MapPin size={15} className="text-saffron" /> {p.purpose}
+                  </p>
                 </div>
-                <div className="flex items-center gap-1 text-xs text-brown/70">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} size={13} fill="hsl(var(--gold))" stroke="hsl(var(--gold))" />
-                  ))}
-                  <span className="ml-1 font-medium">4.9 ({p.reviews} reviews)</span>
-                </div>
-                <div className="flex items-center justify-between border-t border-gold/30 pt-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-brown/50">Starting from</p>
-                    <span className="font-display text-xl font-semibold text-saffron">₹{p.price.toLocaleString("en-IN")}</span>
+
+                <div className="flex-1"></div>
+
+                <div className="my-5 overflow-hidden rounded-xl border border-gold/40 bg-gradient-to-b from-cream to-ivory shadow-sm">
+                  <div className="bg-gradient-to-r from-gold/10 via-saffron/10 to-gold/10 py-2 px-3 border-b border-gold/30">
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-maroon text-center">Available Packages</h4>
                   </div>
-                  <button className="rounded-full bg-sacred px-5 py-2 text-xs font-semibold text-white shadow-md transition-all hover:shadow-gold-glow">
-                    Book Now →
-                  </button>
+                  <div className="p-3.5 flex flex-col gap-2.5">
+                    {p.prices.map((tier, idx) => (
+                      <div key={tier.label} className={`flex items-center justify-between text-sm ${idx !== p.prices.length - 1 ? 'border-b border-gold/20 pb-2.5' : ''}`}>
+                        <span className="text-maroon font-bold tracking-wide">{tier.label}</span>
+                        <span className="font-sans font-bold text-saffron text-base tracking-wide">₹{tier.price.toLocaleString("en-IN")}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+                <button className="w-full rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
+                  Book Now →
+                </button>
               </div>
 
               {/* corner ornament */}
               <svg
                 viewBox="0 0 40 40"
-                className="pointer-events-none absolute right-2 bottom-2 h-8 w-8 text-gold/30"
+                className="pointer-events-none absolute right-2 bottom-2 h-8 w-8 text-gold/20"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="0.6"

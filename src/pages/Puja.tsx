@@ -1,46 +1,76 @@
 import { useState } from "react";
-import { Star, Clock, Award } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import heroPuja from "@/assets/hero-puja-page.png";
 
 const allPujas = [
-  { name: "Ganesh Puja", deity: "Ganesh", purpose: "Prosperity", price: 1100, dur: "2 hrs", lang: "Hindi" },
-  { name: "Lakshmi Puja", deity: "Lakshmi", purpose: "Prosperity", price: 2100, dur: "3 hrs", lang: "Sanskrit" },
-  { name: "Maha Rudrabhishek", deity: "Shiva", purpose: "Health", price: 5100, dur: "4 hrs", lang: "Sanskrit" },
-  { name: "Satyanarayan Puja", deity: "Vishnu", purpose: "Protection", price: 1500, dur: "2.5 hrs", lang: "Hindi" },
-  { name: "Navgraha Shanti", deity: "Navgraha", purpose: "Career", price: 3100, dur: "3 hrs", lang: "Sanskrit" },
-  { name: "Durga Saptashati", deity: "Durga", purpose: "Protection", price: 4100, dur: "5 hrs", lang: "Sanskrit" },
-  { name: "Hanuman Chalisa Path", deity: "Hanuman", purpose: "Protection", price: 700, dur: "1 hr", lang: "Hindi" },
-  { name: "Shiv Mahimna Stotra", deity: "Shiva", purpose: "Health", price: 1800, dur: "2 hrs", lang: "Sanskrit" },
-  { name: "Vishnu Sahasranama", deity: "Vishnu", purpose: "Marriage", price: 2500, dur: "3 hrs", lang: "Sanskrit" },
-  { name: "Sundarkand Path", deity: "Hanuman", purpose: "Education", price: 1100, dur: "2 hrs", lang: "Hindi" },
-  { name: "Kaal Sarp Dosh Puja", deity: "Navgraha", purpose: "Protection", price: 6100, dur: "5 hrs", lang: "Sanskrit" },
-  { name: "Mangal Dosh Nivaran", deity: "Navgraha", purpose: "Marriage", price: 3500, dur: "3 hrs", lang: "Sanskrit" },
+  { 
+    id: 1,
+    name: "Ekadashi Special Badrinarayan Rakshaya Ka Watch", 
+    deity: "Vishnu", 
+    purpose: "Special", 
+    price: 951, 
+    dur: "Special", 
+    lang: "Hindi",
+    location: "Badrinath Dham Shetra",
+    date: "13 May",
+    prices: [
+      { label: "Single", price: 951 },
+      { label: "Couple", price: 1551 },
+      { label: "4 Family", price: 2551 },
+      { label: "6 Members", price: 3551 }
+    ]
+  },
+  { 
+    id: 2,
+    name: "Shani Jayanti Special Nav Greh Shanti Pooja & Tel Abhishek", 
+    deity: "Navgraha", 
+    purpose: "Special", 
+    price: 951, 
+    dur: "Special", 
+    lang: "Hindi",
+    location: "Nav Greh Mandir Haridwar",
+    date: "16 May",
+    prices: [
+      { label: "Single", price: 951 },
+      { label: "Couple", price: 1551 },
+      { label: "4 Family", price: 2551 },
+      { label: "6 Members", price: 3551 }
+    ]
+  },
+  { 
+    id: 3,
+    name: "Ganga Dussehra Special Maa Ganga Abhishek & Deep Daan", 
+    deity: "Ganga", 
+    purpose: "Special", 
+    price: 951, 
+    dur: "Special", 
+    lang: "Hindi",
+    location: "Har Ki Pauri",
+    date: "25 May",
+    prices: [
+      { label: "Single", price: 951 },
+      { label: "Couple", price: 1551 },
+      { label: "4 Family", price: 2551 },
+      { label: "6 Members", price: 3551 }
+    ]
+  },
 ];
 
-const deities = ["All", "Ganesh", "Shiva", "Vishnu", "Durga", "Lakshmi", "Hanuman", "Navgraha"];
-const purposes = ["All", "Prosperity", "Health", "Marriage", "Protection", "Career", "Education"];
-const languages = ["All", "Hindi", "Sanskrit"];
+const deities = ["All", "Vishnu", "Navgraha", "Ganga"];
 
 const Puja = () => {
   usePageTitle("Sacred Pujas — Narayan Kripa");
 
   const [deity, setDeity] = useState("All");
-  const [purpose, setPurpose] = useState("All");
-  const [lang, setLang] = useState("All");
-  const [maxPrice, setMaxPrice] = useState(25000);
 
   const filtered = allPujas.filter(
-    (p) =>
-      (deity === "All" || p.deity === deity) &&
-      (purpose === "All" || p.purpose === purpose) &&
-      (lang === "All" || p.lang === lang) &&
-      p.price <= maxPrice
+    (p) => deity === "All" || p.deity === deity
   );
 
   const Chip = ({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) => (
-    <button onClick={onClick} className={`rounded-full px-3 py-1 text-xs ${active ? "bg-saffron text-white" : "border border-gold bg-ivory text-maroon hover:bg-gold/20"}`}>
+    <button onClick={onClick} className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all ${active ? "bg-saffron text-white shadow-md" : "border border-gold/50 bg-ivory text-maroon hover:bg-gold/20 hover:border-gold"}`}>
       {label}
     </button>
   );
@@ -51,45 +81,48 @@ const Puja = () => {
 
       <section className="bg-background py-12">
         <div className="container grid gap-8 lg:grid-cols-[260px_1fr]">
-          <aside className="h-fit space-y-6 rounded-2xl border border-gold/40 bg-ivory p-5">
+          <aside className="h-fit space-y-6 rounded-2xl border border-gold/40 bg-ivory p-6 shadow-soft">
             <div>
-              <h4 className="mb-3 font-display text-maroon">By Deity</h4>
-              <div className="flex flex-wrap gap-2">{deities.map((d) => <Chip key={d} active={deity === d} onClick={() => setDeity(d)} label={d} />)}</div>
-            </div>
-            <div>
-              <h4 className="mb-3 font-display text-maroon">By Purpose</h4>
-              <div className="flex flex-wrap gap-2">{purposes.map((d) => <Chip key={d} active={purpose === d} onClick={() => setPurpose(d)} label={d} />)}</div>
-            </div>
-            <div>
-              <h4 className="mb-3 font-display text-maroon">Price Range</h4>
-              <input type="range" min={500} max={25000} step={500} value={maxPrice} onChange={(e) => setMaxPrice(+e.target.value)} className="w-full accent-saffron" />
-              <p className="mt-1 text-xs text-brown/70">Up to ₹{maxPrice.toLocaleString("en-IN")}</p>
-            </div>
-            <div>
-              <h4 className="mb-3 font-display text-maroon">Language</h4>
-              <div className="flex flex-wrap gap-2">{languages.map((d) => <Chip key={d} active={lang === d} onClick={() => setLang(d)} label={d} />)}</div>
+              <h4 className="mb-4 font-display text-lg text-maroon">By Deity</h4>
+              <div className="flex flex-wrap gap-2.5">{deities.map((d) => <Chip key={d} active={deity === d} onClick={() => setDeity(d)} label={d} />)}</div>
             </div>
           </aside>
 
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3 items-start">
             {filtered.map((p) => (
-              <article key={p.name} className="overflow-hidden rounded-2xl border border-gold/60 bg-ivory transition-all hover:-translate-y-1 hover:border-saffron hover:shadow-xl">
-                <div className="grid h-40 place-items-center bg-gradient-to-br from-saffron/30 to-gold/20 text-6xl">🪔</div>
-                <div className="space-y-2 p-4">
-                  <h3 className="font-display text-lg text-maroon">{p.name}</h3>
-                  <p className="text-xs text-brown/60">For {p.purpose} • {p.lang}</p>
-                  <div className="flex flex-wrap gap-2 text-[11px]">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-cream px-2 py-0.5 text-maroon"><Clock size={10} /> {p.dur}</span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5 text-maroon"><Award size={10} /> Certified Pandit</span>
+              <article key={p.id} className="group overflow-hidden rounded-2xl border border-gold/50 bg-ivory transition-all duration-500 hover:-translate-y-1.5 hover:border-saffron hover:shadow-sacred flex flex-col h-full shadow-soft">
+                <div className="relative grid h-36 place-items-center bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent overflow-hidden border-b border-gold/30">
+                  <div className="absolute inset-0 opacity-30 mix-blend-multiply texture-parchment transition-transform duration-700 group-hover:scale-110"></div>
+                  <div className="relative text-6xl drop-shadow-[0_0_15px_rgba(255,184,0,0.5)] transition-transform duration-500 group-hover:scale-110">🪔</div>
+                </div>
+                
+                <div className="flex flex-col flex-1 p-5 bg-gradient-to-b from-ivory to-cream/30">
+                  <h3 className="font-display text-[20px] text-maroon leading-tight mb-3 drop-shadow-sm">{p.name}</h3>
+                  
+                  <div className="flex flex-col gap-2 text-xs text-brown/90 font-medium">
+                    <span className="flex items-center gap-2"><Calendar size={14} className="text-saffron" /> {p.date}</span>
+                    <span className="flex items-center gap-2"><MapPin size={14} className="text-saffron" /> {p.location}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-brown/70">
-                    {Array.from({ length: 5 }).map((_, i) => <Star key={i} size={11} fill="hsl(var(--gold))" stroke="hsl(var(--gold))" />)}
-                    <span className="ml-1">(120+)</span>
+
+                  <div className="flex-1"></div>
+
+                  <div className="my-5 overflow-hidden rounded-xl border border-gold/40 bg-gradient-to-b from-cream to-ivory shadow-sm">
+                    <div className="bg-gradient-to-r from-gold/10 via-saffron/10 to-gold/10 py-2 px-3 border-b border-gold/30">
+                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-maroon text-center">Available Packages</h4>
+                    </div>
+                    <div className="p-3.5 flex flex-col gap-2.5">
+                      {p.prices.map((tier, idx) => (
+                        <div key={tier.label} className={`flex items-center justify-between text-sm ${idx !== p.prices.length - 1 ? 'border-b border-gold/20 pb-2.5' : ''}`}>
+                          <span className="text-maroon font-bold tracking-wide">{tier.label}</span>
+                          <span className="font-sans font-bold text-saffron text-base tracking-wide">₹{tier.price.toLocaleString("en-IN")}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between border-t border-gold/30 pt-2">
-                    <span className="font-display font-semibold text-saffron">₹{p.price.toLocaleString("en-IN")}</span>
-                    <button className="text-sm font-semibold text-maroon hover:text-saffron">Book →</button>
-                  </div>
+
+                  <button className="w-full rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
+                    Book Now
+                  </button>
                 </div>
               </article>
             ))}
