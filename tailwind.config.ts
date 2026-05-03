@@ -98,6 +98,11 @@ export default {
           "0%,100%": { opacity: "1" },
           "50%": { opacity: "0.5" },
         },
+        scaleIn: {
+          "0%": { transform: "scale(0)", opacity: "0" },
+          "60%": { transform: "scale(1.2)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -107,6 +112,7 @@ export default {
         fadeIn: "fadeIn 0.6s ease-out forwards",
         shimmer: "shimmer 3s linear infinite",
         "pulse-slow": "pulse-slow 2s ease-in-out infinite",
+        scaleIn: "scaleIn 0.3s ease-out forwards",
       },
       backgroundImage: {
         "shimmer-gold": "linear-gradient(90deg, hsl(var(--gold)) 0%, hsl(var(--gold-light)) 50%, hsl(var(--gold)) 100%)",

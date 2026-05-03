@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ShoppingCart } from "lucide-react";
 import Logo from "./Logo";
+import { useCart } from "@/context/CartContext";
 
 const links = [
   { to: "/", label: "Home" },
@@ -15,6 +16,7 @@ const links = [
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { totalItems } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -60,6 +62,19 @@ const Navbar = () => {
         </ul>
 
         <div className="hidden items-center gap-3 md:flex">
+          {/* Cart icon */}
+          <NavLink
+            to="/cart"
+            className="relative grid h-10 w-10 place-items-center rounded-full border border-gold text-maroon transition-colors hover:bg-gold/20"
+            aria-label="Cart"
+          >
+            <ShoppingCart size={18} />
+            {totalItems > 0 && (
+              <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-saffron text-[10px] font-bold text-white shadow-sm animate-scaleIn">
+                {totalItems}
+              </span>
+            )}
+          </NavLink>
           <NavLink to="/contact" className="rounded-full border border-gold px-5 py-2 text-sm font-medium text-maroon transition-colors hover:bg-gold/20">
             Login
           </NavLink>
@@ -69,13 +84,15 @@ const Navbar = () => {
         </div>
 
         {/* Mobile toggle */}
-        <button
-          className="md:hidden rounded-md p-2 text-maroon"
-          onClick={() => setOpen((o) => !o)}
-          aria-label="Toggle menu"
-        >
-          {open ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <button
+            className="md:hidden rounded-md p-2 text-maroon"
+            onClick={() => setOpen((o) => !o)}
+            aria-label="Toggle menu"
+          >
+            {open ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </nav>
 
       {/* Mobile drawer */}
@@ -99,8 +116,8 @@ const Navbar = () => {
               </li>
             ))}
             <li className="mt-2 flex gap-3 px-3">
-              <NavLink to="/contact" className="flex-1 rounded-full border border-gold px-4 py-2 text-sm text-maroon text-center">Login</NavLink>
-              <NavLink to="/puja" className="flex-1 rounded-full bg-saffron px-4 py-2 text-sm font-semibold text-white text-center">Book Now</NavLink>
+              <NavLink to="/contact" onClick={() => setOpen(false)} className="flex-1 rounded-full border border-gold px-4 py-2 text-sm text-maroon text-center">Login</NavLink>
+              <NavLink to="/puja" onClick={() => setOpen(false)} className="flex-1 rounded-full bg-saffron px-4 py-2 text-sm font-semibold text-white text-center">Book Now</NavLink>
             </li>
           </ul>
         </div>

@@ -1,6 +1,8 @@
-import { MapPin, Calendar } from "lucide-react";
+import { useState } from "react";
+import { MapPin, Calendar, ShoppingCart, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import SectionHeading from "@/components/SectionHeading";
+import { useCart } from "@/context/CartContext";
 import imgLakshmi from "@/assets/puja-lakshmi.jpg";
 import imgVishnu from "@/assets/puja-vishnu.jpg";
 import imgNavgraha from "@/assets/puja-navgraha.jpg";
@@ -57,6 +59,9 @@ const pujas = [
 ];
 
 const FeaturedPujas = () => {
+  const { addItem } = useCart();
+  const [addedId, setAddedId] = useState<string | null>(null);
+
   return (
     <section className="relative texture-parchment py-20">
       {/* decorative top border */}
@@ -115,17 +120,44 @@ const FeaturedPujas = () => {
                     <h4 className="text-[11px] font-bold uppercase tracking-widest text-maroon text-center">Available Packages</h4>
                   </div>
                   <div className="p-3.5 flex flex-col gap-2.5">
-                    {p.prices.map((tier, idx) => (
+                    {p.prices.map((tier, idx) => {
+                      const itemId = `puja-${p.id}-${tier.label}`;
+                      const justAdded = addedId === itemId;
+                      return (
                       <div key={tier.label} className={`flex items-center justify-between text-sm ${idx !== p.prices.length - 1 ? 'border-b border-gold/20 pb-2.5' : ''}`}>
                         <span className="text-maroon font-bold tracking-wide">{tier.label}</span>
-                        <span className="font-sans font-bold text-saffron text-base tracking-wide">₹{tier.price.toLocaleString("en-IN")}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-sans font-bold text-saffron text-base tracking-wide">₹{tier.price.toLocaleString("en-IN")}</span>
+                          <button
+                            onClick={() => {
+                              addItem({
+                                id: itemId,
+                                name: `${p.name} (${tier.label})`,
+                                description: `${p.date} • ${p.purpose}`,
+                                price: tier.price,
+                                category: "puja",
+                              });
+                              setAddedId(itemId);
+                              setTimeout(() => setAddedId(null), 1500);
+                            }}
+                            className={`grid h-7 w-7 place-items-center rounded-full transition-all ${
+                              justAdded
+                                ? "bg-green-500 text-white scale-110"
+                                : "bg-saffron/15 text-saffron hover:bg-saffron hover:text-white"
+                            }`}
+                            aria-label={`Add ${tier.label} to cart`}
+                          >
+                            {justAdded ? <Check size={14} /> : <ShoppingCart size={13} />}
+                          </button>
+                        </div>
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                 </div>
 
-                <Link to="/contact" className="w-full text-center inline-block rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
-                  Book Now →
+                <Link to="/cart" className="w-full text-center inline-block rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
+                  View Cart →
                 </Link>
               </div>
 

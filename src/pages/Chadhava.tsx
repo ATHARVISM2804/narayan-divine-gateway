@@ -1,6 +1,8 @@
-import { Check, Search, Heart, Gift } from "lucide-react";
+import { useState } from "react";
+import { Check, Search, Heart, Gift, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { useCart } from "@/context/CartContext";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 import heroChadhava from "@/assets/hero-chadhava-page.png";
@@ -28,6 +30,8 @@ const benefits = [
 
 const Chadhava = () => {
   usePageTitle("Offer Chadhava — Narayan Kripa");
+  const { addItem } = useCart();
+  const [addedId, setAddedId] = useState<string | null>(null);
 
   return (
   <main>
@@ -67,7 +71,32 @@ const Chadhava = () => {
               <p className="text-sm text-brown/70">{o.item}</p>
               <div className="mt-4 flex items-center justify-between border-t border-gold/30 pt-3">
                 <span className="font-semibold text-saffron">₹{o.price}</span>
-                <Link to="/contact" className="text-sm font-semibold text-maroon hover:text-saffron">Offer Now →</Link>
+                <button
+                  onClick={() => {
+                    const itemId = `chadhava-${o.temple}`;
+                    addItem({
+                      id: itemId,
+                      name: `${o.temple} — ${o.item}`,
+                      description: o.temple,
+                      price: o.price,
+                      image: o.image,
+                      category: "chadhava",
+                    });
+                    setAddedId(itemId);
+                    setTimeout(() => setAddedId(null), 1500);
+                  }}
+                  className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
+                    addedId === `chadhava-${o.temple}`
+                      ? "bg-green-500 text-white"
+                      : "bg-saffron text-white hover:bg-maroon"
+                  }`}
+                >
+                  {addedId === `chadhava-${o.temple}` ? (
+                    <><Check size={14} /> Added!</>
+                  ) : (
+                    <><ShoppingCart size={14} /> Add to Cart</>
+                  )}
+                </button>
               </div>
             </article>
           ))}
