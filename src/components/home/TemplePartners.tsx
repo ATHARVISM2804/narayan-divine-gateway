@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import SectionHeading from "@/components/SectionHeading";
 import heroTemple from "@/assets/hero-temple.jpg";
 import heroDarshan from "@/assets/hero-darshan.jpg";
@@ -69,9 +70,9 @@ const TemplePartners = () => {
             <div className="space-y-3 p-5">
               <h3 className="font-display text-xl text-maroon">{t.name}</h3>
               <p className="font-serif italic text-sm text-brown/70 leading-relaxed">{t.desc}</p>
-              <button className="inline-flex items-center gap-1 rounded-full border border-saffron bg-transparent px-4 py-1.5 text-xs font-semibold text-saffron transition-all hover:bg-saffron hover:text-white">
+              <Link to="/chadhava" className="inline-block items-center gap-1 rounded-full border border-saffron bg-transparent px-4 py-1.5 text-xs font-semibold text-saffron transition-all hover:bg-saffron hover:text-white">
                 Book Chadhava →
-              </button>
+              </Link>
             </div>
           </article>
         ))}

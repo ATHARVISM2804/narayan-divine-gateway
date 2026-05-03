@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Calendar, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import heroPuja from "@/assets/hero-puja-page.png";
@@ -120,9 +121,9 @@ const Puja = () => {
                     </div>
                   </div>
 
-                  <button className="w-full rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
+                  <Link to="/contact" className="w-full text-center inline-block rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
                     Book Now
-                  </button>
+                  </Link>
                 </div>
               </article>
             ))}

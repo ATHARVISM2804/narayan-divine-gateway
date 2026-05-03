@@ -60,12 +60,12 @@ const Navbar = () => {
         </ul>
 
         <div className="hidden items-center gap-3 md:flex">
-          <button className="rounded-full border border-gold px-5 py-2 text-sm font-medium text-maroon transition-colors hover:bg-gold/20">
+          <NavLink to="/contact" className="rounded-full border border-gold px-5 py-2 text-sm font-medium text-maroon transition-colors hover:bg-gold/20">
             Login
-          </button>
-          <button className="rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-maroon hover:shadow-lg">
+          </NavLink>
+          <NavLink to="/puja" className="rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-maroon hover:shadow-lg">
             Book Now
-          </button>
+          </NavLink>
         </div>
 
         {/* Mobile toggle */}
@@ -99,8 +99,8 @@ const Navbar = () => {
               </li>
             ))}
             <li className="mt-2 flex gap-3 px-3">
-              <button className="flex-1 rounded-full border border-gold px-4 py-2 text-sm text-maroon">Login</button>
-              <button className="flex-1 rounded-full bg-saffron px-4 py-2 text-sm font-semibold text-white">Book Now</button>
+              <NavLink to="/contact" className="flex-1 rounded-full border border-gold px-4 py-2 text-sm text-maroon text-center">Login</NavLink>
+              <NavLink to="/puja" className="flex-1 rounded-full bg-saffron px-4 py-2 text-sm font-semibold text-white text-center">Book Now</NavLink>
             </li>
           </ul>
         </div>

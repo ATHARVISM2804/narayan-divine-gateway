@@ -1,4 +1,5 @@
 import { MapPin, Calendar } from "lucide-react";
+import { Link } from "react-router-dom";
 import SectionHeading from "@/components/SectionHeading";
 import imgLakshmi from "@/assets/puja-lakshmi.jpg";
 import imgVishnu from "@/assets/puja-vishnu.jpg";
@@ -123,9 +124,9 @@ const FeaturedPujas = () => {
                   </div>
                 </div>
 
-                <button className="w-full rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
+                <Link to="/contact" className="w-full text-center inline-block rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
                   Book Now →
-                </button>
+                </Link>
               </div>
 
               {/* corner ornament */}
@@ -144,9 +145,9 @@ const FeaturedPujas = () => {
         </div>
 
         <div className="mt-12 text-center">
-          <button className="inline-flex items-center gap-2 rounded-full border-2 border-gold bg-ivory px-8 py-3 font-semibold text-maroon shadow-soft transition-all hover:bg-gold hover:shadow-gold-glow">
+          <Link to="/puja" className="inline-flex items-center gap-2 rounded-full border-2 border-gold bg-ivory px-8 py-3 font-semibold text-maroon shadow-soft transition-all hover:bg-gold hover:shadow-gold-glow">
             View All Pujas →
-          </button>
+          </Link>
         </div>
       </div>
     </section>

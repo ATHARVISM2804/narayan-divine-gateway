@@ -1,4 +1,5 @@
 import { Check, Search, Heart, Gift } from "lucide-react";
+import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
@@ -58,7 +59,7 @@ const Chadhava = () => {
               <p className="text-sm text-brown/70">{o.item}</p>
               <div className="mt-4 flex items-center justify-between border-t border-gold/30 pt-3">
                 <span className="font-semibold text-saffron">₹{o.price}</span>
-                <button className="text-sm font-semibold text-maroon hover:text-saffron">Offer Now →</button>
+                <Link to="/contact" className="text-sm font-semibold text-maroon hover:text-saffron">Offer Now →</Link>
               </div>
             </article>
           ))}
@@ -78,7 +79,7 @@ const Chadhava = () => {
               <li key={b} className="flex items-start gap-2"><Check size={18} className="mt-0.5 text-gold" /> {b}</li>
             ))}
           </ul>
-          <button className="mt-6 rounded-full bg-saffron px-6 py-3 font-semibold text-white hover:bg-gold hover:text-maroon transition-colors">Subscribe — ₹999/mo</button>
+          <Link to="/contact" className="mt-6 inline-block rounded-full bg-saffron px-6 py-3 font-semibold text-white hover:bg-gold hover:text-maroon transition-colors">Subscribe — ₹999/mo</Link>
         </div>
       </div>
     </section>

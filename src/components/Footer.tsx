@@ -90,9 +90,9 @@ const Footer = () => {
             <li className="flex items-start gap-2"><Phone size={16} className="mt-0.5 text-gold" /> +91 92863 45941</li>
             <li className="flex items-start gap-2"><MapPin size={16} className="mt-0.5 text-gold" /> Varanasi, India</li>
           </ul>
-          <button className="mt-5 rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white hover:bg-gold transition-colors">
+          <Link to="/puja" className="mt-5 inline-block rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white hover:bg-gold transition-colors">
             Book a Puja
-          </button>
+          </Link>
         </div>
       </div>
 

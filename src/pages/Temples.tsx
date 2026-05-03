@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, MapPin, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
@@ -75,8 +76,8 @@ const Temples = () => {
                     <span className="inline-flex items-center gap-1 rounded-full bg-cream px-2 py-0.5"><Clock size={10} /> {t.timings}</span>
                   </div>
                   <div className="mt-3 flex gap-2">
-                    <button className="flex-1 rounded-full bg-saffron px-3 py-1.5 text-xs font-semibold text-white hover:bg-maroon transition-colors">Book Chadhava</button>
-                    <button className="flex-1 rounded-full border border-gold px-3 py-1.5 text-xs font-semibold text-maroon hover:bg-gold/20">Details</button>
+                    <Link to="/chadhava" className="flex-1 text-center rounded-full bg-saffron px-3 py-1.5 text-xs font-semibold text-white hover:bg-maroon transition-colors">Book Chadhava</Link>
+                    <Link to="/contact" className="flex-1 text-center rounded-full border border-gold px-3 py-1.5 text-xs font-semibold text-maroon hover:bg-gold/20">Details</Link>
                   </div>
                 </div>
               </article>
@@ -99,8 +100,8 @@ const Temples = () => {
                 One of the twelve sacred Jyotirlingas, the temple stands on the western bank of the Ganga and has been a beacon of Shaivism for millennia.
               </p>
               <div className="mt-6 flex gap-3">
-                <button className="rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white hover:bg-maroon transition-colors">Book Chadhava</button>
-                <button className="rounded-full border border-gold px-5 py-2 text-sm font-semibold text-maroon hover:bg-gold/20">View Details</button>
+                <Link to="/chadhava" className="inline-block text-center rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white hover:bg-maroon transition-colors">Book Chadhava</Link>
+                <Link to="/contact" className="inline-block text-center rounded-full border border-gold px-5 py-2 text-sm font-semibold text-maroon hover:bg-gold/20">View Details</Link>
               </div>
             </div>
           </div>

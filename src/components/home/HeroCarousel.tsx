@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Star, Radio, Sparkles } from "lucide-react";
 import heroTemple from "@/assets/hero-temple.jpg";
 import heroChadhava from "@/assets/hero-chadhava.jpg";
@@ -17,7 +18,9 @@ interface Slide {
   subtitle: string;
   subtitleCls: string;
   primaryCta: string;
+  linkPrimary: string;
   secondaryCta?: string;
+  linkSecondary?: string;
   ctaPrimaryCls: string;
   ctaSecondaryCls?: string;
   badge?: React.ReactNode;
@@ -40,7 +43,9 @@ const slides: Slide[] = [
       "Connect with 50+ revered temples. Book pujas & chadhava from home, performed by expert pandits with full Vedic procedure.",
     subtitleCls: "text-cream/85",
     primaryCta: "Book a Puja  →",
+    linkPrimary: "/puja",
     secondaryCta: "Explore Temples",
+    linkSecondary: "/temples",
     ctaPrimaryCls: "bg-saffron text-white hover:bg-gold hover:text-maroon",
     ctaSecondaryCls:
       "border border-gold text-gold hover:bg-gold hover:text-maroon",
@@ -58,7 +63,9 @@ const slides: Slide[] = [
       "Send your offerings to revered temples — flowers, prasad, vastra & seva delivered with devotion at the auspicious muhurat.",
     subtitleCls: "text-cream/85",
     primaryCta: "Offer Chadhava Now  →",
+    linkPrimary: "/chadhava",
     secondaryCta: "View Temples",
+    linkSecondary: "/temples",
     ctaPrimaryCls: "bg-gold text-maroon hover:bg-gold-light",
     ctaSecondaryCls:
       "border border-gold text-gold hover:bg-gold hover:text-maroon",
@@ -76,7 +83,9 @@ const slides: Slide[] = [
       "Get personalised pooja guidance according to your kundali, and let our expert pandits suggest the most auspicious puja for you.",
     subtitleCls: "text-brown/80",
     primaryCta: "Consult a Pandit  →",
+    linkPrimary: "/astrology",
     secondaryCta: "View Services",
+    linkSecondary: "/astrology",
     ctaPrimaryCls: "bg-saffron text-white hover:bg-maroon",
     ctaSecondaryCls:
       "border border-maroon/40 text-maroon hover:bg-maroon hover:text-gold",
@@ -97,7 +106,9 @@ const slides: Slide[] = [
       "Watch live and recorded aarti from Kashi, Mathura, Tirupati, Vaishno Devi & more — feel the divine presence from anywhere.",
     subtitleCls: "text-cream/85",
     primaryCta: "Watch Live Darshan  →",
+    linkPrimary: "/temples",
     secondaryCta: "Schedule",
+    linkSecondary: "/temples",
     ctaPrimaryCls: "bg-saffron text-white hover:bg-gold hover:text-maroon",
     ctaSecondaryCls:
       "border border-gold text-gold hover:bg-gold hover:text-maroon",
@@ -277,17 +288,19 @@ const HeroCarousel = () => {
                   </p>
 
                   <div className="flex flex-wrap gap-2.5 sm:gap-3 pt-1 sm:pt-2">
-                    <button
-                      className={`rounded-full px-4 py-2 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold shadow-sacred transition-all hover:-translate-y-0.5 ${s.ctaPrimaryCls}`}
+                    <Link
+                      to={s.linkPrimary}
+                      className={`inline-block rounded-full px-4 py-2 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold shadow-sacred transition-all hover:-translate-y-0.5 ${s.ctaPrimaryCls}`}
                     >
                       {s.primaryCta}
-                    </button>
-                    {s.secondaryCta && (
-                      <button
-                        className={`rounded-full px-4 py-2 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold backdrop-blur-sm bg-white/5 transition-all hover:-translate-y-0.5 ${s.ctaSecondaryCls}`}
+                    </Link>
+                    {s.secondaryCta && s.linkSecondary && (
+                      <Link
+                        to={s.linkSecondary}
+                        className={`inline-block rounded-full px-4 py-2 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold backdrop-blur-sm bg-white/5 transition-all hover:-translate-y-0.5 ${s.ctaSecondaryCls}`}
                       >
                         {s.secondaryCta}
-                      </button>
+                      </Link>
                     )}
                   </div>
 

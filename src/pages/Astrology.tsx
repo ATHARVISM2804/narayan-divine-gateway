@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
@@ -43,7 +44,7 @@ const Astrology = () => {
               <div className="text-4xl">{s.icon}</div>
               <h3 className="mt-3 font-display text-maroon">{s.name}</h3>
               <p className="text-sm text-brown/70">{s.desc}</p>
-              <button className="mt-4 text-sm font-semibold text-saffron hover:text-maroon">Consult Now →</button>
+              <Link to="/contact" className="mt-4 inline-block text-sm font-semibold text-saffron hover:text-maroon">Consult Now →</Link>
             </article>
           ))}
         </div>
@@ -59,7 +60,7 @@ const Astrology = () => {
               <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-saffron to-maroon text-2xl text-white">{z.symbol}</div>
               <h4 className="mt-2 font-display text-maroon">{z.sign}</h4>
               <p className="mt-1 text-xs text-brown/70">{z.line}</p>
-              <button className="mt-3 text-xs font-semibold text-saffron hover:text-maroon">Read More →</button>
+              <Link to="/contact" className="mt-3 inline-block text-xs font-semibold text-saffron hover:text-maroon">Read More →</Link>
             </article>
           ))}
         </div>
@@ -70,7 +71,7 @@ const Astrology = () => {
       <div className="container text-center">
         <h2 className="font-display text-3xl text-gold md:text-4xl">Speak to a Certified Pandit Today</h2>
         <p className="mx-auto mt-3 max-w-xl font-serif italic text-cream/80">Personalised guidance on career, marriage, health and dharmic life.</p>
-        <button className="mt-6 rounded-full bg-saffron px-8 py-3 font-semibold text-white hover:bg-gold hover:text-maroon transition-colors">Consult a Pandit →</button>
+        <Link to="/contact" className="mt-6 inline-block rounded-full bg-saffron px-8 py-3 font-semibold text-white hover:bg-gold hover:text-maroon transition-colors">Consult a Pandit →</Link>
       </div>
     </section>
   </main>
