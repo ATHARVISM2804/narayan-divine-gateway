@@ -26,6 +26,8 @@ import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import Login from "./pages/Login";
 import MyOrders from "./pages/MyOrders";
+import PujaDetail from "./pages/PujaDetail";
+import ChadhavaDetail from "./pages/ChadhavaDetail";
 
 const queryClient = new QueryClient();
 
@@ -64,7 +66,9 @@ const App = () => (
             {/* ── Public routes ── */}
             <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
             <Route path="/puja" element={<PublicLayout><Puja /></PublicLayout>} />
+            <Route path="/puja/:id" element={<PublicLayout><PujaDetail /></PublicLayout>} />
             <Route path="/chadhava" element={<PublicLayout><Chadhava /></PublicLayout>} />
+            <Route path="/chadhava/:id" element={<PublicLayout><ChadhavaDetail /></PublicLayout>} />
             <Route path="/astrology" element={<PublicLayout><Astrology /></PublicLayout>} />
             <Route path="/temples" element={<PublicLayout><Temples /></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />

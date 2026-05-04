@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { Calendar, MapPin, ShoppingCart, Check } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { useCart } from "@/context/CartContext";
 import { supabase, type Puja as PujaType } from "@/lib/supabase";
 import PageHero from "@/components/PageHero";
 import heroPuja from "@/assets/hero-puja-page.png";
@@ -13,8 +12,6 @@ const Puja = () => {
   usePageTitle("Sacred Pujas — Narayan Kripa");
 
   const [deity, setDeity] = useState("All");
-  const { addItem } = useCart();
-  const [addedId, setAddedId] = useState<string | null>(null);
   const [pujas, setPujas] = useState<PujaType[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -74,9 +71,15 @@ const Puja = () => {
               </>
             ) : filtered.length === 0 ? (
               <p className="col-span-full py-12 text-center text-brown/60">No pujas match your filters.</p>
-            ) : filtered.map((p) => (
-              <article key={p.id} className="group overflow-hidden rounded-2xl border border-gold/50 bg-ivory transition-all duration-500 hover:-translate-y-1.5 hover:border-saffron hover:shadow-sacred flex flex-col h-full shadow-soft">
-                <div className="relative grid h-36 place-items-center bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent overflow-hidden border-b border-gold/30">
+            ) : filtered.map((p) => {
+              const minPrice = Math.min(...(p.prices || []).map(t => t.price));
+              return (
+              <Link
+                to={`/puja/${p.id}`}
+                key={p.id}
+                className="group overflow-hidden rounded-2xl border border-gold/50 bg-ivory transition-all duration-500 hover:-translate-y-1.5 hover:border-saffron hover:shadow-sacred flex flex-col h-full shadow-soft"
+              >
+                <div className="relative grid h-44 place-items-center bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent overflow-hidden border-b border-gold/30">
                   {p.image_url ? (
                     <img src={p.image_url} alt={p.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                   ) : (
@@ -84,6 +87,15 @@ const Puja = () => {
                       <div className="absolute inset-0 opacity-30 mix-blend-multiply texture-parchment transition-transform duration-700 group-hover:scale-110"></div>
                       <div className="relative text-6xl drop-shadow-[0_0_15px_rgba(255,184,0,0.5)] transition-transform duration-500 group-hover:scale-110">🪔</div>
                     </>
+                  )}
+                  {/* Deity badge */}
+                  <span className="absolute top-3 left-3 rounded-full bg-maroon/80 backdrop-blur px-3 py-1 text-[10px] font-bold text-gold">
+                    {p.deity}
+                  </span>
+                  {p.featured && (
+                    <span className="absolute top-3 right-3 rounded-full bg-saffron/90 px-2.5 py-1 text-[10px] font-bold text-white">
+                      ⭐ Featured
+                    </span>
                   )}
                 </div>
 
@@ -97,53 +109,22 @@ const Puja = () => {
 
                   <div className="flex-1"></div>
 
-                  <div className="my-5 overflow-hidden rounded-xl border border-gold/40 bg-gradient-to-b from-cream to-ivory shadow-sm">
-                    <div className="bg-gradient-to-r from-gold/10 via-saffron/10 to-gold/10 py-2 px-3 border-b border-gold/30">
-                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-maroon text-center">Available Packages</h4>
+                  {/* Starting price + tier count */}
+                  <div className="mt-4 flex items-end justify-between">
+                    <div>
+                      <p className="text-[10px] text-brown/50 uppercase tracking-wider font-medium">Starting from</p>
+                      <p className="font-sans font-bold text-saffron text-xl mt-0.5">₹{minPrice.toLocaleString("en-IN")}</p>
                     </div>
-                    <div className="p-3.5 flex flex-col gap-2.5">
-                      {(p.prices || []).map((tier: { label: string; price: number }, idx: number) => {
-                        const itemId = `puja-${p.id}-${tier.label}`;
-                        const justAdded = addedId === itemId;
-                        return (
-                        <div key={tier.label} className={`flex items-center justify-between text-sm ${idx !== (p.prices?.length || 0) - 1 ? 'border-b border-gold/20 pb-2.5' : ''}`}>
-                          <span className="text-maroon font-bold tracking-wide">{tier.label}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-sans font-bold text-saffron text-base tracking-wide">₹{tier.price.toLocaleString("en-IN")}</span>
-                            <button
-                              onClick={() => {
-                                addItem({
-                                  id: itemId,
-                                  name: `${p.name} (${tier.label})`,
-                                  description: `${p.date} • ${p.location}`,
-                                  price: tier.price,
-                                  category: "puja",
-                                });
-                                setAddedId(itemId);
-                                setTimeout(() => setAddedId(null), 1500);
-                              }}
-                              className={`grid h-7 w-7 place-items-center rounded-full transition-all ${
-                                justAdded
-                                  ? "bg-green-500 text-white scale-110"
-                                  : "bg-saffron/15 text-saffron hover:bg-saffron hover:text-white"
-                              }`}
-                              aria-label={`Add ${tier.label} to cart`}
-                            >
-                              {justAdded ? <Check size={14} /> : <ShoppingCart size={13} />}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                      })}
-                    </div>
+                    <span className="text-[11px] text-brown/50">{(p.prices || []).length} packages available</span>
                   </div>
 
-                  <Link to="/cart" className="w-full text-center inline-block rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
-                    View Cart
-                  </Link>
+                  <div className="mt-4 w-full text-center rounded-full bg-saffron group-hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all group-hover:shadow-gold-glow">
+                    View Details →
+                  </div>
                 </div>
-              </article>
-            ))}
+              </Link>
+            );
+            })}
           </div>
         </div>
       </section>
