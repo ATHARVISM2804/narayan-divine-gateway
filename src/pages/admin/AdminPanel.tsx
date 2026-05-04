@@ -1,248 +1,194 @@
-import { useState, useCallback } from 'react';
-import type { PujaProduct, ChadhavaProduct, SiteSettings, ToastData, NavSection } from './types';
-import { INITIAL_PUJAS, INITIAL_CHADHAVAS, INITIAL_SETTINGS } from './constants';
-import { Sidebar, Header, Dashboard } from './components/Layout';
-import { PujaList } from './components/PujaList';
-import { PujaForm } from './components/PujaForm';
-import { ChadhavaList } from './components/ChadhavaList';
-import { ChadhavaForm } from './components/ChadhavaForm';
-import { MediaManager } from './components/MediaManager';
-import { SettingsPanel } from './components/SettingsPanel';
-import { ToastContainer } from './components/SharedUI';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase, type Puja, type Chadhava } from "@/lib/supabase";
+import { LayoutDashboard, Flame, Flower2, ShoppingBag, LogOut, Menu, X, ChevronRight } from "lucide-react";
+import PujaManager from "./PujaManager";
+import ChadhavaManager from "./ChadhavaManager";
+import OrderManager from "./OrderManager";
 
-// ─── Utility ────────────────────────────────────────────────────
+type Section = "dashboard" | "pujas" | "chadhavas" | "orders";
 
-let nextId = 100;
-const genId = () => ++nextId;
+const NAV = [
+  { id: "dashboard" as const, label: "Dashboard", Icon: LayoutDashboard },
+  { id: "pujas" as const, label: "Pujas", Icon: Flame },
+  { id: "chadhavas" as const, label: "Chadhavas", Icon: Flower2 },
+  { id: "orders" as const, label: "Orders", Icon: ShoppingBag },
+];
 
-// ─── Root Admin Panel ───────────────────────────────────────────
+/* ───────── Main Admin Panel ───────── */
 
 const AdminPanel = () => {
-  // State
-  const [section, setSection] = useState<NavSection>('dashboard');
-  const [pujas, setPujas] = useState<PujaProduct[]>(INITIAL_PUJAS);
-  const [chadhavas, setChadhavas] = useState<ChadhavaProduct[]>(INITIAL_CHADHAVAS);
-  const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
-  const [toasts, setToasts] = useState<ToastData[]>([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const nav = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [section, setSection] = useState<Section>("dashboard");
+  const [mobileNav, setMobileNav] = useState(false);
+  const [pujas, setPujas] = useState<Puja[]>([]);
+  const [chadhavas, setChadhavas] = useState<Chadhava[]>([]);
 
-  // Form state
-  const [editPuja, setEditPuja] = useState<PujaProduct | null | undefined>(undefined); // undefined=closed, null=new, PujaProduct=edit
-  const [editChadhava, setEditChadhava] = useState<ChadhavaProduct | null | undefined>(undefined);
+  /* Auth check — only the admin email can access */
+  const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 
-  // Toast helpers
-  const showToast = useCallback((message: string, type: 'success' | 'error') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
-  }, []);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) {
+        nav("/admin/login");
+      } else if (ADMIN_EMAIL && data.user.email !== ADMIN_EMAIL) {
+        // Not the admin — redirect away
+        nav("/");
+      } else {
+        setLoading(false);
+      }
+    });
+  }, [nav, ADMIN_EMAIL]);
 
-  const dismissToast = useCallback((id: number) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  }, []);
+  /* Fetch data */
+  const fetchPujas = async () => {
+    const { data } = await supabase.from("pujas").select("*").order("created_at", { ascending: false });
+    if (data) setPujas(data as Puja[]);
+  };
+  const fetchChadhavas = async () => {
+    const { data } = await supabase.from("chadhavas").select("*").order("created_at", { ascending: false });
+    if (data) setChadhavas(data as Chadhava[]);
+  };
 
-  // ── Puja CRUD ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!loading) { fetchPujas(); fetchChadhavas(); }
+  }, [loading]);
 
-  const handleSavePuja = useCallback((p: PujaProduct) => {
-    if (p.id === 0) {
-      // New
-      setPujas(prev => [{ ...p, id: genId() }, ...prev]);
-    } else {
-      // Update
-      setPujas(prev => prev.map(x => x.id === p.id ? p : x));
-    }
-    setEditPuja(undefined);
-  }, []);
+  const logout = async () => {
+    await supabase.auth.signOut();
+    nav("/admin/login");
+  };
 
-  const handleDuplicatePuja = useCallback((p: PujaProduct) => {
-    const dup: PujaProduct = {
-      ...p,
-      id: genId(),
-      name: `Copy of ${p.name}`,
-      status: 'inactive',
-      featured: false,
-      lastModified: new Date().toISOString(),
-    };
-    setPujas(prev => [dup, ...prev]);
-    showToast(`Duplicated "${p.name}"`, 'success');
-  }, [showToast]);
-
-  const handleDeletePuja = useCallback((id: number) => {
-    setPujas(prev => prev.filter(p => p.id !== id));
-    showToast('Puja deleted', 'success');
-  }, [showToast]);
-
-  const handleBulkPuja = useCallback((ids: number[], action: 'activate' | 'deactivate' | 'delete') => {
-    if (action === 'delete') {
-      setPujas(prev => prev.filter(p => !ids.includes(p.id)));
-      showToast(`${ids.length} puja(s) deleted`, 'success');
-    } else {
-      const status = action === 'activate' ? 'active' : 'inactive';
-      setPujas(prev => prev.map(p => ids.includes(p.id) ? { ...p, status, lastModified: new Date().toISOString() } : p));
-      showToast(`${ids.length} puja(s) ${action}d`, 'success');
-    }
-  }, [showToast]);
-
-  // ── Chadhava CRUD ─────────────────────────────────────────────
-
-  const handleSaveChadhava = useCallback((c: ChadhavaProduct) => {
-    if (c.id === 0) {
-      setChadhavas(prev => [{ ...c, id: genId() }, ...prev]);
-    } else {
-      setChadhavas(prev => prev.map(x => x.id === c.id ? c : x));
-    }
-    setEditChadhava(undefined);
-  }, []);
-
-  const handleDuplicateChadhava = useCallback((c: ChadhavaProduct) => {
-    const dup: ChadhavaProduct = {
-      ...c,
-      id: genId(),
-      temple: `Copy of ${c.temple}`,
-      status: 'inactive',
-      lastModified: new Date().toISOString(),
-    };
-    setChadhavas(prev => [dup, ...prev]);
-    showToast(`Duplicated "${c.temple}"`, 'success');
-  }, [showToast]);
-
-  const handleDeleteChadhava = useCallback((id: number) => {
-    setChadhavas(prev => prev.filter(c => c.id !== id));
-    showToast('Chadhava deleted', 'success');
-  }, [showToast]);
-
-  const handleBulkChadhava = useCallback((ids: number[], action: 'activate' | 'deactivate' | 'delete') => {
-    if (action === 'delete') {
-      setChadhavas(prev => prev.filter(c => !ids.includes(c.id)));
-      showToast(`${ids.length} chadhava(s) deleted`, 'success');
-    } else {
-      const status = action === 'activate' ? 'active' : 'inactive';
-      setChadhavas(prev => prev.map(c => ids.includes(c.id) ? { ...c, status: status as 'active' | 'inactive', lastModified: new Date().toISOString() } : c));
-      showToast(`${ids.length} chadhava(s) ${action}d`, 'success');
-    }
-  }, [showToast]);
-
-  // ── Media Manager helpers ─────────────────────────────────────
-
-  const handleUpdatePujaImage = useCallback((id: number, field: 'primaryImage' | number, url: string) => {
-    setPujas(prev => prev.map(p => {
-      if (p.id !== id) return p;
-      if (field === 'primaryImage') return { ...p, primaryImage: url, lastModified: new Date().toISOString() };
-      const imgs = [...p.additionalImages];
-      imgs[field] = url;
-      return { ...p, additionalImages: imgs, lastModified: new Date().toISOString() };
-    }));
-    showToast('Image updated', 'success');
-  }, [showToast]);
-
-  const handleUpdateChadhavaImage = useCallback((id: number, field: 'primaryImage' | number, url: string) => {
-    setChadhavas(prev => prev.map(c => {
-      if (c.id !== id) return c;
-      if (field === 'primaryImage') return { ...c, primaryImage: url, lastModified: new Date().toISOString() };
-      const imgs = [...c.additionalImages];
-      imgs[field] = url;
-      return { ...c, additionalImages: imgs, lastModified: new Date().toISOString() };
-    }));
-    showToast('Image updated', 'success');
-  }, [showToast]);
-
-  // ── Dashboard quick actions ───────────────────────────────────
-
-  const handleDashboardAddPuja = useCallback(() => {
-    setSection('puja');
-    setTimeout(() => setEditPuja(null), 100);
-  }, []);
-
-  const handleDashboardAddChadhava = useCallback(() => {
-    setSection('chadhava');
-    setTimeout(() => setEditChadhava(null), 100);
-  }, []);
-
-  // ── Add New (contextual header button) ────────────────────────
-
-  const handleAddNew = useCallback(() => {
-    if (section === 'puja') setEditPuja(null);
-    else if (section === 'chadhava') setEditChadhava(null);
-  }, [section]);
+  if (loading) return (
+    <div className="flex min-h-screen items-center justify-center bg-cream">
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-gold border-t-saffron" />
+    </div>
+  );
 
   return (
-    <div className="flex min-h-screen bg-amber-50 font-body">
-      <Sidebar active={section} onNavigate={setSection} mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />
+    <div className="flex min-h-screen bg-cream font-body">
+      {/* ── Sidebar (desktop) ── */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-gold/30 bg-maroon-deep lg:flex">
+        <div className="flex items-center gap-2 px-5 py-6">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-saffron"><Flame size={18} className="text-white" /></div>
+          <span className="font-display text-lg text-gold">Admin</span>
+        </div>
+        <nav className="flex-1 space-y-1 px-3">
+          {NAV.map((n) => (
+            <button key={n.id} onClick={() => setSection(n.id)}
+              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+                section === n.id ? "bg-saffron/20 text-gold" : "text-cream/70 hover:bg-cream/10 hover:text-cream"
+              }`}
+            ><n.Icon size={18} />{n.label}</button>
+          ))}
+        </nav>
+        <button onClick={logout} className="m-3 flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-cream/60 hover:bg-cream/10 hover:text-cream transition-all">
+          <LogOut size={18} />Logout
+        </button>
+      </aside>
 
+      {/* ── Mobile nav overlay ── */}
+      {mobileNav && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileNav(false)} />
+          <aside className="absolute inset-y-0 left-0 w-64 flex flex-col bg-maroon-deep shadow-2xl animate-fadeIn">
+            <div className="flex items-center justify-between px-5 py-5">
+              <span className="font-display text-lg text-gold">Admin</span>
+              <button onClick={() => setMobileNav(false)} className="text-cream/70"><X size={20} /></button>
+            </div>
+            <nav className="flex-1 space-y-1 px-3">
+              {NAV.map((n) => (
+                <button key={n.id} onClick={() => { setSection(n.id); setMobileNav(false); }}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+                    section === n.id ? "bg-saffron/20 text-gold" : "text-cream/70 hover:bg-cream/10"
+                  }`}
+                ><n.Icon size={18} />{n.label}</button>
+              ))}
+            </nav>
+            <button onClick={logout} className="m-3 flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-cream/60 hover:bg-cream/10 transition-all">
+              <LogOut size={18} />Logout
+            </button>
+          </aside>
+        </div>
+      )}
+
+      {/* ── Main content ── */}
       <div className="flex flex-1 flex-col lg:ml-60">
-        <Header section={section} onAddNew={handleAddNew} onMenuToggle={() => setSidebarOpen(true)} />
+        {/* Header */}
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-gold/30 bg-ivory/95 px-4 py-3 backdrop-blur lg:px-6">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setMobileNav(true)} className="lg:hidden text-maroon"><Menu size={22} /></button>
+            <h2 className="font-display text-lg text-maroon capitalize">{section}</h2>
+          </div>
+        </header>
 
-        <main className="flex-1 overflow-y-auto">
-          {section === 'dashboard' && (
-            <Dashboard
-              pujas={pujas}
-              chadhavas={chadhavas}
-              onNavigate={setSection}
-              onAddPuja={handleDashboardAddPuja}
-              onAddChadhava={handleDashboardAddChadhava}
-            />
+        {/* Content */}
+        <main className="flex-1 p-4 lg:p-6">
+          {section === "dashboard" && (
+            <Dashboard pujas={pujas} chadhavas={chadhavas} onNavigate={setSection} />
           )}
-
-          {section === 'puja' && (
-            <PujaList
-              pujas={pujas}
-              onEdit={p => setEditPuja(p)}
-              onDuplicate={handleDuplicatePuja}
-              onDelete={handleDeletePuja}
-              onBulkAction={handleBulkPuja}
-            />
+          {section === "pujas" && (
+            <PujaManager pujas={pujas} onRefresh={fetchPujas} />
           )}
-
-          {section === 'chadhava' && (
-            <ChadhavaList
-              chadhavas={chadhavas}
-              onEdit={c => setEditChadhava(c)}
-              onDuplicate={handleDuplicateChadhava}
-              onDelete={handleDeleteChadhava}
-              onBulkAction={handleBulkChadhava}
-            />
+          {section === "chadhavas" && (
+            <ChadhavaManager chadhavas={chadhavas} onRefresh={fetchChadhavas} />
           )}
-
-          {section === 'media' && (
-            <MediaManager
-              pujas={pujas}
-              chadhavas={chadhavas}
-              onUpdatePujaImage={handleUpdatePujaImage}
-              onUpdateChadhavaImage={handleUpdateChadhavaImage}
-            />
-          )}
-
-          {section === 'settings' && (
-            <SettingsPanel settings={settings} onSave={setSettings} showToast={showToast} />
+          {section === "orders" && (
+            <OrderManager />
           )}
         </main>
       </div>
+    </div>
+  );
+};
 
-      {/* Puja Form Panel */}
-      {editPuja !== undefined && (
-        <PujaForm
-          puja={editPuja}
-          defaultIncludes={settings.defaultPujaIncludes}
-          defaultDelivery={settings.defaultPujaDelivery}
-          onSave={handleSavePuja}
-          onClose={() => setEditPuja(undefined)}
-          showToast={showToast}
-        />
-      )}
+/* ───────── Dashboard ───────── */
 
-      {/* Chadhava Form Panel */}
-      {editChadhava !== undefined && (
-        <ChadhavaForm
-          chadhava={editChadhava}
-          defaultReceives={settings.defaultChadhavaReceives}
-          defaultDelivery={settings.defaultChadhavaDelivery}
-          onSave={handleSaveChadhava}
-          onClose={() => setEditChadhava(undefined)}
-          showToast={showToast}
-        />
-      )}
+const Dashboard = ({
+  pujas, chadhavas, onNavigate,
+}: {
+  pujas: Puja[]; chadhavas: Chadhava[]; onNavigate: (s: Section) => void;
+}) => {
+  const stats = [
+    { label: "Total Pujas", value: pujas.length, active: pujas.filter((p) => p.status === "active").length, color: "from-saffron to-maroon", icon: "🪔" },
+    { label: "Total Chadhavas", value: chadhavas.length, active: chadhavas.filter((c) => c.status === "active").length, color: "from-gold to-saffron", icon: "🌺" },
+    { label: "Active Products", value: pujas.filter((p) => p.status === "active").length + chadhavas.filter((c) => c.status === "active").length, active: null, color: "from-green-500 to-emerald-600", icon: "✅" },
+    { label: "Drafts", value: pujas.filter((p) => p.status === "draft").length + chadhavas.filter((c) => c.status === "draft").length, active: null, color: "from-gray-400 to-gray-500", icon: "📝" },
+  ];
 
-      {/* Toast Notifications */}
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+  return (
+    <div className="space-y-8">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((s) => (
+          <div key={s.label} className="rounded-2xl border border-gold/40 bg-ivory p-5 shadow-soft">
+            <div className="flex items-center justify-between">
+              <span className="text-2xl">{s.icon}</span>
+              <span className={`rounded-full bg-gradient-to-r ${s.color} px-3 py-1 text-xs font-bold text-white`}>{s.value}</span>
+            </div>
+            <p className="mt-3 text-sm font-semibold text-maroon">{s.label}</p>
+            {s.active !== null && <p className="text-xs text-brown/60">{s.active} active</p>}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {([
+          { label: "Manage Pujas", desc: "Add, edit or remove puja listings", sec: "pujas" as const, icon: "🪔" },
+          { label: "Manage Chadhavas", desc: "Add, edit or remove chadhava offerings", sec: "chadhavas" as const, icon: "🌺" },
+        ]).map((c) => (
+          <button key={c.sec} onClick={() => onNavigate(c.sec)}
+            className="flex items-center gap-4 rounded-2xl border border-gold/40 bg-ivory p-5 text-left shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-saffron/50"
+          >
+            <span className="text-3xl">{c.icon}</span>
+            <div className="flex-1">
+              <p className="font-display text-maroon">{c.label}</p>
+              <p className="text-xs text-brown/60">{c.desc}</p>
+            </div>
+            <ChevronRight size={18} className="text-gold" />
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

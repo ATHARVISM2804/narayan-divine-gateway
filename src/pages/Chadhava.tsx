@@ -1,25 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, Search, Heart, Gift, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
+import { supabase, type Chadhava as CType } from "@/lib/supabase";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 import heroChadhava from "@/assets/hero-chadhava-page.png";
-import imgShiva from "@/assets/puja-shiva.jpg";
-import imgVishnu from "@/assets/puja-vishnu.jpg";
-import imgGanesh from "@/assets/puja-ganesh.jpg";
-import imgDurga from "@/assets/puja-durga.jpg";
 import imgChadhavaHero from "@/assets/hero-chadhava.jpg";
-
-const offerings = [
-  { temple: "Kashi Vishwanath", item: "Bel Patra & Dhatura", price: 251, image: imgShiva },
-  { temple: "Tirupati Balaji", item: "Tulsi Mala & Laddu Prasad", price: 501, image: imgVishnu },
-  { temple: "Siddhivinayak", item: "Modak & Red Hibiscus", price: 351, image: imgGanesh },
-  { temple: "Vaishno Devi", item: "Chunari & Sindoor", price: 451, image: imgDurga },
-  { temple: "Mahakaleshwar", item: "Bhasma Aarti Offering", price: 1100, image: imgShiva },
-  { temple: "Jagannath Puri", item: "Mahaprasad Offering", price: 651, image: imgVishnu },
-];
 
 const benefits = [
   "Monthly chadhava at your chosen temple",
@@ -32,6 +20,30 @@ const Chadhava = () => {
   usePageTitle("Offer Chadhava — Narayan Kripa");
   const { addItem } = useCart();
   const [addedId, setAddedId] = useState<string | null>(null);
+  const [offerings, setOfferings] = useState<CType[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("chadhavas")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setOfferings(data as CType[]);
+        setLoading(false);
+      });
+  }, []);
+
+  /* Loading skeleton */
+  const Skeleton = () => (
+    <div className="rounded-2xl border border-gold/30 bg-ivory p-5 animate-pulse">
+      <div className="h-40 w-full rounded-xl bg-gold/10 mb-4" />
+      <div className="h-4 w-3/4 bg-gold/10 rounded mb-2" />
+      <div className="h-3 w-1/2 bg-gold/10 rounded mb-4" />
+      <div className="h-8 w-full bg-gold/10 rounded-full" />
+    </div>
+  );
 
   return (
   <main>
@@ -57,41 +69,49 @@ const Chadhava = () => {
       </div>
     </section>
 
-    {/* Special Chadhava grid */}
+    {/* Chadhava grid */}
     <section className="bg-cream py-16">
       <div className="container">
         <SectionHeading title="Special Chadhava Offerings" subtitle="Curated offerings for every devotee" />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {offerings.map((o) => (
-            <article key={o.temple + o.item} className="rounded-2xl border border-gold/50 bg-ivory p-5 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-gold/20">
+          {loading ? (
+            <><Skeleton /><Skeleton /><Skeleton /><Skeleton /><Skeleton /><Skeleton /></>
+          ) : offerings.length === 0 ? (
+            <p className="col-span-full py-12 text-center text-brown/60">No chadhava offerings available right now.</p>
+          ) : offerings.map((o) => (
+            <article key={o.id} className="rounded-2xl border border-gold/50 bg-ivory p-5 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-gold/20">
               <div className="mb-4 h-40 w-full overflow-hidden rounded-xl border border-gold/20">
-                <img src={o.image} alt={o.temple} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                {o.image_url ? (
+                  <img src={o.image_url} alt={o.temple} className="h-full w-full object-cover transition-transform duration-700 hover:scale-110" />
+                ) : (
+                  <div className="grid h-full w-full place-items-center bg-gradient-to-br from-saffron/15 to-gold/15 text-4xl">🌺</div>
+                )}
               </div>
               <h3 className="font-display text-maroon">{o.temple}</h3>
               <p className="text-sm text-brown/70">{o.item}</p>
               <div className="mt-4 flex items-center justify-between border-t border-gold/30 pt-3">
-                <span className="font-semibold text-saffron">₹{o.price}</span>
+                <span className="font-semibold text-saffron">₹{o.price.toLocaleString("en-IN")}</span>
                 <button
                   onClick={() => {
-                    const itemId = `chadhava-${o.temple}`;
+                    const itemId = `chadhava-${o.id}`;
                     addItem({
                       id: itemId,
                       name: `${o.temple} — ${o.item}`,
                       description: o.temple,
                       price: o.price,
-                      image: o.image,
+                      image: o.image_url || undefined,
                       category: "chadhava",
                     });
                     setAddedId(itemId);
                     setTimeout(() => setAddedId(null), 1500);
                   }}
                   className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
-                    addedId === `chadhava-${o.temple}`
+                    addedId === `chadhava-${o.id}`
                       ? "bg-green-500 text-white"
                       : "bg-saffron text-white hover:bg-maroon"
                   }`}
                 >
-                  {addedId === `chadhava-${o.temple}` ? (
+                  {addedId === `chadhava-${o.id}` ? (
                     <><Check size={14} /> Added!</>
                   ) : (
                     <><ShoppingCart size={14} /> Add to Cart</>

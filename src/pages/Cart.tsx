@@ -171,7 +171,7 @@ const Cart = () => {
             </div>
 
             <Link
-              to="/contact"
+              to="/checkout"
               className="relative block w-full overflow-hidden rounded-full bg-gradient-to-r from-saffron to-maroon py-4 text-center text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5 z-10 group"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">

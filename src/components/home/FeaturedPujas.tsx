@@ -1,66 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MapPin, Calendar, ShoppingCart, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import SectionHeading from "@/components/SectionHeading";
 import { useCart } from "@/context/CartContext";
-import imgLakshmi from "@/assets/puja-lakshmi.jpg";
-import imgVishnu from "@/assets/puja-vishnu.jpg";
-import imgNavgraha from "@/assets/puja-navgraha.jpg";
-
-const pujas = [
-  { 
-    id: 1,
-    name: "Ekadashi Special Badrinarayan Rakshaya Ka Watch", 
-    deity: "Vishnu", 
-    purpose: "Badrinath Dham Shetra", 
-    price: 951, 
-    badge: "SPECIAL", 
-    image: imgVishnu, 
-    date: "13 May",
-    prices: [
-      { label: "Single", price: 951 },
-      { label: "Couple", price: 1551 },
-      { label: "4 Family", price: 2551 },
-      { label: "6 Members", price: 3551 }
-    ]
-  },
-  { 
-    id: 2,
-    name: "Shani Jayanti Special Nav Greh Shanti Pooja & Tel Abhishek", 
-    deity: "Navgraha", 
-    purpose: "Nav Greh Mandir Haridwar", 
-    price: 951, 
-    badge: "SPECIAL", 
-    image: imgNavgraha, 
-    date: "16 May",
-    prices: [
-      { label: "Single", price: 951 },
-      { label: "Couple", price: 1551 },
-      { label: "4 Family", price: 2551 },
-      { label: "6 Members", price: 3551 }
-    ]
-  },
-  { 
-    id: 3,
-    name: "Ganga Dussehra Special Maa Ganga Abhishek & Deep Daan", 
-    deity: "Ganga", 
-    purpose: "Har Ki Pauri", 
-    price: 951, 
-    badge: "SPECIAL", 
-    image: imgLakshmi, 
-    date: "25 May",
-    prices: [
-      { label: "Single", price: 951 },
-      { label: "Couple", price: 1551 },
-      { label: "4 Family", price: 2551 },
-      { label: "6 Members", price: 3551 }
-    ]
-  },
-];
+import { supabase, type Puja } from "@/lib/supabase";
 
 const FeaturedPujas = () => {
   const { addItem } = useCart();
   const [addedId, setAddedId] = useState<string | null>(null);
+  const [pujas, setPujas] = useState<Puja[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("pujas")
+      .select("*")
+      .eq("status", "active")
+      .eq("featured", true)
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .then(({ data }) => {
+        if (data) setPujas(data as Puja[]);
+        setLoading(false);
+      });
+  }, []);
+
+  /* Loading skeleton */
+  const Skeleton = () => (
+    <div className="rounded-2xl border border-gold/30 bg-ivory overflow-hidden animate-pulse">
+      <div className="h-56 bg-gold/10" />
+      <div className="p-5 space-y-3">
+        <div className="h-5 w-3/4 bg-gold/10 rounded" />
+        <div className="h-3 w-1/2 bg-gold/10 rounded" />
+        <div className="h-36 bg-gold/10 rounded-xl mt-4" />
+        <div className="h-11 bg-gold/10 rounded-full mt-4" />
+      </div>
+    </div>
+  );
+
+  if (!loading && pujas.length === 0) return null;
 
   return (
     <section className="relative texture-parchment py-20">
@@ -74,27 +52,26 @@ const FeaturedPujas = () => {
         />
 
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3 mt-10">
-          {pujas.map((p) => (
+          {loading ? (
+            <><Skeleton /><Skeleton /><Skeleton /></>
+          ) : pujas.map((p) => (
             <article
               key={p.id}
               className="group relative flex flex-col overflow-hidden rounded-2xl border border-gold/50 bg-ivory shadow-soft transition-all duration-500 hover:-translate-y-2 hover:border-saffron hover:shadow-sacred"
             >
               {/* Image */}
               <div className="relative h-56 overflow-hidden shrink-0">
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  loading="lazy"
-                  width={1024}
-                  height={768}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
+                {p.image_url ? (
+                  <img src={p.image_url} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-saffron/20 via-gold/20 to-maroon/10 flex items-center justify-center text-7xl">🪔</div>
+                )}
                 {/* Gradient overlay for badges legibility */}
                 <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-maroon-deep/70 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-maroon-deep/85 to-transparent" />
 
                 <span className="absolute left-3 top-3 rounded-full bg-maroon px-3 py-1 text-[10px] font-bold tracking-wider text-gold shadow-md">
-                  ★ {p.badge}
+                  ★ SPECIAL
                 </span>
                 <span className="absolute right-3 top-3 rounded-full bg-gold-grad px-3 py-1 text-[10px] font-bold text-maroon shadow-md">
                   {p.deity}
@@ -109,7 +86,7 @@ const FeaturedPujas = () => {
                 <div>
                   <h3 className="font-display text-[22px] text-maroon leading-tight mb-2 drop-shadow-sm">{p.name}</h3>
                   <p className="flex items-center gap-1.5 font-serif italic text-sm text-brown/90 font-medium">
-                    <MapPin size={15} className="text-saffron" /> {p.purpose}
+                    <MapPin size={15} className="text-saffron" /> {p.location}
                   </p>
                 </div>
 
@@ -120,11 +97,11 @@ const FeaturedPujas = () => {
                     <h4 className="text-[11px] font-bold uppercase tracking-widest text-maroon text-center">Available Packages</h4>
                   </div>
                   <div className="p-3.5 flex flex-col gap-2.5">
-                    {p.prices.map((tier, idx) => {
+                    {(p.prices || []).map((tier: { label: string; price: number }, idx: number) => {
                       const itemId = `puja-${p.id}-${tier.label}`;
                       const justAdded = addedId === itemId;
                       return (
-                      <div key={tier.label} className={`flex items-center justify-between text-sm ${idx !== p.prices.length - 1 ? 'border-b border-gold/20 pb-2.5' : ''}`}>
+                      <div key={tier.label} className={`flex items-center justify-between text-sm ${idx !== (p.prices?.length || 0) - 1 ? 'border-b border-gold/20 pb-2.5' : ''}`}>
                         <span className="text-maroon font-bold tracking-wide">{tier.label}</span>
                         <div className="flex items-center gap-2">
                           <span className="font-sans font-bold text-saffron text-base tracking-wide">₹{tier.price.toLocaleString("en-IN")}</span>
@@ -133,7 +110,7 @@ const FeaturedPujas = () => {
                               addItem({
                                 id: itemId,
                                 name: `${p.name} (${tier.label})`,
-                                description: `${p.date} • ${p.purpose}`,
+                                description: `${p.date} • ${p.location}`,
                                 price: tier.price,
                                 category: "puja",
                               });

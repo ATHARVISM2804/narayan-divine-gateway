@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
-import { Menu, X, ShoppingCart } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { Menu, X, ShoppingCart, User, LogOut, Package } from "lucide-react";
 import Logo from "./Logo";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 const links = [
   { to: "/", label: "Home" },
@@ -16,13 +17,32 @@ const links = [
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [userMenu, setUserMenu] = useState(false);
   const { totalItems } = useCart();
+  const { user, signOut } = useAuth();
+  const nav = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Close user menu on outside click
+  useEffect(() => {
+    if (!userMenu) return;
+    const close = () => setUserMenu(false);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [userMenu]);
+
+  const handleLogout = async () => {
+    await signOut();
+    setUserMenu(false);
+    nav("/");
+  };
+
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
 
   return (
     <header
@@ -75,9 +95,41 @@ const Navbar = () => {
               </span>
             )}
           </NavLink>
-          <NavLink to="/contact" className="rounded-full border border-gold px-5 py-2 text-sm font-medium text-maroon transition-colors hover:bg-gold/20">
-            Login
-          </NavLink>
+
+          {user ? (
+            /* ── Logged in: User avatar dropdown ── */
+            <div className="relative">
+              <button
+                onClick={(e) => { e.stopPropagation(); setUserMenu(!userMenu); }}
+                className="flex items-center gap-2 rounded-full border border-gold px-3 py-2 text-sm text-maroon hover:bg-gold/20 transition-colors"
+              >
+                <div className="grid h-6 w-6 place-items-center rounded-full bg-saffron text-white text-xs font-bold">
+                  {userName.charAt(0).toUpperCase()}
+                </div>
+                <span className="max-w-[100px] truncate font-medium">{userName}</span>
+              </button>
+              {userMenu && (
+                <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gold/40 bg-ivory shadow-lg overflow-hidden animate-fadeIn z-50"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <NavLink to="/my-orders" onClick={() => setUserMenu(false)}
+                    className="flex items-center gap-2 px-4 py-3 text-sm text-maroon hover:bg-gold/10 transition-colors border-b border-gold/20">
+                    <Package size={15} /> My Orders
+                  </NavLink>
+                  <button onClick={handleLogout}
+                    className="flex w-full items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                    <LogOut size={15} /> Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* ── Not logged in: Login button ── */
+            <NavLink to="/login" className="rounded-full border border-gold px-5 py-2 text-sm font-medium text-maroon transition-colors hover:bg-gold/20">
+              Login
+            </NavLink>
+          )}
+
           <NavLink to="/temples" className="rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-maroon hover:shadow-lg">
             Book Now
           </NavLink>
@@ -115,9 +167,30 @@ const Navbar = () => {
                 </NavLink>
               </li>
             ))}
+
+            {user && (
+              <li>
+                <NavLink to="/my-orders" onClick={() => setOpen(false)}
+                  className="block rounded-md px-3 py-3 text-base text-brown hover:bg-gold/10">
+                  📦 My Orders
+                </NavLink>
+              </li>
+            )}
+
             <li className="mt-2 flex gap-3 px-3">
-              <NavLink to="/contact" onClick={() => setOpen(false)} className="flex-1 rounded-full border border-gold px-4 py-2 text-sm text-maroon text-center">Login</NavLink>
-              <NavLink to="/puja" onClick={() => setOpen(false)} className="flex-1 rounded-full bg-saffron px-4 py-2 text-sm font-semibold text-white text-center">Book Now</NavLink>
+              {user ? (
+                <>
+                  <button onClick={() => { handleLogout(); setOpen(false); }}
+                    className="flex-1 rounded-full border border-gold px-4 py-2 text-sm text-maroon text-center">Logout</button>
+                  <NavLink to="/puja" onClick={() => setOpen(false)}
+                    className="flex-1 rounded-full bg-saffron px-4 py-2 text-sm font-semibold text-white text-center">Book Now</NavLink>
+                </>
+              ) : (
+                <>
+                  <NavLink to="/login" onClick={() => setOpen(false)} className="flex-1 rounded-full border border-gold px-4 py-2 text-sm text-maroon text-center">Login</NavLink>
+                  <NavLink to="/puja" onClick={() => setOpen(false)} className="flex-1 rounded-full bg-saffron px-4 py-2 text-sm font-semibold text-white text-center">Book Now</NavLink>
+                </>
+              )}
             </li>
           </ul>
         </div>

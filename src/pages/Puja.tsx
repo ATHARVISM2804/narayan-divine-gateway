@@ -1,66 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, MapPin, ShoppingCart, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
+import { supabase, type Puja as PujaType } from "@/lib/supabase";
 import PageHero from "@/components/PageHero";
 import heroPuja from "@/assets/hero-puja-page.png";
 
-const allPujas = [
-  { 
-    id: 1,
-    name: "Ekadashi Special Badrinarayan Rakshaya Ka Watch", 
-    deity: "Vishnu", 
-    purpose: "Special", 
-    price: 951, 
-    dur: "Special", 
-    lang: "Hindi",
-    location: "Badrinath Dham Shetra",
-    date: "13 May",
-    prices: [
-      { label: "Single", price: 951 },
-      { label: "Couple", price: 1551 },
-      { label: "4 Family", price: 2551 },
-      { label: "6 Members", price: 3551 }
-    ]
-  },
-  { 
-    id: 2,
-    name: "Shani Jayanti Special Nav Greh Shanti Pooja & Tel Abhishek", 
-    deity: "Navgraha", 
-    purpose: "Special", 
-    price: 951, 
-    dur: "Special", 
-    lang: "Hindi",
-    location: "Nav Greh Mandir Haridwar",
-    date: "16 May",
-    prices: [
-      { label: "Single", price: 951 },
-      { label: "Couple", price: 1551 },
-      { label: "4 Family", price: 2551 },
-      { label: "6 Members", price: 3551 }
-    ]
-  },
-  { 
-    id: 3,
-    name: "Ganga Dussehra Special Maa Ganga Abhishek & Deep Daan", 
-    deity: "Ganga", 
-    purpose: "Special", 
-    price: 951, 
-    dur: "Special", 
-    lang: "Hindi",
-    location: "Har Ki Pauri",
-    date: "25 May",
-    prices: [
-      { label: "Single", price: 951 },
-      { label: "Couple", price: 1551 },
-      { label: "4 Family", price: 2551 },
-      { label: "6 Members", price: 3551 }
-    ]
-  },
-];
-
-const deities = ["All", "Vishnu", "Navgraha", "Ganga"];
+const deities = ["All", "Vishnu", "Shiva", "Ganga", "Navgraha", "Ganesh", "Durga", "Lakshmi", "Hanuman", "Saraswati"];
 
 const Puja = () => {
   usePageTitle("Sacred Pujas — Narayan Kripa");
@@ -68,8 +15,22 @@ const Puja = () => {
   const [deity, setDeity] = useState("All");
   const { addItem } = useCart();
   const [addedId, setAddedId] = useState<string | null>(null);
+  const [pujas, setPujas] = useState<PujaType[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = allPujas.filter(
+  useEffect(() => {
+    supabase
+      .from("pujas")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setPujas(data as PujaType[]);
+        setLoading(false);
+      });
+  }, []);
+
+  const filtered = pujas.filter(
     (p) => deity === "All" || p.deity === deity
   );
 
@@ -77,6 +38,20 @@ const Puja = () => {
     <button onClick={onClick} className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all ${active ? "bg-saffron text-white shadow-md" : "border border-gold/50 bg-ivory text-maroon hover:bg-gold/20 hover:border-gold"}`}>
       {label}
     </button>
+  );
+
+  /* Loading skeleton */
+  const Skeleton = () => (
+    <div className="rounded-2xl border border-gold/30 bg-ivory overflow-hidden animate-pulse">
+      <div className="h-36 bg-gold/10" />
+      <div className="p-5 space-y-3">
+        <div className="h-5 w-3/4 bg-gold/10 rounded" />
+        <div className="h-3 w-1/2 bg-gold/10 rounded" />
+        <div className="h-3 w-2/3 bg-gold/10 rounded" />
+        <div className="h-32 bg-gold/10 rounded-xl mt-4" />
+        <div className="h-10 bg-gold/10 rounded-full mt-4" />
+      </div>
+    </div>
   );
 
   return (
@@ -93,16 +68,28 @@ const Puja = () => {
           </aside>
 
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3 items-start">
-            {filtered.map((p) => (
+            {loading ? (
+              <>
+                <Skeleton /><Skeleton /><Skeleton />
+              </>
+            ) : filtered.length === 0 ? (
+              <p className="col-span-full py-12 text-center text-brown/60">No pujas match your filters.</p>
+            ) : filtered.map((p) => (
               <article key={p.id} className="group overflow-hidden rounded-2xl border border-gold/50 bg-ivory transition-all duration-500 hover:-translate-y-1.5 hover:border-saffron hover:shadow-sacred flex flex-col h-full shadow-soft">
                 <div className="relative grid h-36 place-items-center bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent overflow-hidden border-b border-gold/30">
-                  <div className="absolute inset-0 opacity-30 mix-blend-multiply texture-parchment transition-transform duration-700 group-hover:scale-110"></div>
-                  <div className="relative text-6xl drop-shadow-[0_0_15px_rgba(255,184,0,0.5)] transition-transform duration-500 group-hover:scale-110">🪔</div>
+                  {p.image_url ? (
+                    <img src={p.image_url} alt={p.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 opacity-30 mix-blend-multiply texture-parchment transition-transform duration-700 group-hover:scale-110"></div>
+                      <div className="relative text-6xl drop-shadow-[0_0_15px_rgba(255,184,0,0.5)] transition-transform duration-500 group-hover:scale-110">🪔</div>
+                    </>
+                  )}
                 </div>
-                
+
                 <div className="flex flex-col flex-1 p-5 bg-gradient-to-b from-ivory to-cream/30">
                   <h3 className="font-display text-[20px] text-maroon leading-tight mb-3 drop-shadow-sm">{p.name}</h3>
-                  
+
                   <div className="flex flex-col gap-2 text-xs text-brown/90 font-medium">
                     <span className="flex items-center gap-2"><Calendar size={14} className="text-saffron" /> {p.date}</span>
                     <span className="flex items-center gap-2"><MapPin size={14} className="text-saffron" /> {p.location}</span>
@@ -115,11 +102,11 @@ const Puja = () => {
                       <h4 className="text-[11px] font-bold uppercase tracking-widest text-maroon text-center">Available Packages</h4>
                     </div>
                     <div className="p-3.5 flex flex-col gap-2.5">
-                      {p.prices.map((tier, idx) => {
+                      {(p.prices || []).map((tier: { label: string; price: number }, idx: number) => {
                         const itemId = `puja-${p.id}-${tier.label}`;
                         const justAdded = addedId === itemId;
                         return (
-                        <div key={tier.label} className={`flex items-center justify-between text-sm ${idx !== p.prices.length - 1 ? 'border-b border-gold/20 pb-2.5' : ''}`}>
+                        <div key={tier.label} className={`flex items-center justify-between text-sm ${idx !== (p.prices?.length || 0) - 1 ? 'border-b border-gold/20 pb-2.5' : ''}`}>
                           <span className="text-maroon font-bold tracking-wide">{tier.label}</span>
                           <div className="flex items-center gap-2">
                             <span className="font-sans font-bold text-saffron text-base tracking-wide">₹{tier.price.toLocaleString("en-IN")}</span>
@@ -157,9 +144,6 @@ const Puja = () => {
                 </div>
               </article>
             ))}
-            {filtered.length === 0 && (
-              <p className="col-span-full py-12 text-center text-brown/60">No pujas match your filters.</p>
-            )}
           </div>
         </div>
       </section>
