@@ -5,10 +5,18 @@ node_modules
 dist
 dist-ssr
 
-# Environment variables
+# Environment variables — NEVER commit these
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
+*.env
+
+# Supabase secrets / local config
+supabase/.env
+supabase/config.toml
+.supabase/
 
 # Logs
 logs
@@ -36,9 +44,21 @@ bun.lockb
 .DS_Store
 Thumbs.db
 Desktop.ini
+ehthumbs.db
 
 # Local config
 *.local
 
 # Vercel
 .vercel
+
+# Test coverage
+coverage
+*.lcov
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Temp / scratch files
+*.tmp
+*.temp
