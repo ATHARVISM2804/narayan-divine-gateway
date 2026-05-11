@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapPin, Calendar, ShoppingCart, Check } from "lucide-react";
+import { Calendar, ShoppingCart, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import SectionHeading from "@/components/SectionHeading";
 import { useCart } from "@/context/CartContext";
@@ -66,29 +66,27 @@ const FeaturedPujas = () => {
                 ) : (
                   <div className="h-full w-full bg-gradient-to-br from-saffron/20 via-gold/20 to-maroon/10 flex items-center justify-center text-7xl">🪔</div>
                 )}
-                {/* Gradient overlay for badges legibility */}
-                <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-maroon-deep/70 to-transparent" />
+                {/* Gradient overlay */}
                 <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-maroon-deep/85 to-transparent" />
-
-                <span className="absolute left-3 top-3 rounded-full bg-maroon px-3 py-1 text-[10px] font-bold tracking-wider text-gold shadow-md">
-                  ★ SPECIAL
-                </span>
-                <span className="absolute right-3 top-3 rounded-full bg-gold-grad px-3 py-1 text-[10px] font-bold text-maroon shadow-md">
-                  {p.deity}
-                </span>
                 <div className="absolute bottom-3 left-3 flex items-center gap-2 text-xs text-cream drop-shadow-md">
-                  <span className="flex items-center gap-1.5 font-medium"><Calendar size={13} className="text-gold" /> {p.date}</span>
+                  <span className="flex items-center gap-1.5 font-semibold"><Calendar size={13} className="text-gold" /> {p.date}</span>
                 </div>
               </div>
 
               {/* Body */}
               <div className="flex flex-col flex-1 p-5 bg-gradient-to-b from-ivory to-cream/30">
                 <div>
-                  <h3 className="font-display text-[22px] text-maroon leading-tight mb-2 drop-shadow-sm">{p.name}</h3>
-                  <p className="flex items-center gap-1.5 font-serif italic text-sm text-brown/90 font-medium">
-                    <MapPin size={15} className="text-saffron" /> {p.location}
+                  <h3 className="font-body text-[18px] font-bold text-maroon leading-snug mb-2">{p.name}</h3>
+                  <p className="flex items-center gap-1.5 text-sm text-brown/90 font-semibold">
+                    <span className="text-base leading-none">🛕</span> {p.location}
                   </p>
                 </div>
+
+                {p.benefit && (
+                  <div className="mt-3 rounded-xl bg-saffron/10 border border-saffron/20 px-3 py-2">
+                    <p className="text-[14px] font-bold text-maroon leading-snug">✦ {p.benefit}</p>
+                  </div>
+                )}
 
                 <div className="flex-1"></div>
 

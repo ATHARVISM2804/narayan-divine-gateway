@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase, type Puja as PujaType } from "@/lib/supabase";
 import PageHero from "@/components/PageHero";
 import heroPuja from "@/assets/hero-puja-page.png";
+import { useLanguage } from "@/context/LanguageContext";
 
-const deities = ["All", "Vishnu", "Shiva", "Ganga", "Navgraha", "Ganesh", "Durga", "Lakshmi", "Hanuman", "Saraswati"];
 
 const Puja = () => {
   usePageTitle("Sacred Pujas — Narayan Kripa");
+  const { t, lang } = useLanguage();
 
-  const [deity, setDeity] = useState("All");
   const [pujas, setPujas] = useState<PujaType[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,16 +26,6 @@ const Puja = () => {
         setLoading(false);
       });
   }, []);
-
-  const filtered = pujas.filter(
-    (p) => deity === "All" || p.deity === deity
-  );
-
-  const Chip = ({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) => (
-    <button onClick={onClick} className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all ${active ? "bg-saffron text-white shadow-md" : "border border-gold/50 bg-ivory text-maroon hover:bg-gold/20 hover:border-gold"}`}>
-      {label}
-    </button>
-  );
 
   /* Loading skeleton */
   const Skeleton = () => (
@@ -53,26 +43,20 @@ const Puja = () => {
 
   return (
     <main>
-      <PageHero title="Sacred Pujas for Every Need" subtitle="Verified pandits, authentic rituals, divine blessings" breadcrumb="Pujas" bgImage={heroPuja} />
+      <PageHero title={t("puja_hero_title")} subtitle={t("puja_hero_sub")} breadcrumb={t("nav_puja")} bgImage={heroPuja} />
 
       <section className="bg-background py-12">
-        <div className="container grid gap-8 lg:grid-cols-[260px_1fr]">
-          <aside className="h-fit space-y-6 rounded-2xl border border-gold/40 bg-ivory p-6 shadow-soft">
-            <div>
-              <h4 className="mb-4 font-display text-lg text-maroon">By Deity</h4>
-              <div className="flex flex-wrap gap-2.5">{deities.map((d) => <Chip key={d} active={deity === d} onClick={() => setDeity(d)} label={d} />)}</div>
-            </div>
-          </aside>
-
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3 items-start">
+        <div className="container">
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {loading ? (
-              <>
-                <Skeleton /><Skeleton /><Skeleton />
-              </>
-            ) : filtered.length === 0 ? (
-              <p className="col-span-full py-12 text-center text-brown/60">No pujas match your filters.</p>
-            ) : filtered.map((p) => {
+              <><Skeleton /><Skeleton /><Skeleton /></>
+            ) : pujas.length === 0 ? (
+              <p className="col-span-full py-12 text-center text-brown/60">{t("puja_empty")}</p>
+            ) : pujas.map((p) => {
               const minPrice = Math.min(...(p.prices || []).map(t => t.price));
+              const displayName = (lang === 'hi' && p.name_hi) ? p.name_hi : p.name;
+              const displayLocation = (lang === 'hi' && p.location_hi) ? p.location_hi : p.location;
+              const displayBenefit = (lang === 'hi' && p.benefit_hi) ? p.benefit_hi : p.benefit;
               return (
               <Link
                 to={`/puja/${p.id}`}
@@ -88,38 +72,35 @@ const Puja = () => {
                       <div className="relative text-6xl drop-shadow-[0_0_15px_rgba(255,184,0,0.5)] transition-transform duration-500 group-hover:scale-110">🪔</div>
                     </>
                   )}
-                  {/* Deity badge */}
-                  <span className="absolute top-3 left-3 rounded-full bg-maroon/80 backdrop-blur px-3 py-1 text-[10px] font-bold text-gold">
-                    {p.deity}
-                  </span>
-                  {p.featured && (
-                    <span className="absolute top-3 right-3 rounded-full bg-saffron/90 px-2.5 py-1 text-[10px] font-bold text-white">
-                      ⭐ Featured
-                    </span>
-                  )}
                 </div>
 
                 <div className="flex flex-col flex-1 p-5 bg-gradient-to-b from-ivory to-cream/30">
-                  <h3 className="font-display text-[20px] text-maroon leading-tight mb-3 drop-shadow-sm">{p.name}</h3>
+                  <h3 className="font-body text-[18px] font-bold text-maroon leading-snug mb-3">{displayName}</h3>
 
-                  <div className="flex flex-col gap-2 text-xs text-brown/90 font-medium">
-                    <span className="flex items-center gap-2"><Calendar size={14} className="text-saffron" /> {p.date}</span>
-                    <span className="flex items-center gap-2"><MapPin size={14} className="text-saffron" /> {p.location}</span>
+                  <div className="flex flex-col gap-2 text-sm text-brown/90 font-semibold">
+                    <span className="flex items-center gap-2"><Calendar size={15} className="text-saffron" /> {p.date}</span>
+                    <span className="flex items-center gap-2"><span className="text-base leading-none">🛕</span> {displayLocation}</span>
                   </div>
+
+                  {displayBenefit && (
+                    <div className="mt-3 rounded-xl bg-saffron/10 border border-saffron/20 px-3 py-2">
+                      <p className="text-[14px] font-bold text-maroon leading-snug">✦ {displayBenefit}</p>
+                    </div>
+                  )}
 
                   <div className="flex-1"></div>
 
                   {/* Starting price + tier count */}
                   <div className="mt-4 flex items-end justify-between">
                     <div>
-                      <p className="text-[10px] text-brown/50 uppercase tracking-wider font-medium">Starting from</p>
+                      <p className="text-[10px] text-brown/50 uppercase tracking-wider font-medium">{t("puja_starting")}</p>
                       <p className="font-sans font-bold text-saffron text-xl mt-0.5">₹{minPrice.toLocaleString("en-IN")}</p>
                     </div>
-                    <span className="text-[11px] text-brown/50">{(p.prices || []).length} packages available</span>
+
                   </div>
 
                   <div className="mt-4 w-full text-center rounded-full bg-saffron group-hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all group-hover:shadow-gold-glow">
-                    View Details →
+                    {t("btn_participate")}
                   </div>
                 </div>
               </Link>

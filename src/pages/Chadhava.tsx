@@ -7,6 +7,7 @@ import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 import heroChadhava from "@/assets/hero-chadhava-page.png";
 import imgChadhavaHero from "@/assets/hero-chadhava.jpg";
+import { useLanguage } from "@/context/LanguageContext";
 
 const benefits = [
   "Monthly chadhava at your chosen temple",
@@ -17,6 +18,7 @@ const benefits = [
 
 const Chadhava = () => {
   usePageTitle("Offer Chadhava — Narayan Kripa");
+  const { t, lang } = useLanguage();
   const [offerings, setOfferings] = useState<CType[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,38 +46,22 @@ const Chadhava = () => {
 
   return (
   <main>
-    <PageHero title="Offer Chadhava at Sacred Temples" subtitle="Your devotion, our sacred delivery" variant="saffron" breadcrumb="Chadhava" bgImage={heroChadhava} />
+    <PageHero title={t("chadhava_hero_title")} subtitle={t("chadhava_hero_sub")} variant="saffron" breadcrumb={t("breadcrumb_chadhava")} bgImage={heroChadhava} />
 
-    {/* What is Chadhava */}
-    <section className="bg-background py-16">
-      <div className="container grid items-center gap-10 md:grid-cols-2">
-        <div>
-          <h2 className="font-display text-3xl text-maroon">What is Chadhava?</h2>
-          <div className="my-3 h-px w-20 bg-gold" />
-          <p className="text-brown/80">
-            Chadhava is the sacred act of offering items like flowers, prasad, vastra, sindoor and seva to a deity at a temple — performed on your behalf with the full intent of your sankalp.
-          </p>
-          <p className="mt-3 text-brown/80">
-            With Narayan Kripa, your offering reaches India's most revered shrines through verified temple priests, and the prasad returns to your home as a tangible blessing.
-          </p>
-        </div>
-        <div className="relative h-64 md:h-full min-h-[300px] overflow-hidden rounded-2xl border border-gold/50 shadow-soft">
-          <img src={imgChadhavaHero} alt="Offering Chadhava" className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" />
-          <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/40 to-transparent" />
-        </div>
-      </div>
-    </section>
 
     {/* Chadhava grid */}
     <section className="bg-cream py-16">
       <div className="container">
-        <SectionHeading title="Special Chadhava Offerings" subtitle="Curated offerings for every devotee" />
+        <SectionHeading title={t("chadhava_section_title")} subtitle={t("chadhava_section_sub")} />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {loading ? (
             <><Skeleton /><Skeleton /><Skeleton /><Skeleton /><Skeleton /><Skeleton /></>
           ) : offerings.length === 0 ? (
-            <p className="col-span-full py-12 text-center text-brown/60">No chadhava offerings available right now.</p>
-          ) : offerings.map((o) => (
+            <p className="col-span-full py-12 text-center text-brown/60">{t("chadhava_empty")}</p>
+          ) : offerings.map((o) => {
+            const dTemple = (lang === 'hi' && o.temple_hi) ? o.temple_hi : o.temple;
+            const dItem = (lang === 'hi' && o.item_hi) ? o.item_hi : o.item;
+            return (
             <Link to={`/chadhava/${o.id}`} key={o.id} className="group rounded-2xl border border-gold/50 bg-ivory p-5 transition-all hover:-translate-y-1.5 hover:shadow-lg hover:shadow-gold/20 hover:border-saffron">
               <div className="mb-4 h-40 w-full overflow-hidden rounded-xl border border-gold/20">
                 {o.image_url ? (
@@ -84,16 +70,18 @@ const Chadhava = () => {
                   <div className="grid h-full w-full place-items-center bg-gradient-to-br from-saffron/15 to-gold/15 text-4xl">🌺</div>
                 )}
               </div>
-              <h3 className="font-display text-maroon">{o.temple}</h3>
-              <p className="text-sm text-brown/70">{o.item}</p>
+              <h3 className="font-display text-maroon">{dTemple}</h3>
+              <p className="text-sm text-brown/70">{dItem}</p>
               <div className="mt-4 flex items-center justify-between border-t border-gold/30 pt-3">
                 <span className="font-semibold text-saffron text-lg">₹{o.price.toLocaleString("en-IN")}</span>
                 <span className="rounded-full bg-saffron group-hover:bg-maroon px-4 py-1.5 text-sm font-semibold text-white transition-colors">
-                  View Details →
+                  {lang === 'hi' ? 'विवरण देखें →' : 'View Details →'}
                 </span>
               </div>
             </Link>
-          ))}
+          );
+          })}
+
         </div>
       </div>
     </section>

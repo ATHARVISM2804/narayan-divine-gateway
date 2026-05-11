@@ -6,10 +6,10 @@ import ImageUpload from "./ImageUpload";
 
 interface Props { pujas: Puja[]; onRefresh: () => void }
 
-const DEITIES = ["Vishnu", "Shiva", "Ganga", "Navgraha", "Ganesh", "Durga", "Lakshmi", "Hanuman", "Saraswati", "Other"];
 
 const emptyPuja = (): Partial<Puja> => ({
-  name: "", deity: "Vishnu", location: "", date: "", image_url: null,
+  name: "", location: "", date: "", image_url: null, benefit: "",
+  name_hi: "", location_hi: "", benefit_hi: "",
   prices: [{ label: "Single", price: 951 }, { label: "Couple", price: 1551 }, { label: "4 Family", price: 2551 }, { label: "6 Members", price: 3551 }],
   status: "draft", featured: false,
 });
@@ -22,8 +22,8 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
   /* ── Save (create or update) ── */
   const save = async () => {
     if (!editing) return;
-    const { name, deity, location, date, prices } = editing;
-    if (!name?.trim() || !deity || !location?.trim() || !date?.trim()) {
+    const { name, location, date, prices } = editing;
+    if (!name?.trim() || !location?.trim() || !date?.trim()) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -32,7 +32,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
       return;
     }
     setSaving(true);
-    const payload = { name: name.trim(), deity, location: location.trim(), date: date.trim(), image_url: editing.image_url || null, prices, status: editing.status || "draft", featured: editing.featured || false };
+    const payload = { name: name.trim(), location: location.trim(), date: date.trim(), image_url: editing.image_url || null, benefit: editing.benefit?.trim() || null, name_hi: editing.name_hi?.trim() || null, location_hi: editing.location_hi?.trim() || null, benefit_hi: editing.benefit_hi?.trim() || null, prices, status: editing.status || "draft", featured: editing.featured || false };
 
     let err;
     if (editing.id) {
@@ -106,7 +106,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                   <h3 className="font-display text-maroon text-base truncate">{p.name}</h3>
                   {p.featured && <Star size={14} className="text-saffron fill-saffron shrink-0" />}
                 </div>
-                <p className="text-xs text-brown/60 mt-0.5">{p.deity} • {p.location} • {p.date}</p>
+                <p className="text-xs text-brown/60 mt-0.5">{p.location} • {p.date}</p>
                 <p className="text-xs text-saffron font-semibold mt-0.5">From ₹{Math.min(...p.prices.map((t) => t.price)).toLocaleString("en-IN")}</p>
               </div>
               {/* Status + Actions */}
@@ -151,20 +151,11 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Maha Rudrabhishek" />
               </div>
 
-              {/* Deity + Date */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Deity *</label>
-                  <select value={editing.deity || ""} onChange={(e) => setEditing({ ...editing, deity: e.target.value })}
-                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron">
-                    {DEITIES.map((d) => <option key={d}>{d}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Date *</label>
-                  <input value={editing.date || ""} onChange={(e) => setEditing({ ...editing, date: e.target.value })}
-                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. 13 May" />
-                </div>
+              {/* Date */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Date *</label>
+                <input value={editing.date || ""} onChange={(e) => setEditing({ ...editing, date: e.target.value })}
+                  className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. 13 May" />
               </div>
 
               {/* Location */}
@@ -172,6 +163,37 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Location *</label>
                 <input value={editing.location || ""} onChange={(e) => setEditing({ ...editing, location: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Badrinath Dham Shetra" />
+              </div>
+
+              {/* Benefit */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Puja Benefit (1 liner)</label>
+                <input value={editing.benefit || ""} onChange={(e) => setEditing({ ...editing, benefit: e.target.value })}
+                  className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Brings peace, prosperity & divine blessings" maxLength={150} />
+                <p className="mt-1 text-[11px] text-brown/40">{(editing.benefit || "").length}/150 characters</p>
+              </div>
+
+              {/* ── Hindi Translation Section ── */}
+              <div className="rounded-xl border border-saffron/40 bg-saffron/5 p-4 space-y-4">
+                <p className="text-xs font-bold text-saffron uppercase tracking-wider flex items-center gap-1.5">🇮🇳 हिंदी अनुवाद (Hindi Translation)</p>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">पूजा का नाम (Hindi Name)</label>
+                  <input value={editing.name_hi || ""} onChange={(e) => setEditing({ ...editing, name_hi: e.target.value })}
+                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="जैसे: महा रुद्राभिषेक" />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">स्थान (Hindi Location)</label>
+                  <input value={editing.location_hi || ""} onChange={(e) => setEditing({ ...editing, location_hi: e.target.value })}
+                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="जैसे: काशी विश्वनाथ मंदिर" />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">लाभ (Hindi Benefit)</label>
+                  <input value={editing.benefit_hi || ""} onChange={(e) => setEditing({ ...editing, benefit_hi: e.target.value })}
+                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="जैसे: शांति, समृद्धि और दैवीय आशीर्वाद" maxLength={150} />
+                </div>
               </div>
 
               {/* Pricing Tiers */}

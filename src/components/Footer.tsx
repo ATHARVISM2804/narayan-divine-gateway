@@ -1,12 +1,29 @@
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Youtube, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const Footer = () => {
+  const { t } = useLanguage();
+
   const social = [
     { Icon: Facebook, label: "Facebook" },
     { Icon: Instagram, label: "Instagram" },
     { Icon: Youtube, label: "YouTube" },
     { Icon: Twitter, label: "Twitter" },
+  ];
+
+  const quickLinks = [
+    { label: t("nav_home"), to: "/" },
+    { label: t("nav_puja"), to: "/puja" },
+    { label: t("nav_chadhava"), to: "/chadhava" },
+    { label: t("nav_astrology"), to: "/astrology" },
+    { label: t("nav_temples"), to: "/temples" },
+    { label: t("nav_contact"), to: "/contact" },
+  ];
+
+  const services = [
+    t("svc_darshan"), t("svc_pandit"), t("svc_store"),
+    t("svc_panchang"), t("svc_horoscope"), t("svc_tours"),
   ];
 
   return (
@@ -20,6 +37,7 @@ const Footer = () => {
           <line key={k} x1="100" y1="5" x2="100" y2="195" transform={`rotate(${k * 11.25} 100 100)`} />
         ))}
       </svg>
+
       {/* Lotus divider */}
       <div className="flex justify-center pt-12">
         <svg width="160" height="24" viewBox="0 0 160 24" fill="none">
@@ -35,26 +53,16 @@ const Footer = () => {
       <div className="container grid gap-10 py-12 md:grid-cols-4">
         <div>
           <div className="mb-3 flex items-center gap-2 sm:gap-3">
-            <img 
-              src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712834/favicon-removebg-preview_kx4s41.png" 
-              alt="Narayan Kripa Logo Icon" 
-              className="h-14 w-auto object-contain"
-            />
-            <img 
-              src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712826/Screenshot_2026-05-02_143432-removebg-preview_vqcmpo.png" 
-              alt="Narayan Kripa Text" 
-              className="h-10 w-auto object-contain brightness-0 invert -ml-1"
-            />
+            <img src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712834/favicon-removebg-preview_kx4s41.png"
+              alt="Narayan Kripa Logo Icon" className="h-14 w-auto object-contain" />
+            <img src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712826/Screenshot_2026-05-02_143432-removebg-preview_vqcmpo.png"
+              alt="Narayan Kripa Text" className="h-10 w-auto object-contain brightness-0 invert -ml-1" />
           </div>
-          <p className="font-serif italic text-gold">Where Devotion Meets Tradition</p>
+          <p className="font-serif italic text-gold">{t("footer_tagline")}</p>
           <div className="mt-5 flex gap-3">
             {social.map(({ Icon, label }) => (
-              <a
-                key={label}
-                href="#"
-                aria-label={label}
-                className="grid h-9 w-9 place-items-center rounded-full border border-gold text-gold transition-colors hover:bg-gold hover:text-maroon"
-              >
+              <a key={label} href="#" aria-label={label}
+                className="grid h-9 w-9 place-items-center rounded-full border border-gold text-gold transition-colors hover:bg-gold hover:text-maroon">
                 <Icon size={16} />
               </a>
             ))}
@@ -62,47 +70,45 @@ const Footer = () => {
         </div>
 
         <div>
-          <h4 className="mb-4 font-display text-lg text-gold">Quick Links</h4>
+          <h4 className="mb-4 font-display text-lg text-gold">{t("footer_quick_links")}</h4>
           <ul className="space-y-2 text-sm text-cream/80">
-            {["Home", "Puja", "Chadhava", "Astrology", "Temples", "Contact"].map((l) => (
-              <li key={l}>
-                <Link to={`/${l === "Home" ? "" : l.toLowerCase()}`} className="hover:text-saffron transition-colors">
-                  {l}
-                </Link>
+            {quickLinks.map((l) => (
+              <li key={l.to}>
+                <Link to={l.to} className="hover:text-saffron transition-colors">{l.label}</Link>
               </li>
             ))}
           </ul>
         </div>
 
         <div>
-          <h4 className="mb-4 font-display text-lg text-gold">Services</h4>
+          <h4 className="mb-4 font-display text-lg text-gold">{t("footer_services")}</h4>
           <ul className="space-y-2 text-sm text-cream/80">
-            {["Daily Darshan", "Pandit Consultation", "Sacred Store", "Panchang", "Horoscope", "Temple Tours"].map((s) => (
+            {services.map((s) => (
               <li key={s} className="hover:text-saffron transition-colors cursor-pointer">{s}</li>
             ))}
           </ul>
         </div>
 
         <div>
-          <h4 className="mb-4 font-display text-lg text-gold">Connect</h4>
+          <h4 className="mb-4 font-display text-lg text-gold">{t("footer_connect")}</h4>
           <ul className="space-y-3 text-sm text-cream/80">
             <li className="flex items-start gap-2"><Mail size={16} className="mt-0.5 text-gold" /> hello@narayankripa.com</li>
             <li className="flex items-start gap-2"><Phone size={16} className="mt-0.5 text-gold" /> +91 92863 45941</li>
             <li className="flex items-start gap-2"><MapPin size={16} className="mt-0.5 text-gold" /> Varanasi, India</li>
           </ul>
           <Link to="/puja" className="mt-5 inline-block rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white hover:bg-gold transition-colors">
-            Book a Puja
+            {t("btn_book_puja")}
           </Link>
         </div>
       </div>
 
       <div className="border-t border-gold/30">
         <div className="container flex flex-col items-center justify-between gap-2 py-5 text-xs text-cream/60 md:flex-row">
-          <p>© 2025 Narayan Kripa. All rights reserved.</p>
+          <p>{t("footer_copyright")}</p>
           <div className="flex gap-5">
-            <Link to="/privacy-policy" className="hover:text-gold">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-gold">Terms</Link>
-            <Link to="/grievance" className="hover:text-gold">Grievance</Link>
+            <Link to="/privacy-policy" className="hover:text-gold">{t("footer_privacy")}</Link>
+            <Link to="/terms" className="hover:text-gold">{t("footer_terms")}</Link>
+            <Link to="/grievance" className="hover:text-gold">{t("footer_grievance")}</Link>
           </div>
         </div>
       </div>

@@ -7,7 +7,8 @@ import ImageUpload from "./ImageUpload";
 interface Props { chadhavas: Chadhava[]; onRefresh: () => void }
 
 const emptyChadhava = (): Partial<Chadhava> => ({
-  temple: "", item: "", price: 0, image_url: null, status: "draft",
+  temple: "", item: "", price: 0, image_url: null, description: "",
+  item_hi: "", temple_hi: "", description_hi: "", status: "draft",
 });
 
 const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
@@ -24,7 +25,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
       return;
     }
     setSaving(true);
-    const payload = { temple: temple.trim(), item: item.trim(), price, image_url: editing.image_url || null, status: editing.status || "draft" };
+    const payload = { temple: temple.trim(), item: item.trim(), price, image_url: editing.image_url || null, description: editing.description?.trim() || null, item_hi: editing.item_hi?.trim() || null, temple_hi: editing.temple_hi?.trim() || null, description_hi: editing.description_hi?.trim() || null, status: editing.status || "draft" };
 
     let err;
     if (editing.id) {
@@ -134,6 +135,39 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Offering Item *</label>
                 <input value={editing.item || ""} onChange={(e) => setEditing({ ...editing, item: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Bel Patra & Dhatura" />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Description</label>
+                <textarea value={editing.description || ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })}
+                  rows={4} className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-none"
+                  placeholder="Describe the significance of this chadhava, the ritual, and its benefits…" />
+                <p className="mt-1 text-[11px] text-brown/40">{(editing.description || "").length} characters</p>
+              </div>
+
+              {/* ── Hindi Translation Section ── */}
+              <div className="rounded-xl border border-saffron/40 bg-saffron/5 p-4 space-y-4">
+                <p className="text-xs font-bold text-saffron uppercase tracking-wider flex items-center gap-1.5">🇮🇳 हिंदी अनुवाद (Hindi Translation)</p>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">मंदिर का नाम (Hindi Temple)</label>
+                  <input value={editing.temple_hi || ""} onChange={(e) => setEditing({ ...editing, temple_hi: e.target.value })}
+                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="जैसे: काशी विश्वनाथ मंदिर" />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">चढ़ावा वस्तु (Hindi Item)</label>
+                  <input value={editing.item_hi || ""} onChange={(e) => setEditing({ ...editing, item_hi: e.target.value })}
+                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="जैसे: बेल पत्र और धतूरा" />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">विवरण (Hindi Description)</label>
+                  <textarea value={editing.description_hi || ""} onChange={(e) => setEditing({ ...editing, description_hi: e.target.value })}
+                    rows={3} className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-none"
+                    placeholder="चढ़ावे का महत्व हिंदी में लिखें…" />
+                </div>
               </div>
 
               {/* Price */}
