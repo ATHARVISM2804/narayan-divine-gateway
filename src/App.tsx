@@ -20,6 +20,8 @@ import Cart from "./pages/Cart";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Grievance from "./pages/Grievance";
+import Refund from "./pages/Refund";
+import Shipping from "./pages/Shipping";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminPanel from "./pages/admin/AdminPanel";
@@ -82,6 +84,8 @@ const App = () => (
             <Route path="/privacy-policy" element={<PublicLayout><Privacy /></PublicLayout>} />
             <Route path="/terms" element={<PublicLayout><Terms /></PublicLayout>} />
             <Route path="/grievance" element={<PublicLayout><Grievance /></PublicLayout>} />
+            <Route path="/refund-policy" element={<PublicLayout><Refund /></PublicLayout>} />
+            <Route path="/shipping-policy" element={<PublicLayout><Shipping /></PublicLayout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
           </Routes>

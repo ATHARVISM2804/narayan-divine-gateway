@@ -193,10 +193,10 @@ const ChadhavaDetail = () => {
                 { icon: "🔒", text: t("trust_secure") },
                 { icon: "📦", text: t("trust_prasad_home") },
                 { icon: "🙏", text: t("trust_priests") },
-              ].map(t => (
-                <div key={t.text} className="rounded-xl border border-gold/20 bg-cream py-2.5 px-1">
-                  <p className="text-lg">{t.icon}</p>
-                  <p className="text-[11px] font-bold text-maroon mt-0.5 leading-tight">{t.text}</p>
+              ].map(badge => (
+                <div key={badge.text} className="rounded-xl border border-gold/20 bg-cream py-2.5 px-1">
+                  <p className="text-lg">{badge.icon}</p>
+                  <p className="text-[11px] font-bold text-maroon mt-0.5 leading-tight">{badge.text}</p>
                 </div>
               ))}
             </div>

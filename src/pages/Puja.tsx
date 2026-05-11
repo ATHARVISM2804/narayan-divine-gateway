@@ -53,7 +53,7 @@ const Puja = () => {
             ) : pujas.length === 0 ? (
               <p className="col-span-full py-12 text-center text-brown/60">{t("puja_empty")}</p>
             ) : pujas.map((p) => {
-              const minPrice = Math.min(...(p.prices || []).map(t => t.price));
+              const minPrice = Math.min(...(p.prices || []).map(tier => tier.price));
               const displayName = (lang === 'hi' && p.name_hi) ? p.name_hi : p.name;
               const displayLocation = (lang === 'hi' && p.location_hi) ? p.location_hi : p.location;
               const displayBenefit = (lang === 'hi' && p.benefit_hi) ? p.benefit_hi : p.benefit;

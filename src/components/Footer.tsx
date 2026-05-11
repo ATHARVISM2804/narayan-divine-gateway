@@ -1,114 +1,142 @@
 import { Link } from "react-router-dom";
-import { Facebook, Instagram, Youtube, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import { Youtube, Instagram, Phone, MessageCircle, Facebook } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 const Footer = () => {
   const { t } = useLanguage();
 
-  const social = [
-    { Icon: Facebook, label: "Facebook" },
-    { Icon: Instagram, label: "Instagram" },
-    { Icon: Youtube, label: "YouTube" },
-    { Icon: Twitter, label: "Twitter" },
+  const companyLinks = [
+    { label: "About Us", to: "/contact" },
+    { label: t("nav_contact"), to: "/contact" },
   ];
 
-  const quickLinks = [
-    { label: t("nav_home"), to: "/" },
+  const serviceLinks = [
     { label: t("nav_puja"), to: "/puja" },
     { label: t("nav_chadhava"), to: "/chadhava" },
     { label: t("nav_astrology"), to: "/astrology" },
     { label: t("nav_temples"), to: "/temples" },
-    { label: t("nav_contact"), to: "/contact" },
   ];
 
-  const services = [
-    t("svc_darshan"), t("svc_pandit"), t("svc_store"),
-    t("svc_panchang"), t("svc_horoscope"), t("svc_tours"),
+  const socialLinks = [
+    { Icon: Youtube, label: "YouTube", href: "#" },
+    { Icon: Instagram, label: "Instagram", href: "#" },
+    { Icon: Phone, label: "Phone", href: "tel:+919286345941" },
+    { Icon: MessageCircle, label: "WhatsApp", href: "https://wa.me/919286345941" },
+    { Icon: Facebook, label: "Facebook", href: "#" },
   ];
 
   return (
-    <footer className="relative bg-maroon-deep text-cream overflow-hidden">
-      <div className="h-1 w-full bg-gradient-to-r from-transparent via-gold to-transparent" />
-      <svg viewBox="0 0 200 200" className="pointer-events-none absolute -right-32 -top-20 h-[28rem] w-[28rem] text-gold/5" fill="none" stroke="currentColor" strokeWidth="0.4" aria-hidden="true">
-        <circle cx="100" cy="100" r="95" />
-        <circle cx="100" cy="100" r="70" />
-        <circle cx="100" cy="100" r="45" />
-        {Array.from({ length: 16 }).map((_, k) => (
-          <line key={k} x1="100" y1="5" x2="100" y2="195" transform={`rotate(${k * 11.25} 100 100)`} />
-        ))}
-      </svg>
+    <footer className="relative overflow-hidden">
+      {/* ── Main footer — warm saffron gradient like Sri Mandir ── */}
+      <div className="bg-gradient-to-b from-[#D4891A] via-[#C07818] to-[#A86510] text-white">
+        <div className="container grid gap-10 py-14 md:grid-cols-4">
 
-      {/* Lotus divider */}
-      <div className="flex justify-center pt-12">
-        <svg width="160" height="24" viewBox="0 0 160 24" fill="none">
-          <line x1="0" y1="12" x2="60" y2="12" stroke="hsl(var(--gold))" strokeWidth="0.8" />
-          <circle cx="68" cy="12" r="2" fill="hsl(var(--gold))" />
-          <path d="M80 4 C 72 12, 72 16, 80 22 C 88 16, 88 12, 80 4 Z" fill="hsl(var(--gold))" />
-          <circle cx="80" cy="13" r="1.5" fill="hsl(var(--saffron))" />
-          <circle cx="92" cy="12" r="2" fill="hsl(var(--gold))" />
-          <line x1="100" y1="12" x2="160" y2="12" stroke="hsl(var(--gold))" strokeWidth="0.8" />
-        </svg>
+          {/* Col 1 — Brand */}
+          <div>
+            <div className="mb-4 flex items-center gap-2">
+              <img
+                src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712834/favicon-removebg-preview_kx4s41.png"
+                alt="Narayan Kripa Logo"
+                className="h-12 w-auto object-contain"
+              />
+              <span className="font-display text-xl text-white drop-shadow-sm">Narayan Kripa</span>
+            </div>
+            <p className="text-sm text-white/85 leading-relaxed">
+              Narayan Kripa has brought religious services to the masses in India by connecting devotees, pandits and temples. Partnering with over 50 renowned temples, we provide exclusive pujas and offerings performed by expert pandits and share videos of the completed puja rituals.
+            </p>
+          </div>
+
+          {/* Col 2 — Company */}
+          <div>
+            <h4 className="mb-4 font-display text-lg text-white">Company</h4>
+            <ul className="space-y-2.5 text-sm">
+              {companyLinks.map((link) => (
+                <li key={link.label}>
+                  <Link to={link.to} className="text-white/85 hover:text-white transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Col 3 — Our Services */}
+          <div>
+            <h4 className="mb-4 font-display text-lg text-white">Our Services</h4>
+            <ul className="space-y-2.5 text-sm">
+              {serviceLinks.map((link) => (
+                <li key={link.to}>
+                  <Link to={link.to} className="text-white/85 hover:text-white transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Col 4 — Our Address */}
+          <div>
+            <h4 className="mb-4 font-display text-lg text-white">Our Address</h4>
+            <div className="text-sm text-white/85 leading-relaxed space-y-1">
+              <p>Narayan Kripa Spiritual Services</p>
+              <p>Lanka, Varanasi,</p>
+              <p>Uttar Pradesh - 221005</p>
+            </div>
+            <div className="mt-4 text-sm text-white/85 space-y-1">
+              <p>📧 Asknarayankripa@gmail.com</p>
+              <p>📞 +91 92863 45941</p>
+            </div>
+
+            {/* Social Icons */}
+            <div className="mt-5 flex gap-2.5">
+              {socialLinks.map(({ Icon, label, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  target={href.startsWith("http") ? "_blank" : undefined}
+                  rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+                  className="grid h-9 w-9 place-items-center rounded-full bg-white/20 text-white transition-all hover:bg-white hover:text-[#C07818] hover:scale-110"
+                >
+                  <Icon size={16} />
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="container grid gap-10 py-12 md:grid-cols-4">
-        <div>
-          <div className="mb-3 flex items-center gap-2 sm:gap-3">
-            <img src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712834/favicon-removebg-preview_kx4s41.png"
-              alt="Narayan Kripa Logo Icon" className="h-14 w-auto object-contain" />
-            <img src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712826/Screenshot_2026-05-02_143432-removebg-preview_vqcmpo.png"
-              alt="Narayan Kripa Text" className="h-10 w-auto object-contain brightness-0 invert -ml-1" />
+      {/* ── Bottom bar — darker shade ── */}
+      <div className="bg-[#8B5512] text-white/80">
+        <div className="container flex flex-col items-center justify-between gap-3 py-4 md:flex-row">
+
+          {/* Trust badges */}
+          <div className="flex items-center gap-4 flex-wrap justify-center">
+            <span className="text-xs font-semibold flex items-center gap-1.5">
+              <span className="text-lg">🇮🇳</span> Digital India
+            </span>
+            <span className="text-xs font-semibold flex items-center gap-1.5">
+              <span className="text-lg">🏅</span> ISO Certified
+            </span>
+            <span className="text-xs font-semibold flex items-center gap-1.5">
+              <span className="text-lg">💳</span> Razorpay Trusted
+            </span>
           </div>
-          <p className="font-serif italic text-gold">{t("footer_tagline")}</p>
-          <div className="mt-5 flex gap-3">
-            {social.map(({ Icon, label }) => (
-              <a key={label} href="#" aria-label={label}
-                className="grid h-9 w-9 place-items-center rounded-full border border-gold text-gold transition-colors hover:bg-gold hover:text-maroon">
-                <Icon size={16} />
-              </a>
-            ))}
-          </div>
-        </div>
 
-        <div>
-          <h4 className="mb-4 font-display text-lg text-gold">{t("footer_quick_links")}</h4>
-          <ul className="space-y-2 text-sm text-cream/80">
-            {quickLinks.map((l) => (
-              <li key={l.to}>
-                <Link to={l.to} className="hover:text-saffron transition-colors">{l.label}</Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="mb-4 font-display text-lg text-gold">{t("footer_services")}</h4>
-          <ul className="space-y-2 text-sm text-cream/80">
-            {services.map((s) => (
-              <li key={s} className="hover:text-saffron transition-colors cursor-pointer">{s}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="mb-4 font-display text-lg text-gold">{t("footer_connect")}</h4>
-          <ul className="space-y-3 text-sm text-cream/80">
-            <li className="flex items-start gap-2"><Mail size={16} className="mt-0.5 text-gold" /> hello@narayankripa.com</li>
-            <li className="flex items-start gap-2"><Phone size={16} className="mt-0.5 text-gold" /> +91 92863 45941</li>
-            <li className="flex items-start gap-2"><MapPin size={16} className="mt-0.5 text-gold" /> Varanasi, India</li>
-          </ul>
-          <Link to="/puja" className="mt-5 inline-block rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white hover:bg-gold transition-colors">
-            {t("btn_book_puja")}
-          </Link>
-        </div>
-      </div>
-
-      <div className="border-t border-gold/30">
-        <div className="container flex flex-col items-center justify-between gap-2 py-5 text-xs text-cream/60 md:flex-row">
-          <p>{t("footer_copyright")}</p>
-          <div className="flex gap-5">
-            <Link to="/privacy-policy" className="hover:text-gold">{t("footer_privacy")}</Link>
-            <Link to="/terms" className="hover:text-gold">{t("footer_terms")}</Link>
-            <Link to="/grievance" className="hover:text-gold">{t("footer_grievance")}</Link>
+          {/* Policy links + Copyright */}
+          <div className="flex flex-col items-center gap-1.5 md:items-end">
+            <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs">
+              <Link to="/privacy-policy" className="hover:text-white transition-colors">{t("footer_privacy")}</Link>
+              <span className="text-white/40">·</span>
+              <Link to="/terms" className="hover:text-white transition-colors">{t("footer_terms")}</Link>
+              <span className="text-white/40">·</span>
+              <Link to="/refund-policy" className="hover:text-white transition-colors">Refund Policy</Link>
+              <span className="text-white/40">·</span>
+              <Link to="/shipping-policy" className="hover:text-white transition-colors">Shipping Policy</Link>
+              <span className="text-white/40">·</span>
+              <Link to="/grievance" className="hover:text-white transition-colors">{t("footer_grievance")}</Link>
+            </div>
+            <p className="text-[11px] text-white/50">© {new Date().getFullYear()} Narayan Kripa. All rights reserved.</p>
           </div>
         </div>
       </div>
