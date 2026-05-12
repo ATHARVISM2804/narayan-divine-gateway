@@ -34,16 +34,17 @@ const HeroCarousel = () => {
     {
       id: 0, image: heroTemple,
       overlay: "bg-gradient-to-r from-maroon-deep/85 via-maroon/60 to-maroon-deep/30",
-      pill: { text: "🪔  Trusted by 2 Lakh+ Devotees", cls: "bg-gold/90 text-maroon" },
-      title: "Bringing Sacred Traditions",
-      titleAccent: "to Your Doorstep",
+      pill: { text: t("hero_s1_pill"), cls: "bg-gold/90 text-maroon" },
+      title: t("hero_s1_title"),
+      titleAccent: t("hero_s1_accent"),
       titleCls: "text-cream",
-      subtitle: "Connect with 50+ revered temples. Book pujas & chadhava from home, performed by expert pandits with full Vedic procedure.",
+      subtitle: t("hero_s1_sub"),
       subtitleCls: "text-cream/85",
       primaryCta: t("hero_s1_cta1") + "  →", linkPrimary: "/puja",
       secondaryCta: t("hero_s1_cta2"), linkSecondary: "/temples",
       ctaPrimaryCls: "bg-saffron text-white hover:bg-gold hover:text-maroon",
       ctaSecondaryCls: "border border-gold text-gold hover:bg-gold hover:text-maroon",
+
     },
     {
       id: 1, image: heroChadhava,
@@ -240,7 +241,7 @@ const HeroCarousel = () => {
                           ))}
                         </div>
                         <p className="text-[11px] sm:text-xs text-cream/85">
-                          2 Lakh+ Bhakts trust Narayan Kripa
+                          {t("hero_s1_trust")}
                         </p>
                       </div>
                     </div>

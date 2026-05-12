@@ -12,6 +12,14 @@
   "btn_view_chadhava": "View Chadhava", "btn_book_puja": "Book a Puja",
   "btn_proceed_checkout": "Proceed to Checkout",
 
+  "hero_s1_pill": "🪔  Trusted by 2 Lakh+ Devotees",
+  "hero_s1_title": "Bringing Sacred Traditions",
+  "hero_s1_accent": "to Your Doorstep",
+  "hero_s1_sub": "Connect with 50+ revered temples. Book pujas & chadhava from home, performed by expert pandits with full Vedic procedure.",
+  "hero_s1_trust": "2 Lakh+ Bhakts trust Narayan Kripa",
+  "hero_s1_cta1": "Book Puja",
+  "hero_s1_cta2": "View Temples",
+
   "timer_label": "⏳ Puja booking will close in",
   "timer_days": "Days", "timer_hours": "Hours", "timer_mins": "Mins", "timer_secs": "Secs",
   "timer_expired": "🔴 Puja booking is closed",
