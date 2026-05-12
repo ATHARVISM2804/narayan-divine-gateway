@@ -161,9 +161,9 @@ const Checkout = () => {
         </div>
       </div>
 
-      <div className="container py-10">
-        <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
-          <div className="rounded-2xl border border-gold/40 bg-ivory p-6 md:p-8 shadow-soft">
+      <div className="container py-6 sm:py-10 pb-10">
+        <div className="grid gap-6 sm:gap-8 lg:grid-cols-[1fr_380px]">
+          <div className="rounded-2xl border border-gold/40 bg-ivory p-4 sm:p-6 md:p-8 shadow-soft">
             <h2 className="font-display text-xl text-maroon mb-6">{t("co_details")}</h2>
             <div className="space-y-5">
               <div>
@@ -197,21 +197,21 @@ const Checkout = () => {
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20 resize-none" />
               </div>
             </div>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-2">
               {[t("co_ssl"), t("co_razorpay"), t("co_prasad")].map((b) => (
-                <span key={b} className="rounded-full bg-green-50 border border-green-200 px-3 py-1 text-[11px] font-medium text-green-700">{b}</span>
+                <span key={b} className="rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-[10px] sm:text-[11px] font-medium text-green-700 whitespace-nowrap">{b}</span>
               ))}
             </div>
           </div>
 
-          <div className="h-fit sticky top-32 rounded-2xl border border-gold/60 bg-gradient-to-b from-ivory to-cream p-6 shadow-lg">
+          <div className="h-fit lg:sticky lg:top-32 rounded-2xl border border-gold/60 bg-gradient-to-b from-ivory to-cream p-4 sm:p-6 shadow-lg">
             <h2 className="font-display text-xl text-maroon mb-5 flex items-center gap-2">
               <ShoppingBag size={18} className="text-gold" /> {t("co_summary")}
             </h2>
             <div className="space-y-3 border-b border-gold/30 pb-5">
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between text-[13px]">
-                  <span className="text-brown/90 truncate pr-3 flex-1">
+                <div key={item.id} className="flex justify-between gap-3 text-[13px]">
+                  <span className="text-brown/90 min-w-0 break-words">
                     {item.name} <span className="text-brown/50 ml-1">× {item.quantity}</span>
                   </span>
                   <span className="font-semibold text-maroon whitespace-nowrap shrink-0">

@@ -1,17 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
 
 /**
  * Floating cart bar shown ONLY on mobile devices (lg:hidden).
- * Appears at the bottom of the screen when the cart has items.
+ * Hidden on checkout/order-success pages where it would overlap payment UI.
  */
+const HIDDEN_PATHS = ["/checkout", "/order-success", "/cart"];
+
 const MobileCartBar = () => {
   const { totalItems, totalPrice } = useCart();
   const { t } = useLanguage();
+  const { pathname } = useLocation();
 
-  if (totalItems === 0) return null;
+  // Hide on checkout-related pages and when cart is empty
+  if (totalItems === 0 || HIDDEN_PATHS.some((p) => pathname.startsWith(p))) return null;
 
   return (
     <div className="fixed bottom-0 inset-x-0 z-50 lg:hidden animate-fadeIn safe-bottom">
