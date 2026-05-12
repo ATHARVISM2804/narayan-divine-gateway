@@ -7,7 +7,6 @@ import PageHero from "@/components/PageHero";
 import heroPuja from "@/assets/hero-puja-page.png";
 import { useLanguage } from "@/context/LanguageContext";
 
-
 const Puja = () => {
   usePageTitle("Sacred Pujas — Narayan Kripa");
   const { t, lang } = useLanguage();
@@ -27,7 +26,6 @@ const Puja = () => {
       });
   }, []);
 
-  /* Loading skeleton */
   const Skeleton = () => (
     <div className="rounded-2xl border border-gold/30 bg-ivory overflow-hidden animate-pulse">
       <div className="h-36 bg-gold/10" />
@@ -35,7 +33,6 @@ const Puja = () => {
         <div className="h-5 w-3/4 bg-gold/10 rounded" />
         <div className="h-3 w-1/2 bg-gold/10 rounded" />
         <div className="h-3 w-2/3 bg-gold/10 rounded" />
-        <div className="h-32 bg-gold/10 rounded-xl mt-4" />
         <div className="h-10 bg-gold/10 rounded-full mt-4" />
       </div>
     </div>
@@ -53,7 +50,6 @@ const Puja = () => {
             ) : pujas.length === 0 ? (
               <p className="col-span-full py-12 text-center text-brown/60">{t("puja_empty")}</p>
             ) : pujas.map((p) => {
-              const minPrice = Math.min(...(p.prices || []).map(tier => tier.price));
               const displayName = (lang === 'hi' && p.name_hi) ? p.name_hi : p.name;
               const displayLocation = (lang === 'hi' && p.location_hi) ? p.location_hi : p.location;
               const displayBenefit = (lang === 'hi' && p.benefit_hi) ? p.benefit_hi : p.benefit;
@@ -77,9 +73,9 @@ const Puja = () => {
                 <div className="flex flex-col flex-1 p-5 bg-gradient-to-b from-ivory to-cream/30">
                   <h3 className="font-body text-[18px] font-bold text-maroon leading-snug mb-3">{displayName}</h3>
 
-                  <div className="flex flex-col gap-2 text-sm text-brown/90 font-semibold">
-                    <span className="flex items-center gap-2"><Calendar size={15} className="text-saffron" /> {p.date}</span>
-                    <span className="flex items-center gap-2"><span className="text-base leading-none">🛕</span> {displayLocation}</span>
+                  <div className="flex flex-col gap-1.5 text-xs text-brown/70 font-semibold">
+                    <span className="flex items-center gap-1.5"><Calendar size={13} className="text-saffron" /> {p.date}</span>
+                    <span className="flex items-center gap-1.5"><span className="text-sm leading-none">🛕</span> {displayLocation}</span>
                   </div>
 
                   {displayBenefit && (
@@ -89,15 +85,6 @@ const Puja = () => {
                   )}
 
                   <div className="flex-1"></div>
-
-                  {/* Starting price + tier count */}
-                  <div className="mt-4 flex items-end justify-between">
-                    <div>
-                      <p className="text-[10px] text-brown/50 uppercase tracking-wider font-medium">{t("puja_starting")}</p>
-                      <p className="font-sans font-bold text-saffron text-xl mt-0.5">₹{minPrice.toLocaleString("en-IN")}</p>
-                    </div>
-
-                  </div>
 
                   <div className="mt-4 w-full text-center rounded-full bg-saffron group-hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all group-hover:shadow-gold-glow">
                     {t("btn_participate")}

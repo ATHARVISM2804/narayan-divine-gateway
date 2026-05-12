@@ -3,17 +3,19 @@ import { useParams, useNavigate } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
 import { supabase, type Puja } from "@/lib/supabase";
-import { Calendar, ShoppingCart, Check, Loader2, Shield, ChevronRight } from "lucide-react";
+import { Calendar, ShoppingCart, Check, Loader2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+import PujaGallery from "@/components/puja/PujaGallery";
+import PujaSectionNav from "@/components/puja/PujaSectionNav";
+import PujaSections from "@/components/puja/PujaSections";
+import PujaPackageModal from "@/components/puja/PujaPackageModal";
 
-// Package tier images
 import pkgSingle from "@/assets/pkg-single.png";
 import pkgCouple from "@/assets/pkg-couple.png";
 import pkgFamily4 from "@/assets/pkg-family4.png";
 import pkgFamily6 from "@/assets/pkg-family6.png";
 
-/** Maps a tier label to the corresponding package image */
 const getTierImage = (label: string): string => {
   const l = label.toLowerCase();
   if (l.includes("6") || l.includes("joint")) return pkgFamily6;
@@ -22,14 +24,12 @@ const getTierImage = (label: string): string => {
   return pkgSingle;
 };
 
-/** Parse date strings like "13 May", "25 May 2026", etc. → Date at end of that day */
+
 const parsePujaDate = (dateStr: string): Date => {
   const year = new Date().getFullYear();
-  // Try adding current year if no year present
   const hasYear = /\d{4}/.test(dateStr);
   const fullStr = hasYear ? dateStr : `${dateStr} ${year}`;
   const d = new Date(`${fullStr} 23:59:59`);
-  // If date already passed this year, try next year
   if (isNaN(d.getTime()) || d < new Date()) {
     const next = new Date(`${dateStr} ${year + 1} 23:59:59`);
     return isNaN(next.getTime()) ? d : next;
@@ -57,6 +57,7 @@ const PujaDetail = () => {
 
   const [puja, setPuja] = useState<Puja | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
   const [selectedTier, setSelectedTier] = useState<{ label: string; price: number } | null>(null);
   const [addedId, setAddedId] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0, expired: false });
@@ -66,12 +67,7 @@ const PujaDetail = () => {
 
   useEffect(() => {
     if (!id) return;
-    supabase
-      .from("pujas")
-      .select("*")
-      .eq("id", id)
-      .eq("status", "active")
-      .single()
+    supabase.from("pujas").select("*").eq("id", id).eq("status", "active").single()
       .then(({ data, error }) => {
         if (error || !data) { nav("/puja", { replace: true }); return; }
         setPuja(data as Puja);
@@ -79,7 +75,6 @@ const PujaDetail = () => {
       });
   }, [id, nav]);
 
-  // Start countdown when puja loads
   useEffect(() => {
     if (!puja?.date) return;
     const target = parsePujaDate(puja.date);
@@ -88,25 +83,22 @@ const PujaDetail = () => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [puja?.date]);
 
+  // Scroll to #packages on page load if hash is present
+  useEffect(() => {
+    if (!loading && window.location.hash === "#packages") {
+      setTimeout(() => {
+        document.getElementById("packages")?.scrollIntoView({ behavior: "smooth" });
+      }, 300);
+    }
+  }, [loading]);
+
   const handleAdd = (goToCheckout = false) => {
     if (!puja || !selectedTier) return;
     const itemId = `puja-${puja.id}-${selectedTier.label}`;
-    addItem({
-      id: itemId,
-      name: `${puja.name} (${selectedTier.label})`,
-      description: `${puja.date} • ${puja.location}`,
-      price: selectedTier.price,
-      category: "puja",
-      image: puja.image_url || undefined,
-    });
+    addItem({ id: itemId, name: `${puja.name} (${selectedTier.label})`, description: `${puja.date} • ${puja.location}`, price: selectedTier.price, category: "puja", image: puja.image_url || undefined });
     setAddedId(itemId);
-    if (goToCheckout) {
-      toast.success("Proceeding to payment…");
-      nav("/checkout");
-    } else {
-      toast.success(`${puja.name} (${selectedTier.label}) added to cart!`);
-      setTimeout(() => setAddedId(null), 1500);
-    }
+    if (goToCheckout) { toast.success("Proceeding to payment…"); nav("/checkout"); }
+    else { toast.success(`${puja.name} (${selectedTier.label}) added to cart!`); setTimeout(() => setAddedId(null), 1500); }
   };
 
   if (loading) return (
@@ -120,10 +112,21 @@ const PujaDetail = () => {
 
   if (!puja) return null;
 
-  const displayName = (lang === 'hi' && puja.name_hi) ? puja.name_hi : puja.name;
-  const displayLocation = (lang === 'hi' && puja.location_hi) ? puja.location_hi : puja.location;
-  const displayBenefit = (lang === 'hi' && puja.benefit_hi) ? puja.benefit_hi : puja.benefit;
-  const minPrice = Math.min(...(puja.prices || []).map((t) => t.price));
+  const displayName = (lang === "hi" && puja.name_hi) ? puja.name_hi : puja.name;
+  const displayLocation = (lang === "hi" && puja.location_hi) ? puja.location_hi : puja.location;
+  const displayBenefit = (lang === "hi" && puja.benefit_hi) ? puja.benefit_hi : puja.benefit;
+  const includes = (lang === "hi" && puja.includes_hi?.length) ? puja.includes_hi : puja.includes;
+
+  // Determine which sections to show in the sticky nav
+  const visibleSections: string[] = [];
+  if (puja.about || puja.about_hi) visibleSections.push("aboutPuja");
+  if (puja.benefits?.length || puja.benefits_hi?.length) visibleSections.push("pujaBenefits");
+  if (puja.process_steps?.length || puja.process_steps_hi?.length) visibleSections.push("pujaProcess");
+  if (puja.temple_name || puja.temple_image) visibleSections.push("templeDetails");
+  visibleSections.push("packages");
+  if (puja.faqs?.length || puja.faqs_hi?.length) visibleSections.push("faqSection");
+
+  const galleryImages = puja.gallery?.length ? puja.gallery : [];
 
   return (
     <main className="bg-background min-h-screen">
@@ -138,15 +141,9 @@ const PujaDetail = () => {
         <div className="container relative py-10 md:py-14">
           <div className="flex flex-col md:flex-row gap-8 items-start">
 
-            {/* Image */}
-            <div className="w-full md:w-[420px] lg:w-[480px] shrink-0 rounded-2xl overflow-hidden border-2 border-gold/30 shadow-2xl">
-              {puja.image_url ? (
-                <img src={puja.image_url} alt={puja.name} className="w-full h-72 md:h-96 object-cover" />
-              ) : (
-                <div className="w-full h-72 md:h-96 bg-gradient-to-br from-sacred/30 to-gold/20 grid place-items-center">
-                  <span className="text-7xl drop-shadow-lg">🪔</span>
-                </div>
-              )}
+            {/* Gallery */}
+            <div className="w-full md:w-[420px] lg:w-[480px] shrink-0">
+              <PujaGallery images={galleryImages} fallbackUrl={puja.image_url} name={puja.name} />
             </div>
 
             {/* Title + Info */}
@@ -162,33 +159,27 @@ const PujaDetail = () => {
                 </span>
               </div>
 
-              {/* ── Countdown Timer ── */}
+              {/* Countdown */}
               <div className="mt-5">
                 {timeLeft.expired ? (
                   <div className="inline-flex items-center gap-2 rounded-xl bg-red-900/40 border border-red-500/30 px-4 py-2.5">
-                  <span className="text-red-300 font-bold text-sm">{t("timer_expired")}</span>
+                    <span className="text-red-300 font-bold text-sm">{t("timer_expired")}</span>
                   </div>
                 ) : (
                   <div>
-                    <p className="text-cream/60 text-xs font-semibold uppercase tracking-wider mb-2">
-                      {t("timer_label")}
-                    </p>
+                    <p className="text-cream/60 text-xs font-semibold uppercase tracking-wider mb-2">{t("timer_label")}</p>
                     <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                       {[
-                        { val: timeLeft.days,  label: t("timer_days")  },
+                        { val: timeLeft.days, label: t("timer_days") },
                         { val: timeLeft.hours, label: t("timer_hours") },
-                        { val: timeLeft.mins,  label: t("timer_mins")  },
-                        { val: timeLeft.secs,  label: t("timer_secs")  },
+                        { val: timeLeft.mins, label: t("timer_mins") },
+                        { val: timeLeft.secs, label: t("timer_secs") },
                       ].map(({ val, label }, i) => (
                         <div key={label} className="flex items-center gap-2">
                           <div className={`flex flex-col items-center justify-center rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 min-w-[44px] sm:min-w-[52px] border ${
-                            timeLeft.days === 0
-                              ? "bg-red-900/50 border-red-500/40"
-                              : "bg-maroon-deep/60 border-gold/20"
+                            timeLeft.days === 0 ? "bg-red-900/50 border-red-500/40" : "bg-maroon-deep/60 border-gold/20"
                           }`}>
-                            <span className={`font-bold text-lg sm:text-xl leading-none tabular-nums ${
-                              timeLeft.days === 0 ? "text-red-300" : "text-gold"
-                            }`}>
+                            <span className={`font-bold text-lg sm:text-xl leading-none tabular-nums ${timeLeft.days === 0 ? "text-red-300" : "text-gold"}`}>
                               {String(val).padStart(2, "0")}
                             </span>
                             <span className="text-[10px] font-semibold text-cream/50 mt-0.5">{label}</span>
@@ -207,19 +198,18 @@ const PujaDetail = () => {
                 </div>
               )}
 
-              <div className="mt-6 flex items-end gap-2">
-                <span className="text-cream/60 text-sm">Starting from</span>
-                <span className="font-sans text-3xl font-bold text-gold">
-                  ₹{minPrice.toLocaleString("en-IN")}
-                </span>
-              </div>
+              {/* Select Package CTA - opens modal */}
+              <button onClick={() => setShowModal(true)}
+                className="mt-6 flex items-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-gold px-6 py-3.5 text-[15px] font-bold text-white shadow-lg transition-all hover:shadow-gold-glow hover:-translate-y-0.5">
+                {t("pd_scroll_packages")}
+              </button>
 
-              {/* Trust badges — visible in hero on desktop */}
+              {/* Trust badges on desktop */}
               <div className="mt-6 hidden md:flex flex-wrap gap-2">
                 {[
-                  { icon: "🪔", text: "Authentic Rituals" },
-                  { icon: "📦", text: "Prasad Delivery" },
-                  { icon: "🔒", text: "Secure Payment" },
+                  { icon: "🪔", text: t("trust_rituals") },
+                  { icon: "📦", text: t("trust_prasad_del") },
+                  { icon: "🔒", text: t("trust_secure") },
                 ].map(b => (
                   <span key={b.text} className="flex items-center gap-1.5 rounded-full bg-white/10 border border-gold/20 px-3 py-1.5 text-xs font-semibold text-cream/80">
                     {b.icon} {b.text}
@@ -231,70 +221,57 @@ const PujaDetail = () => {
         </div>
       </div>
 
+      {/* ── Sticky Section Nav ── */}
+      <PujaSectionNav visibleSections={visibleSections} />
+
+      {/* ── Content Sections (About, Benefits, Process, Temple, FAQs) ── */}
+      <PujaSections puja={puja} />
+
       {/* ── Package Selection ── */}
-      <section className="bg-cream border-b border-gold/20 py-10">
+      <section id="packages" className="scroll-mt-32 bg-cream border-b border-gold/20 py-10">
         <div className="container">
-          <h2 className="font-body text-xl md:text-2xl font-bold text-maroon mb-1 flex items-center gap-2">
-            {t("select_package")}
-          </h2>
+          <h2 className="font-body text-xl md:text-2xl font-bold text-maroon mb-1">{t("pd_packages")}</h2>
           <p className="text-sm text-brown/60 font-semibold mb-6">{t("select_package_sub")}</p>
 
-          {/* Package Cards Grid */}
+          {/* Includes */}
+          <div className="mb-6 rounded-xl border border-gold/30 bg-ivory p-5 shadow-soft">
+            <h3 className="text-sm font-bold text-maroon mb-3">{t("pd_includes")}</h3>
+            <ul className="space-y-2">
+              {(includes && includes.length > 0 ? includes : [t("rcv1"), t("rcv2"), t("rcv3"), t("rcv4"), t("rcv5")]).map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm font-medium text-brown/80">
+                  <Check size={14} className="text-green-500 shrink-0 mt-0.5" /> {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Package Cards */}
           <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {(puja.prices || []).map((tier) => {
               const isSelected = selectedTier?.label === tier.label;
               const itemId = `puja-${puja.id}-${tier.label}`;
               const justAdded = addedId === itemId;
               return (
-                <button
-                  key={tier.label}
-                  onClick={() => setSelectedTier(isSelected ? null : tier)}
+                <button key={tier.label} onClick={() => setSelectedTier(isSelected ? null : tier)}
                   className={`relative group rounded-2xl overflow-hidden border-2 text-left transition-all duration-300 shadow-soft hover:-translate-y-1 hover:shadow-lg ${
-                    isSelected
-                      ? "border-saffron shadow-lg -translate-y-1"
-                      : justAdded
-                      ? "border-green-500"
-                      : "border-gold/30 hover:border-saffron/60"
-                  }`}
-                >
-                  {/* Card Image */}
+                    isSelected ? "border-saffron shadow-lg -translate-y-1" : justAdded ? "border-green-500" : "border-gold/30 hover:border-saffron/60"
+                  }`}>
                   <div className="relative h-36 md:h-44 overflow-hidden bg-gradient-to-br from-saffron/20 via-gold/15 to-maroon/10">
-                    <img
-                      src={getTierImage(tier.label)}
-                      alt={tier.label}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    {/* Selected checkmark overlay */}
-                    {isSelected && (
-                      <div className="absolute inset-0 bg-saffron/20" />
-                    )}
-                    {/* Selected badge */}
-                    {isSelected && (
-                      <div className="absolute top-2 right-2 h-7 w-7 rounded-full bg-saffron flex items-center justify-center shadow-md">
-                        <Check size={14} className="text-white" strokeWidth={3} />
-                      </div>
-                    )}
-                    {justAdded && !isSelected && (
-                      <div className="absolute top-2 right-2 h-7 w-7 rounded-full bg-green-500 flex items-center justify-center shadow-md">
-                        <Check size={14} className="text-white" strokeWidth={3} />
-                      </div>
-                    )}
+                    <img src={getTierImage(tier.label)} alt={tier.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    {isSelected && <div className="absolute inset-0 bg-saffron/20" />}
+                    {isSelected && <div className="absolute top-2 right-2 h-7 w-7 rounded-full bg-saffron flex items-center justify-center shadow-md"><Check size={14} className="text-white" strokeWidth={3} /></div>}
                   </div>
-
-                  {/* Card Body */}
                   <div className={`p-3 md:p-4 transition-colors ${isSelected ? "bg-saffron/5" : "bg-ivory"}`}>
                     <p className="font-bold text-maroon text-sm md:text-base leading-snug">{tier.label}</p>
-                    <p className={`font-bold text-lg md:text-xl mt-1 ${isSelected ? "text-saffron" : "text-saffron"}`}>
-                      ₹{tier.price.toLocaleString("en-IN")}
-                    </p>
+                    <p className="font-bold text-lg md:text-xl mt-1 text-saffron">₹{tier.price.toLocaleString("en-IN")}</p>
                   </div>
                 </button>
               );
             })}
           </div>
 
-          {/* Action Buttons — appear when a package is selected */}
-          {selectedTier && (
+          {/* Action Buttons */}
+          {selectedTier ? (
             <div className="mt-6 rounded-2xl border-2 border-saffron/30 bg-ivory p-5 shadow-soft animate-fadeIn">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -303,65 +280,40 @@ const PujaDetail = () => {
                   <p className="font-bold text-saffron text-2xl">₹{selectedTier.price.toLocaleString("en-IN")}</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 sm:shrink-0">
-                  <button
-                    onClick={() => handleAdd(true)}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-maroon px-6 py-4 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5"
-                  >
+                  <button onClick={() => handleAdd(true)} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-maroon px-6 py-4 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5">
                     {t("btn_buy_now")} <ChevronRight size={18} />
                   </button>
-                  <button
-                    onClick={() => handleAdd(false)}
-                    className="flex items-center justify-center gap-2 rounded-xl border-2 border-gold/50 bg-cream px-6 py-4 text-[14px] font-bold text-maroon transition-all hover:bg-gold/10 hover:border-saffron"
-                  >
+                  <button onClick={() => handleAdd(false)} className="flex items-center justify-center gap-2 rounded-xl border-2 border-gold/50 bg-cream px-6 py-4 text-[14px] font-bold text-maroon transition-all hover:bg-gold/10 hover:border-saffron">
                     <ShoppingCart size={16} className="text-saffron" /> {t("btn_add_cart")}
                   </button>
                 </div>
               </div>
               <p className="mt-3 text-center text-xs text-brown/40 font-serif italic">{t("secure_pay")}</p>
             </div>
-          )}
-
-          {!selectedTier && (
+          ) : (
             <p className="mt-5 text-center text-sm text-brown/50 font-semibold">{t("tap_to_select")}</p>
           )}
-        </div>
-      </section>
 
-      {/* ── Content — What You Get + How It Works ── */}
-      <div className="container py-10">
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-
-          {/* Trust badges */}
-          <div className="md:col-span-2 xl:col-span-3 flex flex-wrap gap-3">
-            {[
-              { icon: "🪔", text: t("trust_rituals") },
-              { icon: "🧑‍🦳", text: t("trust_pandits") },
-              { icon: "📦", text: t("trust_prasad_del") },
-              { icon: "📞", text: t("trust_support") },
-            ].map((b) => (
+          {/* Trust row */}
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {[{ icon: "🪔", text: t("trust_rituals") }, { icon: "🧑‍🦳", text: t("trust_pandits") }, { icon: "📦", text: t("trust_prasad_del") }, { icon: "📞", text: t("trust_support") }].map((b) => (
               <span key={b.text} className="flex items-center gap-2 rounded-xl bg-ivory border border-gold/30 px-4 py-2.5 text-sm font-semibold text-maroon shadow-soft">
                 <span className="text-lg">{b.icon}</span> {b.text}
               </span>
             ))}
           </div>
+        </div>
+      </section>
 
-          {/* What You Receive */}
-          <div className="md:col-span-1 xl:col-span-2 rounded-2xl border border-gold/40 bg-ivory p-6 shadow-soft">
-            <h2 className="font-body text-xl font-bold text-maroon mb-4 flex items-center gap-2">
-              <Shield size={18} className="text-saffron" /> {t("what_receive")}
-            </h2>
-            <ul className="space-y-3">
-              {[t("rcv1"), t("rcv2"), t("rcv3"), t("rcv4"), t("rcv5")].map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm font-medium text-brown/80">
-                  <Check size={16} className="text-green-500 shrink-0 mt-0.5" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+      {/* Package Modal */}
+      {showModal && puja && (
+        <PujaPackageModal puja={puja} onClose={() => setShowModal(false)} />
+      )}
 
-          {/* How It Works */}
-          <div className="rounded-2xl border border-gold/40 bg-ivory p-6 shadow-soft">
+      {/* ── How It Works (fallback) ── */}
+      {(!puja.process_steps || puja.process_steps.length === 0) && (
+        <div className="container py-10">
+          <div className="max-w-4xl mx-auto rounded-2xl border border-gold/40 bg-ivory p-6 shadow-soft">
             <h2 className="font-body text-xl font-bold text-maroon mb-4">{t("how_works")}</h2>
             <div className="flex flex-col gap-5">
               {[
@@ -381,10 +333,8 @@ const PujaDetail = () => {
               ))}
             </div>
           </div>
-
         </div>
-      </div>
-
+      )}
     </main>
   );
 };

@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
-import { Calendar, ShoppingCart, Check } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import SectionHeading from "@/components/SectionHeading";
-import { useCart } from "@/context/CartContext";
 import { supabase, type Puja } from "@/lib/supabase";
 import { useLanguage } from "@/context/LanguageContext";
 
 const FeaturedPujas = () => {
-  const { addItem } = useCart();
   const { t } = useLanguage();
-  const [addedId, setAddedId] = useState<string | null>(null);
   const [pujas, setPujas] = useState<Puja[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,101 +53,50 @@ const FeaturedPujas = () => {
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3 mt-10">
           {loading ? (
             <><Skeleton /><Skeleton /><Skeleton /></>
-          ) : pujas.map((p) => (
-            <article
+          ) : pujas.map((p) => {
+            const displayName = (p.name);
+            const displayLocation = (p.location);
+            const displayBenefit = (p.benefit);
+            return (
+            <Link
+              to={`/puja/${p.id}`}
               key={p.id}
-              className="group relative flex flex-col overflow-hidden rounded-2xl border border-gold/50 bg-ivory shadow-soft transition-all duration-500 hover:-translate-y-2 hover:border-saffron hover:shadow-sacred"
+              className="group overflow-hidden rounded-2xl border border-gold/50 bg-ivory transition-all duration-500 hover:-translate-y-1.5 hover:border-saffron hover:shadow-sacred flex flex-col h-full shadow-soft"
             >
-              {/* Image */}
-              <div className="relative h-56 overflow-hidden shrink-0">
+              <div className="relative grid h-44 place-items-center bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent overflow-hidden border-b border-gold/30">
                 {p.image_url ? (
-                  <img src={p.image_url} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <img src={p.image_url} alt={p.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 ) : (
-                  <div className="h-full w-full bg-gradient-to-br from-saffron/20 via-gold/20 to-maroon/10 flex items-center justify-center text-7xl">🪔</div>
+                  <>
+                    <div className="absolute inset-0 opacity-30 mix-blend-multiply texture-parchment transition-transform duration-700 group-hover:scale-110"></div>
+                    <div className="relative text-6xl drop-shadow-[0_0_15px_rgba(255,184,0,0.5)] transition-transform duration-500 group-hover:scale-110">🪔</div>
+                  </>
                 )}
-                {/* Gradient overlay */}
-                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-maroon-deep/85 to-transparent" />
-                <div className="absolute bottom-3 left-3 flex items-center gap-2 text-xs text-cream drop-shadow-md">
-                  <span className="flex items-center gap-1.5 font-semibold"><Calendar size={13} className="text-gold" /> {p.date}</span>
-                </div>
               </div>
 
-              {/* Body */}
               <div className="flex flex-col flex-1 p-5 bg-gradient-to-b from-ivory to-cream/30">
-                <div>
-                  <h3 className="font-body text-[18px] font-bold text-maroon leading-snug mb-2">{p.name}</h3>
-                  <p className="flex items-center gap-1.5 text-sm text-brown/90 font-semibold">
-                    <span className="text-base leading-none">🛕</span> {p.location}
-                  </p>
+                <h3 className="font-body text-[18px] font-bold text-maroon leading-snug mb-3">{displayName}</h3>
+
+                <div className="flex flex-col gap-1.5 text-xs text-brown/70 font-semibold">
+                  <span className="flex items-center gap-1.5"><Calendar size={13} className="text-saffron" /> {p.date}</span>
+                  <span className="flex items-center gap-1.5"><span className="text-sm leading-none">🛕</span> {displayLocation}</span>
                 </div>
 
-                {p.benefit && (
+                {displayBenefit && (
                   <div className="mt-3 rounded-xl bg-saffron/10 border border-saffron/20 px-3 py-2">
-                    <p className="text-[14px] font-bold text-maroon leading-snug">✦ {p.benefit}</p>
+                    <p className="text-[14px] font-bold text-maroon leading-snug">✦ {displayBenefit}</p>
                   </div>
                 )}
 
                 <div className="flex-1"></div>
 
-                <div className="my-5 overflow-hidden rounded-xl border border-gold/40 bg-gradient-to-b from-cream to-ivory shadow-sm">
-                  <div className="bg-gradient-to-r from-gold/10 via-saffron/10 to-gold/10 py-2 px-3 border-b border-gold/30">
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-maroon text-center">{t("featured_packages")}</h4>
-                  </div>
-                  <div className="p-3.5 flex flex-col gap-2.5">
-                    {(p.prices || []).map((tier: { label: string; price: number }, idx: number) => {
-                      const itemId = `puja-${p.id}-${tier.label}`;
-                      const justAdded = addedId === itemId;
-                      return (
-                      <div key={tier.label} className={`flex items-center justify-between text-sm ${idx !== (p.prices?.length || 0) - 1 ? 'border-b border-gold/20 pb-2.5' : ''}`}>
-                        <span className="text-maroon font-bold tracking-wide">{tier.label}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-sans font-bold text-saffron text-base tracking-wide">₹{tier.price.toLocaleString("en-IN")}</span>
-                          <button
-                            onClick={() => {
-                              addItem({
-                                id: itemId,
-                                name: `${p.name} (${tier.label})`,
-                                description: `${p.date} • ${p.location}`,
-                                price: tier.price,
-                                category: "puja",
-                              });
-                              setAddedId(itemId);
-                              setTimeout(() => setAddedId(null), 1500);
-                            }}
-                            className={`grid h-7 w-7 place-items-center rounded-full transition-all ${
-                              justAdded
-                                ? "bg-green-500 text-white scale-110"
-                                : "bg-saffron/15 text-saffron hover:bg-saffron hover:text-white"
-                            }`}
-                            aria-label={`Add ${tier.label} to cart`}
-                          >
-                            {justAdded ? <Check size={14} /> : <ShoppingCart size={13} />}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                    })}
-                  </div>
-                </div>
-
-                <Link to={`/puja/${p.id}`} className="w-full text-center inline-block rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
+                <div className="mt-4 w-full text-center rounded-full bg-saffron group-hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all group-hover:shadow-gold-glow">
                   {t("btn_participate")}
-                </Link>
+                </div>
               </div>
-
-              {/* corner ornament */}
-              <svg
-                viewBox="0 0 40 40"
-                className="pointer-events-none absolute right-2 bottom-2 h-8 w-8 text-gold/20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="0.6"
-              >
-                <path d="M2 38 L2 20 Q 2 2 20 2 L38 2" />
-                <circle cx="6" cy="34" r="1.5" fill="currentColor" />
-              </svg>
-            </article>
-          ))}
+            </Link>
+          );
+          })}
         </div>
 
         <div className="mt-12 text-center">

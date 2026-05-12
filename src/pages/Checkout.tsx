@@ -4,7 +4,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase } from "@/lib/supabase";
-import { ShoppingBag, Shield, ArrowLeft, Loader2, User, Mail, Phone, MapPin } from "lucide-react";
+import { ShoppingBag, Shield, ArrowLeft, Loader2, User, Mail, Phone, MapPin, Users, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
@@ -37,8 +37,27 @@ const Checkout = () => {
   const { t } = useLanguage();
 
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
+  const [memberNames, setMemberNames] = useState<string[]>([]);
+  const [gotra, setGotra] = useState("");
+  const [gotraUnknown, setGotraUnknown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"form" | "paying">("form");
+
+  // Detect member count from puja items in cart
+  const pujaItem = items.find(i => i.category === "puja");
+  const getMemberCount = (): number => {
+    if (!pujaItem) return 0;
+    const n = pujaItem.name.toLowerCase();
+    if (n.includes("6") || n.includes("joint")) return 6;
+    if (n.includes("4") || n.includes("family")) return 4;
+    if (n.includes("couple") || n.includes("2")) return 2;
+    if (n.includes("single") || n.includes("individual") || n.includes("1")) return 1;
+    return 1;
+  };
+  const memberCount = getMemberCount();
+
+  // Sync memberNames array length when memberCount changes
+  const syncedMemberNames = Array.from({ length: memberCount }, (_, i) => memberNames[i] || "");
 
   useEffect(() => {
     if (user) {
@@ -58,7 +77,14 @@ const Checkout = () => {
     if (!form.name.trim()) { toast.error(t("co_err_name")); return false; }
     if (!form.email.trim() || !form.email.includes("@")) { toast.error(t("co_err_email")); return false; }
     if (!form.phone.trim() || form.phone.length < 10) { toast.error(t("co_err_phone")); return false; }
+    if (memberCount > 0 && !syncedMemberNames[0].trim()) { toast.error("Please enter at least the first member's name"); return false; }
     return true;
+  };
+
+  const handleGotraUnknown = (checked: boolean) => {
+    setGotraUnknown(checked);
+    if (checked) setGotra("Kashyap");
+    else setGotra("");
   };
 
   const handleCheckout = async () => {
@@ -76,6 +102,7 @@ const Checkout = () => {
         body: {
           items: items.map((i) => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, category: i.category })),
           customer: { name: form.name, email: form.email, phone: form.phone, address: form.address },
+          puja_details: memberCount > 0 ? { member_names: syncedMemberNames.filter(n => n.trim()), gotra: gotraUnknown ? "Kashyap" : gotra } : undefined,
         },
       });
 
@@ -166,6 +193,7 @@ const Checkout = () => {
           <div className="rounded-2xl border border-gold/40 bg-ivory p-4 sm:p-6 md:p-8 shadow-soft">
             <h2 className="font-display text-xl text-maroon mb-6">{t("co_details")}</h2>
             <div className="space-y-5">
+              {/* Name */}
               <div>
                 <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-maroon">
                   <User size={13} /> {t("co_name")} *
@@ -173,6 +201,8 @@ const Checkout = () => {
                 <input value={form.name} onChange={set("name")} type="text" required placeholder={t("co_ph_name")}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20" />
               </div>
+
+              {/* Email + Phone */}
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-maroon">
@@ -189,6 +219,8 @@ const Checkout = () => {
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20" />
                 </div>
               </div>
+
+              {/* Address */}
               <div>
                 <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-maroon">
                   <MapPin size={13} /> {t("co_address")}
@@ -196,6 +228,71 @@ const Checkout = () => {
                 <textarea value={form.address} onChange={set("address")} rows={3} placeholder={t("co_ph_address")}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20 resize-none" />
               </div>
+
+              {/* Member Names — only for puja items */}
+              {memberCount > 0 && (
+                <div className="rounded-xl border border-gold/30 bg-saffron/5 p-4">
+                  <div className="flex items-start gap-2 mb-1">
+                    <Users size={15} className="text-saffron mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-maroon">{t("co_member_names")}</p>
+                      <p className="text-xs text-brown/60 mt-0.5">{t("co_member_sub")}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {syncedMemberNames.map((val, idx) => (
+                      <div key={idx}>
+                        <label className="mb-1 block text-[11px] font-semibold text-maroon/70 uppercase tracking-wide">
+                          {`${t("co_member_ph")} ${idx + 1}`}{idx === 0 && " *"}
+                        </label>
+                        <input
+                          value={val}
+                          onChange={(e) => {
+                            const updated = [...syncedMemberNames];
+                            updated[idx] = e.target.value;
+                            setMemberNames(updated);
+                          }}
+                          placeholder={`${t("co_member_ph")} ${idx + 1}`}
+                          className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Gotra — only for puja items */}
+              {memberCount > 0 && (
+                <div className="rounded-xl border border-gold/30 bg-amber-50/50 p-4">
+                  <div className="flex items-start gap-2 mb-1">
+                    <Info size={15} className="text-gold mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-maroon">{t("co_gotra")}</p>
+                      <p className="text-xs text-brown/60 mt-0.5">{t("co_gotra_sub")}</p>
+                    </div>
+                  </div>
+                  <input
+                    value={gotraUnknown ? "Kashyap" : gotra}
+                    onChange={(e) => { if (!gotraUnknown) setGotra(e.target.value); }}
+                    disabled={gotraUnknown}
+                    placeholder={t("co_gotra_ph")}
+                    className={`mt-3 w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors ${
+                      gotraUnknown
+                        ? "border-gold/30 bg-gold/10 text-brown/50 cursor-not-allowed"
+                        : "border-gold/50 bg-cream focus:border-saffron focus:ring-2 focus:ring-saffron/20"
+                    }`}
+                  />
+                  <label className="mt-2.5 flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={gotraUnknown}
+                      onChange={(e) => handleGotraUnknown(e.target.checked)}
+                      className="h-4 w-4 rounded border-gold/50 accent-saffron"
+                    />
+                    <span className="text-[13px] text-brown/70 font-medium">{t("co_gotra_unknown")}</span>
+                  </label>
+                </div>
+              )}
             </div>
             <div className="mt-6 flex flex-wrap gap-2">
               {[t("co_ssl"), t("co_razorpay"), t("co_prasad")].map((b) => (

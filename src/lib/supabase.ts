@@ -21,6 +21,23 @@ export interface Puja {
   location_hi: string | null;
   benefit_hi: string | null;
   featured?: boolean;
+  /* ── Enhanced detail fields ── */
+  gallery?: string[];
+  about?: string | null;
+  about_hi?: string | null;
+  benefits?: string[];
+  benefits_hi?: string[];
+  process_steps?: { title: string; description: string }[];
+  process_steps_hi?: { title: string; description: string }[];
+  temple_name?: string | null;
+  temple_name_hi?: string | null;
+  temple_description?: string | null;
+  temple_description_hi?: string | null;
+  temple_image?: string | null;
+  faqs?: { question: string; answer: string }[];
+  faqs_hi?: { question: string; answer: string }[];
+  includes?: string[];
+  includes_hi?: string[];
   created_at: string;
   updated_at: string;
 }
