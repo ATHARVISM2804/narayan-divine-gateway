@@ -23,7 +23,7 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
     <div className="space-y-3">
       {/* Main image */}
       <div className="relative rounded-2xl overflow-hidden border-2 border-gold/30 shadow-2xl aspect-[4/3] bg-gradient-to-br from-saffron/10 to-maroon/10">
-        <img src={allImages[active]} alt={name} className="w-full h-full object-cover transition-opacity duration-300" />
+        <img src={allImages[active]} alt={name} fetchPriority="high" decoding="async" className="w-full h-full object-cover transition-opacity duration-300" />
         {allImages.length > 1 && (
           <>
             <button onClick={() => setActive((active - 1 + allImages.length) % allImages.length)}
@@ -49,7 +49,7 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
           {allImages.map((url, i) => (
             <button key={i} onClick={() => setActive(i)}
               className={`shrink-0 h-16 w-20 rounded-lg overflow-hidden border-2 transition-all ${i === active ? "border-saffron shadow-md" : "border-gold/20 opacity-60 hover:opacity-100"}`}>
-              <img src={url} alt="" className="h-full w-full object-cover" />
+              <img src={url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>

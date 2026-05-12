@@ -77,7 +77,7 @@ const Chadhava = () => {
                   {/* Image */}
                   <div className="relative h-44 overflow-hidden bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent border-b border-gold/30">
                     {c.image_url ? (
-                      <img src={c.image_url} alt={c.item} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                      <img src={c.image_url} alt={c.item} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center text-5xl">🪔</div>
                     )}

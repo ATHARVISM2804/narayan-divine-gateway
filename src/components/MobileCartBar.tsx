@@ -1,3 +1,4 @@
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -9,7 +10,7 @@ import { useLanguage } from "@/context/LanguageContext";
  */
 const HIDDEN_PATHS = ["/checkout", "/order-success", "/cart"];
 
-const MobileCartBar = () => {
+const MobileCartBar = React.memo(() => {
   const { totalItems, totalPrice } = useCart();
   const { t } = useLanguage();
   const { pathname } = useLocation();
@@ -44,6 +45,6 @@ const MobileCartBar = () => {
       </div>
     </div>
   );
-};
+});
 
 export default MobileCartBar;

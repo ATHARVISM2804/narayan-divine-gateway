@@ -105,7 +105,7 @@ const ChadhavaDetail = () => {
           ══════════════════════════════════════════════ */}
       <div className="relative overflow-hidden bg-gradient-to-br from-maroon via-maroon-deep to-maroon">
         {chadhava.image_url && (
-          <img src={chadhava.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm" />
+          <img src={chadhava.image_url} alt="" fetchPriority="high" decoding="async" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm" />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-maroon/60 via-maroon-deep/80 to-maroon" />
 

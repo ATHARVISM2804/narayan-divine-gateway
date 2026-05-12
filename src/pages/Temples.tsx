@@ -69,7 +69,7 @@ const Temples = () => {
               return (
               <article key={tp.name} className="group overflow-hidden rounded-2xl border border-gold/60 bg-ivory transition-all hover:-translate-y-1 hover:shadow-xl">
                 <div className="relative h-48 overflow-hidden">
-                  <img src={tp.image} alt={dName} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={tp.image} alt={dName} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/60 to-transparent" />
                   <span className="absolute bottom-3 left-3 font-display text-xl text-white drop-shadow-md">{dName}</span>
                 </div>
@@ -98,7 +98,7 @@ const Temples = () => {
           <SectionHeading title={t("tmp_spot_title")} />
           <div className="grid gap-6 overflow-hidden rounded-3xl border border-gold/60 bg-ivory md:grid-cols-2">
             <div className="relative overflow-hidden h-64 md:h-full min-h-[300px]">
-               <img src={imgDarshan} alt="Kashi Vishwanath" className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
+               <img src={imgDarshan} alt="Kashi Vishwanath" loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
                <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/60 via-maroon-deep/20 to-transparent" />
             </div>
             <div className="p-8 md:p-10">

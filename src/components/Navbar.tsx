@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Menu, X, ShoppingCart, LogOut, Package } from "lucide-react";
 import Logo from "./Logo";
@@ -6,7 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 
-const Navbar = () => {
+const Navbar = React.memo(() => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
@@ -274,8 +274,8 @@ const Navbar = () => {
           </ul>
         </div>
       )}
-    </header>
+  </header>
   );
-};
+});
 
 export default Navbar;

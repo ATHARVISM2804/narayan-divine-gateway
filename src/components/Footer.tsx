@@ -1,8 +1,9 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import { Youtube, Instagram, Phone, MessageCircle, Facebook, MapPin, Mail, Sparkles } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
-const Footer = () => {
+const Footer = React.memo(() => {
   const { t } = useLanguage();
 
   const companyLinks = [
@@ -197,8 +198,8 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
+  </footer>
   );
-};
+});
 
 export default Footer;
