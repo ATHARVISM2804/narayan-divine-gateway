@@ -86,7 +86,7 @@ const Footer = () => {
                 <li key={link.label}>
                   <Link
                     to={link.to}
-                    className="text-cream/65 hover:text-gold transition-colors duration-200 flex items-center gap-2"
+                    className="text-cream/65 hover:text-gold transition-colors duration-200 flex items-center gap-2 py-1.5"
                   >
                     <span className="h-1 w-1 rounded-full bg-gold/40 shrink-0" />
                     {link.label}
@@ -105,7 +105,7 @@ const Footer = () => {
                 <li key={link.to}>
                   <Link
                     to={link.to}
-                    className="text-cream/65 hover:text-gold transition-colors duration-200 flex items-center gap-2"
+                    className="text-cream/65 hover:text-gold transition-colors duration-200 flex items-center gap-2 py-1.5"
                   >
                     <span className="h-1 w-1 rounded-full bg-gold/40 shrink-0" />
                     {link.label}
@@ -130,13 +130,13 @@ const Footer = () => {
               </div>
               <div className="flex items-center gap-2.5">
                 <Mail size={15} className="text-gold/60 shrink-0" />
-                <a href="mailto:Asknarayankripa@gmail.com" className="hover:text-gold transition-colors">
+                <a href="mailto:Asknarayankripa@gmail.com" className="hover:text-gold transition-colors py-1 block">
                   Asknarayankripa@gmail.com
                 </a>
               </div>
               <div className="flex items-center gap-2.5">
                 <Phone size={15} className="text-gold/60 shrink-0" />
-                <a href="tel:+919286345941" className="hover:text-gold transition-colors">
+                <a href="tel:+919286345941" className="hover:text-gold transition-colors py-1 block">
                   +91 92863 45941
                 </a>
               </div>
@@ -151,7 +151,7 @@ const Footer = () => {
                   aria-label={label}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="grid h-9 w-9 place-items-center rounded-full border border-gold/20 bg-gold/[0.06] text-cream/70 transition-all duration-300 hover:bg-gold hover:text-maroon-deep hover:scale-110 hover:border-gold hover:shadow-[0_0_12px_rgba(201,168,76,0.3)]"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-gold/20 bg-gold/[0.06] text-cream/70 transition-all duration-300 hover:bg-gold hover:text-maroon-deep hover:scale-110 hover:border-gold hover:shadow-[0_0_12px_rgba(201,168,76,0.3)]"
                 >
                   <Icon size={15} />
                 </a>
@@ -183,15 +183,15 @@ const Footer = () => {
           {/* Policy links + Copyright */}
           <div className="flex flex-col items-center gap-1.5 md:items-end">
             <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-cream/45">
-              <Link to="/privacy-policy" className="hover:text-gold transition-colors">{t("footer_privacy")}</Link>
-              <span className="text-cream/20">·</span>
-              <Link to="/terms" className="hover:text-gold transition-colors">{t("footer_terms")}</Link>
-              <span className="text-cream/20">·</span>
-              <Link to="/refund-policy" className="hover:text-gold transition-colors">{t("footer_refund_policy")}</Link>
-              <span className="text-cream/20">·</span>
-              <Link to="/shipping-policy" className="hover:text-gold transition-colors">{t("footer_shipping_policy")}</Link>
-              <span className="text-cream/20">·</span>
-              <Link to="/grievance" className="hover:text-gold transition-colors">{t("footer_grievance")}</Link>
+              <Link to="/privacy-policy" className="hover:text-gold transition-colors py-2">Privacy Policy</Link>
+              <span className="text-cream/20 py-2">·</span>
+              <Link to="/terms" className="hover:text-gold transition-colors py-2">Terms & Conditions</Link>
+              <span className="text-cream/20 py-2">·</span>
+              <Link to="/refund-policy" className="hover:text-gold transition-colors py-2">Refund Policy</Link>
+              <span className="text-cream/20 py-2">·</span>
+              <Link to="/shipping-policy" className="hover:text-gold transition-colors py-2">Shipping Policy</Link>
+              <span className="text-cream/20 py-2">·</span>
+              <Link to="/grievance" className="hover:text-gold transition-colors py-2">Grievance</Link>
             </div>
             <p className="text-[11px] text-cream/30">{t("footer_copyright")}</p>
           </div>
