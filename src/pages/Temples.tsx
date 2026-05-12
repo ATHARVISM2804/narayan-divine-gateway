@@ -14,26 +14,26 @@ import imgDarshan from "@/assets/hero-darshan.jpg";
 import imgTemple from "@/assets/hero-temple.jpg";
 
 const temples = [
-  { name: "Kashi Vishwanath", state: "Uttar Pradesh", deity: "Shiva", timings: "4 AM – 11 PM", image: imgDarshan },
-  { name: "Tirupati Balaji", state: "Andhra Pradesh", deity: "Vishnu", timings: "3 AM – 10 PM", image: imgVishnu },
-  { name: "Siddhivinayak", state: "Maharashtra", deity: "Ganesh", timings: "5:30 AM – 9:30 PM", image: imgGanesh },
-  { name: "Vaishno Devi", state: "Jammu & Kashmir", deity: "Durga", timings: "5 AM – 12 AM", image: imgDurga },
-  { name: "Jagannath Puri", state: "Odisha", deity: "Vishnu", timings: "5 AM – 9 PM", image: imgTemple },
-  { name: "Mahakaleshwar", state: "Madhya Pradesh", deity: "Shiva", timings: "4 AM – 11 PM", image: imgShiva },
+  { name: "Kashi Vishwanath", name_hi: "काशी विश्वनाथ", state: "Uttar Pradesh", state_hi: "उत्तर प्रदेश", deity: "Shiva", deity_hi: "शिव", timings: "4 AM – 11 PM", image: imgDarshan },
+  { name: "Tirupati Balaji", name_hi: "तिरुपति बालाजी", state: "Andhra Pradesh", state_hi: "आंध्र प्रदेश", deity: "Vishnu", deity_hi: "विष्णु", timings: "3 AM – 10 PM", image: imgVishnu },
+  { name: "Siddhivinayak", name_hi: "सिद्धिविनायक", state: "Maharashtra", state_hi: "महाराष्ट्र", deity: "Ganesh", deity_hi: "गणेश", timings: "5:30 AM – 9:30 PM", image: imgGanesh },
+  { name: "Vaishno Devi", name_hi: "वैष्णो देवी", state: "Jammu & Kashmir", state_hi: "जम्मू और कश्मीर", deity: "Durga", deity_hi: "दुर्गा", timings: "5 AM – 12 AM", image: imgDurga },
+  { name: "Jagannath Puri", name_hi: "जगन्नाथ पुरी", state: "Odisha", state_hi: "ओडिशा", deity: "Vishnu", deity_hi: "विष्णु", timings: "5 AM – 9 PM", image: imgTemple },
+  { name: "Mahakaleshwar", name_hi: "महाकालेश्वर", state: "Madhya Pradesh", state_hi: "मध्य प्रदेश", deity: "Shiva", deity_hi: "शिव", timings: "4 AM – 11 PM", image: imgShiva },
 ];
 
 const states = ["All", "Uttar Pradesh", "Maharashtra", "Andhra Pradesh", "Odisha", "Madhya Pradesh", "Jammu & Kashmir"];
 const deities = ["All", "Shiva", "Vishnu", "Ganesh", "Durga"];
 
 const Temples = () => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [q, setQ] = useState("");
   const [state, setState] = useState("All");
   const [deity, setDeity] = useState("All");
 
   const filtered = temples.filter(
     (t) =>
-      t.name.toLowerCase().includes(q.toLowerCase()) &&
+      (t.name.toLowerCase().includes(q.toLowerCase()) || t.name_hi.includes(q)) &&
       (state === "All" || t.state === state) &&
       (deity === "All" || t.deity === deity)
   );
@@ -62,18 +62,22 @@ const Temples = () => {
 
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((tp) => (
+            {filtered.map((tp) => {
+              const dName = lang === "hi" ? tp.name_hi : tp.name;
+              const dState = lang === "hi" ? tp.state_hi : tp.state;
+              const dDeity = lang === "hi" ? tp.deity_hi : tp.deity;
+              return (
               <article key={tp.name} className="group overflow-hidden rounded-2xl border border-gold/60 bg-ivory transition-all hover:-translate-y-1 hover:shadow-xl">
                 <div className="relative h-48 overflow-hidden">
-                  <img src={tp.image} alt={tp.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={tp.image} alt={dName} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/60 to-transparent" />
-                  <span className="absolute bottom-3 left-3 font-display text-xl text-white drop-shadow-md">{tp.name}</span>
+                  <span className="absolute bottom-3 left-3 font-display text-xl text-white drop-shadow-md">{dName}</span>
                 </div>
                 <div className="space-y-3 p-4">
 
                   <div className="flex flex-wrap gap-2 text-[11px] text-brown/70">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-cream px-2 py-0.5"><MapPin size={10} /> {tp.state}</span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5">{tp.deity}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-cream px-2 py-0.5"><MapPin size={10} /> {dState}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5">{dDeity}</span>
                     <span className="inline-flex items-center gap-1 rounded-full bg-cream px-2 py-0.5"><Clock size={10} /> {tp.timings}</span>
                   </div>
                   <div className="mt-3 flex gap-2">
@@ -82,7 +86,7 @@ const Temples = () => {
                   </div>
                 </div>
               </article>
-            ))}
+            )})}
 
           </div>
         </div>
@@ -99,8 +103,8 @@ const Temples = () => {
             </div>
             <div className="p-8 md:p-10">
               <span className="inline-block rounded-full bg-gold px-3 py-1 text-xs font-bold text-maroon">{t("tmp_spot_tag")}</span>
-              <h3 className="mt-3 font-display text-3xl text-maroon">Kashi Vishwanath</h3>
-              <p className="mt-2 text-sm text-brown/70">Varanasi, Uttar Pradesh</p>
+              <h3 className="mt-3 font-display text-3xl text-maroon">{lang === "hi" ? "काशी विश्वनाथ" : "Kashi Vishwanath"}</h3>
+              <p className="mt-2 text-sm text-brown/70">{lang === "hi" ? "वाराणसी, उत्तर प्रदेश" : "Varanasi, Uttar Pradesh"}</p>
               <p className="mt-4 text-brown/80">
                 {t("tmp_spot_desc")}
               </p>
