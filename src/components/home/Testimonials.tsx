@@ -1,26 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Star, Quote } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
-
-const items = [
-  { name: "Aarti Sharma", city: "Delhi", initials: "AS", quote: "I booked the Maha Rudrabhishek for my father's health and the entire experience was transcendent. The pandits were learned, the ritual was conducted with utmost devotion, and we received the prasad within days.", rating: 5 },
-  { name: "Ramesh Iyer", city: "Bengaluru", initials: "RI", quote: "Narayan Kripa made it possible for me to offer chadhava at Tirupati despite living far away. Watching the live darshan brought tears to my eyes. Truly a blessing for our digital age.", rating: 5 },
-  { name: "Priya Verma", city: "Mumbai", initials: "PV", quote: "The kundali consultation with their pandit ji helped my family understand grah-doshas and the right remedies. We performed the Navgraha Shanti and saw real positive changes within months.", rating: 5 },
-];
-
-const mini = [
-  { name: "Suresh K.", city: "Pune", quote: "Beautifully conducted Satyanarayan puja. Felt the divine presence." },
-  { name: "Meera R.", city: "Hyderabad", quote: "The pandits are extremely knowledgeable. Highly recommended." },
-  { name: "Anil S.", city: "Kolkata", quote: "Live darshan from Kashi feels like being there in person." },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 const Testimonials = () => {
+  const { t: tr } = useLanguage();
+
+  const items = useMemo(() => [
+    { name: tr("test_1_name"), city: tr("test_1_city"), initials: tr("test_1_initials"), quote: tr("test_1_quote"), rating: 5 },
+    { name: tr("test_2_name"), city: tr("test_2_city"), initials: tr("test_2_initials"), quote: tr("test_2_quote"), rating: 5 },
+    { name: tr("test_3_name"), city: tr("test_3_city"), initials: tr("test_3_initials"), quote: tr("test_3_quote"), rating: 5 },
+  ], [tr]);
+
+  const mini = useMemo(() => [
+    { name: tr("test_mini_1_name"), city: tr("test_mini_1_city"), quote: tr("test_mini_1_quote") },
+    { name: tr("test_mini_2_name"), city: tr("test_mini_2_city"), quote: tr("test_mini_2_quote") },
+    { name: tr("test_mini_3_name"), city: tr("test_mini_3_city"), quote: tr("test_mini_3_quote") },
+  ], [tr]);
+
   const [i, setI] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setI((c) => (c + 1) % items.length), 5000);
     return () => clearInterval(t);
-  }, []);
-  const t = items[i];
+  }, [items.length]);
+  const curr = items[i];
 
   return (
     <section className="relative overflow-hidden bg-twilight py-20 text-cream">
@@ -56,9 +59,9 @@ const Testimonials = () => {
 
       <div className="container relative">
         <SectionHeading
-          eyebrow="Voices of Devotion"
-          title="Blessings Received. Lives Transformed."
-          subtitle="Hear from devotees whose lives have been touched by sacred service"
+          eyebrow={tr("test_eyebrow")}
+          title={tr("test_title")}
+          subtitle={tr("test_sub")}
           light
         />
 
@@ -71,19 +74,19 @@ const Testimonials = () => {
             key={i}
             className="font-serif text-xl italic text-cream md:text-2xl leading-relaxed animate-fadeIn text-center"
           >
-            "{t.quote}"
+            "{curr.quote}"
           </blockquote>
 
           <div className="mt-8 flex flex-col items-center gap-3">
             <div className="grid h-14 w-14 place-items-center rounded-full bg-gold-grad font-display text-lg font-bold text-maroon ring-sacred">
-              {t.initials}
+              {curr.initials}
             </div>
             <div className="text-center">
-              <p className="font-display text-lg text-gold">{t.name}</p>
-              <p className="text-xs text-cream/60">{t.city}</p>
+              <p className="font-display text-lg text-gold">{curr.name}</p>
+              <p className="text-xs text-cream/60">{curr.city}</p>
             </div>
             <div className="flex">
-              {Array.from({ length: t.rating }).map((_, k) => (
+              {Array.from({ length: curr.rating }).map((_, k) => (
                 <Star key={k} size={16} fill="hsl(var(--gold))" stroke="hsl(var(--gold))" />
               ))}
             </div>

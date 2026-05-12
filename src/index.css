@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
+/* ── Google Fonts loaded via HTML <link> with preload/media-swap pattern ──
+   See index.html for the non-blocking font loading.
+   Fallback system fonts declared below ensure text is visible during load.
+*/
 
 @tailwind base;
 @tailwind components;
@@ -96,10 +99,17 @@
     @apply border-border;
   }
 
+  /* Prevent horizontal overflow from negative-offset decorative elements */
+  html {
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5 {
@@ -210,12 +220,33 @@
 ::-webkit-scrollbar-thumb { background: hsl(var(--gold)); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: hsl(var(--saffron)); }
 
-/* Marquee groups */
-.marquee-track { display: flex; width: max-content; animation: marquee 25s linear infinite; }
-.marquee-track-reverse { display: flex; width: max-content; animation: marquee 30s linear infinite reverse; }
+/* Marquee groups — GPU-composited */
+.marquee-track { display: flex; width: max-content; animation: marquee 25s linear infinite; will-change: transform; }
+.marquee-track-reverse { display: flex; width: max-content; animation: marquee 30s linear infinite reverse; will-change: transform; }
 
 /* Admin panel toast animation */
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Accessibility: Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .marquee-track,
+  .marquee-track-reverse {
+    animation: none;
+  }
+}
+
+/* ── Safe-area padding for notched phones ── */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

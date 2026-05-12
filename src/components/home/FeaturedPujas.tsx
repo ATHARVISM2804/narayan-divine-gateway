@@ -4,9 +4,11 @@ import { Link } from "react-router-dom";
 import SectionHeading from "@/components/SectionHeading";
 import { useCart } from "@/context/CartContext";
 import { supabase, type Puja } from "@/lib/supabase";
+import { useLanguage } from "@/context/LanguageContext";
 
 const FeaturedPujas = () => {
   const { addItem } = useCart();
+  const { t } = useLanguage();
   const [addedId, setAddedId] = useState<string | null>(null);
   const [pujas, setPujas] = useState<Puja[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +49,8 @@ const FeaturedPujas = () => {
 
       <div className="container">
         <SectionHeading
-          title="Sacred Pujas for Every Occasion"
-          subtitle="Performed by verified pandits at partnered temples — ancient rituals delivered with modern care"
+          title={t("featured_title")}
+          subtitle={t("featured_sub")}
         />
 
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3 mt-10">
@@ -92,7 +94,7 @@ const FeaturedPujas = () => {
 
                 <div className="my-5 overflow-hidden rounded-xl border border-gold/40 bg-gradient-to-b from-cream to-ivory shadow-sm">
                   <div className="bg-gradient-to-r from-gold/10 via-saffron/10 to-gold/10 py-2 px-3 border-b border-gold/30">
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-maroon text-center">Available Packages</h4>
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-maroon text-center">{t("featured_packages")}</h4>
                   </div>
                   <div className="p-3.5 flex flex-col gap-2.5">
                     {(p.prices || []).map((tier: { label: string; price: number }, idx: number) => {
@@ -131,8 +133,8 @@ const FeaturedPujas = () => {
                   </div>
                 </div>
 
-                <Link to="/cart" className="w-full text-center inline-block rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
-                  View Cart →
+                <Link to={`/puja/${p.id}`} className="w-full text-center inline-block rounded-full bg-saffron hover:bg-maroon px-5 py-3.5 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow mt-auto hover:-translate-y-0.5">
+                  {t("btn_participate")}
                 </Link>
               </div>
 
@@ -153,7 +155,7 @@ const FeaturedPujas = () => {
 
         <div className="mt-12 text-center">
           <Link to="/puja" className="inline-flex items-center gap-2 rounded-full border-2 border-gold bg-ivory px-8 py-3 font-semibold text-maroon shadow-soft transition-all hover:bg-gold hover:shadow-gold-glow">
-            View All Pujas →
+            {t("featured_view_all")}
           </Link>
         </div>
       </div>

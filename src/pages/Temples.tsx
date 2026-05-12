@@ -5,6 +5,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 import heroTemples from "@/assets/hero-temples-page.png";
+import { useLanguage } from "@/context/LanguageContext";
 import imgShiva from "@/assets/puja-shiva.jpg";
 import imgVishnu from "@/assets/puja-vishnu.jpg";
 import imgGanesh from "@/assets/puja-ganesh.jpg";
@@ -25,6 +26,7 @@ const states = ["All", "Uttar Pradesh", "Maharashtra", "Andhra Pradesh", "Odisha
 const deities = ["All", "Shiva", "Vishnu", "Ganesh", "Durga"];
 
 const Temples = () => {
+  const { t } = useLanguage();
   const [q, setQ] = useState("");
   const [state, setState] = useState("All");
   const [deity, setDeity] = useState("All");
@@ -40,14 +42,14 @@ const Temples = () => {
 
   return (
     <main>
-      <PageHero title="Explore India's Most Sacred Temples" subtitle="From Himalayan shrines to coastal sanctums" breadcrumb="Temples" bgImage={heroTemples} />
+      <PageHero title={t("tmp_hero")} subtitle={t("tmp_hero_sub")} breadcrumb={t("tmp_breadcrumb")} bgImage={heroTemples} />
 
       <section className="bg-background py-12">
         <div className="container">
           <div className="mx-auto mb-8 flex max-w-4xl flex-col gap-3 rounded-2xl border border-gold/50 bg-ivory p-4 md:flex-row">
             <div className="flex flex-1 items-center gap-2 rounded-full border border-gold/60 bg-cream px-4 py-2">
               <Search size={16} className="text-saffron" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search temple…" className="w-full bg-transparent text-sm outline-none placeholder:text-brown/40" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("tmp_search")} className="w-full bg-transparent text-sm outline-none placeholder:text-brown/40" />
             </div>
             <select value={state} onChange={(e) => setState(e.target.value)} className="rounded-full border border-gold/60 bg-cream px-4 py-2 text-sm text-maroon outline-none">
               {states.map((s) => <option key={s}>{s}</option>)}
@@ -60,27 +62,28 @@ const Temples = () => {
 
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((t) => (
-              <article key={t.name} className="group overflow-hidden rounded-2xl border border-gold/60 bg-ivory transition-all hover:-translate-y-1 hover:shadow-xl">
+            {filtered.map((tp) => (
+              <article key={tp.name} className="group overflow-hidden rounded-2xl border border-gold/60 bg-ivory transition-all hover:-translate-y-1 hover:shadow-xl">
                 <div className="relative h-48 overflow-hidden">
-                  <img src={t.image} alt={t.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={tp.image} alt={tp.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/60 to-transparent" />
-                  <span className="absolute bottom-3 left-3 font-display text-xl text-white drop-shadow-md">{t.name}</span>
+                  <span className="absolute bottom-3 left-3 font-display text-xl text-white drop-shadow-md">{tp.name}</span>
                 </div>
                 <div className="space-y-3 p-4">
 
                   <div className="flex flex-wrap gap-2 text-[11px] text-brown/70">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-cream px-2 py-0.5"><MapPin size={10} /> {t.state}</span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5">{t.deity}</span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-cream px-2 py-0.5"><Clock size={10} /> {t.timings}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-cream px-2 py-0.5"><MapPin size={10} /> {tp.state}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5">{tp.deity}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-cream px-2 py-0.5"><Clock size={10} /> {tp.timings}</span>
                   </div>
                   <div className="mt-3 flex gap-2">
-                    <Link to="/chadhava" className="flex-1 text-center rounded-full bg-saffron px-3 py-1.5 text-xs font-semibold text-white hover:bg-maroon transition-colors">Book Chadhava</Link>
-                    <Link to="/contact" className="flex-1 text-center rounded-full border border-gold px-3 py-1.5 text-xs font-semibold text-maroon hover:bg-gold/20">Details</Link>
+                    <Link to="/chadhava" className="flex-1 text-center rounded-full bg-saffron px-3 py-1.5 text-xs font-semibold text-white hover:bg-maroon transition-colors">{t("tmp_book_chadhava")}</Link>
+                    <Link to="/contact" className="flex-1 text-center rounded-full border border-gold px-3 py-1.5 text-xs font-semibold text-maroon hover:bg-gold/20">{t("tmp_details")}</Link>
                   </div>
                 </div>
               </article>
             ))}
+
           </div>
         </div>
       </section>
@@ -88,22 +91,22 @@ const Temples = () => {
       {/* Spotlight */}
       <section className="bg-cream py-16">
         <div className="container">
-          <SectionHeading title="Featured Temple Spotlight" />
+          <SectionHeading title={t("tmp_spot_title")} />
           <div className="grid gap-6 overflow-hidden rounded-3xl border border-gold/60 bg-ivory md:grid-cols-2">
             <div className="relative overflow-hidden h-64 md:h-full min-h-[300px]">
                <img src={imgDarshan} alt="Kashi Vishwanath" className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
                <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/60 via-maroon-deep/20 to-transparent" />
             </div>
             <div className="p-8 md:p-10">
-              <span className="inline-block rounded-full bg-gold px-3 py-1 text-xs font-bold text-maroon">JYOTIRLINGA</span>
+              <span className="inline-block rounded-full bg-gold px-3 py-1 text-xs font-bold text-maroon">{t("tmp_spot_tag")}</span>
               <h3 className="mt-3 font-display text-3xl text-maroon">Kashi Vishwanath</h3>
               <p className="mt-2 text-sm text-brown/70">Varanasi, Uttar Pradesh</p>
               <p className="mt-4 text-brown/80">
-                One of the twelve sacred Jyotirlingas, the temple stands on the western bank of the Ganga and has been a beacon of Shaivism for millennia.
+                {t("tmp_spot_desc")}
               </p>
               <div className="mt-6 flex gap-3">
-                <Link to="/chadhava" className="inline-block text-center rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white hover:bg-maroon transition-colors">Book Chadhava</Link>
-                <Link to="/contact" className="inline-block text-center rounded-full border border-gold px-5 py-2 text-sm font-semibold text-maroon hover:bg-gold/20">View Details</Link>
+                <Link to="/chadhava" className="inline-block text-center rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-white hover:bg-maroon transition-colors">{t("tmp_book_chadhava")}</Link>
+                <Link to="/contact" className="inline-block text-center rounded-full border border-gold px-5 py-2 text-sm font-semibold text-maroon hover:bg-gold/20">{t("tmp_view_details")}</Link>
               </div>
             </div>
           </div>

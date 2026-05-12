@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase } from "@/lib/supabase";
 import { Package, LogOut, ShoppingBag, Eye, X, User } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Order {
   id: string;
@@ -27,6 +28,7 @@ const MyOrders = () => {
   usePageTitle("My Orders — Narayan Kripa");
   const { user, loading: authLoading, signOut } = useAuth();
   const nav = useNavigate();
+  const { t } = useLanguage();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<Order | null>(null);
@@ -80,7 +82,7 @@ const MyOrders = () => {
             </div>
             <button onClick={handleLogout}
               className="flex items-center gap-2 rounded-full border border-gold/50 px-4 py-2 text-sm text-gold hover:bg-gold/10 transition-colors">
-              <LogOut size={14} /> Logout
+              <LogOut size={14} /> {t("mo_logout")}
             </button>
           </div>
         </div>
@@ -88,7 +90,7 @@ const MyOrders = () => {
 
       <div className="container py-10">
         <h2 className="font-display text-2xl text-maroon mb-6 flex items-center gap-2">
-          <Package size={22} className="text-saffron" /> My Orders
+          <Package size={22} className="text-saffron" /> {t("mo_title")}
         </h2>
 
         {loading ? (
@@ -100,10 +102,10 @@ const MyOrders = () => {
             <div className="mx-auto mb-4 grid h-20 w-20 place-items-center rounded-full bg-gold/10">
               <ShoppingBag size={36} className="text-gold/50" />
             </div>
-            <h3 className="font-display text-xl text-maroon">No orders yet</h3>
-            <p className="mt-2 text-sm text-brown/60">Your puja and chadhava orders will appear here</p>
+            <h3 className="font-display text-xl text-maroon">{t("mo_empty_title")}</h3>
+            <p className="mt-2 text-sm text-brown/60">{t("mo_empty_sub")}</p>
             <Link to="/puja" className="mt-6 inline-block rounded-full bg-saffron px-6 py-3 text-sm font-semibold text-white hover:bg-maroon transition-colors">
-              Browse Pujas
+              {t("mo_browse")}
             </Link>
           </div>
         ) : (
@@ -147,36 +149,36 @@ const MyOrders = () => {
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDetail(null)} />
           <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-2xl bg-ivory shadow-2xl p-6 animate-fadeIn">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-display text-lg text-maroon">Order Details</h3>
+              <h3 className="font-display text-lg text-maroon">{t("mo_details")}</h3>
               <button onClick={() => setDetail(null)} className="text-brown/50 hover:text-maroon"><X size={20} /></button>
             </div>
 
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-[11px] text-brown/50 uppercase">Status</p>
+                  <p className="text-[11px] text-brown/50 uppercase">{t("mo_status")}</p>
                   <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${statusColors[detail.status]}`}>{detail.status}</span>
                 </div>
                 <div>
-                  <p className="text-[11px] text-brown/50 uppercase">Amount</p>
+                  <p className="text-[11px] text-brown/50 uppercase">{t("mo_amount")}</p>
                   <p className="font-bold text-saffron">₹{(detail.amount / 100).toLocaleString("en-IN")}</p>
                 </div>
               </div>
 
               <div className="border-t border-gold/20 pt-3">
-                <p className="text-[11px] text-brown/50 uppercase mb-1">Date</p>
+                <p className="text-[11px] text-brown/50 uppercase mb-1">{t("mo_date")}</p>
                 <p className="text-brown/70">{new Date(detail.created_at).toLocaleString("en-IN")}</p>
               </div>
 
               {detail.razorpay_payment_id && (
                 <div className="border-t border-gold/20 pt-3">
-                  <p className="text-[11px] text-brown/50 uppercase mb-1">Payment ID</p>
+                  <p className="text-[11px] text-brown/50 uppercase mb-1">{t("mo_payment_id")}</p>
                   <p className="font-mono text-xs text-brown/60">{detail.razorpay_payment_id}</p>
                 </div>
               )}
 
               <div className="border-t border-gold/20 pt-3">
-                <p className="text-[11px] text-brown/50 uppercase mb-2">Items</p>
+                <p className="text-[11px] text-brown/50 uppercase mb-2">{t("mo_items")}</p>
                 {(detail.items || []).map((item: any, i: number) => (
                   <div key={i} className="flex justify-between py-1.5 border-b border-gold/10 last:border-0">
                     <span className="text-maroon">{item.name} <span className="text-brown/40">×{item.quantity}</span></span>

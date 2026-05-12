@@ -9,12 +9,7 @@ import heroChadhava from "@/assets/hero-chadhava-page.png";
 import imgChadhavaHero from "@/assets/hero-chadhava.jpg";
 import { useLanguage } from "@/context/LanguageContext";
 
-const benefits = [
-  "Monthly chadhava at your chosen temple",
-  "Prasad delivered to your doorstep",
-  "Personalized blessings certificate",
-  "Priority darshan booking",
-];
+
 
 const Chadhava = () => {
   usePageTitle("Offer Chadhava — Narayan Kripa");
@@ -75,7 +70,7 @@ const Chadhava = () => {
               <div className="mt-4 flex items-center justify-between border-t border-gold/30 pt-3">
                 <span className="font-semibold text-saffron text-lg">₹{o.price.toLocaleString("en-IN")}</span>
                 <span className="rounded-full bg-saffron group-hover:bg-maroon px-4 py-1.5 text-sm font-semibold text-white transition-colors">
-                  {lang === 'hi' ? 'विवरण देखें →' : 'View Details →'}
+                  {t("ch_view_details")}
                 </span>
               </div>
             </Link>
@@ -90,15 +85,15 @@ const Chadhava = () => {
     <section className="bg-background py-16">
       <div className="container">
         <div className="mx-auto max-w-3xl rounded-3xl border-2 border-gold bg-gradient-to-br from-maroon to-maroon-deep p-8 text-cream md:p-12">
-          <span className="inline-block rounded-full bg-gold px-3 py-1 text-xs font-bold text-maroon">CHADHAVA+ SEVA</span>
-          <h2 className="mt-3 font-display text-3xl text-gold">Monthly Sacred Subscription</h2>
-          <p className="mt-2 text-cream/80">Continuous blessings — automated chadhava every month at your chosen temple.</p>
+          <span className="inline-block rounded-full bg-gold px-3 py-1 text-xs font-bold text-maroon">{t("ch_seva_badge")}</span>
+          <h2 className="mt-3 font-display text-3xl text-gold">{t("ch_seva_title")}</h2>
+          <p className="mt-2 text-cream/80">{t("ch_seva_desc")}</p>
           <ul className="mt-5 space-y-2">
-            {benefits.map((b) => (
+            {[t("ch_benefit1"), t("ch_benefit2"), t("ch_benefit3"), t("ch_benefit4")].map((b) => (
               <li key={b} className="flex items-start gap-2"><Check size={18} className="mt-0.5 text-gold" /> {b}</li>
             ))}
           </ul>
-          <Link to="/contact" className="mt-6 inline-block rounded-full bg-saffron px-6 py-3 font-semibold text-white hover:bg-gold hover:text-maroon transition-colors">Subscribe — ₹999/mo</Link>
+          <Link to="/contact" className="mt-6 inline-block rounded-full bg-saffron px-6 py-3 font-semibold text-white hover:bg-gold hover:text-maroon transition-colors">{t("ch_seva_btn")}</Link>
         </div>
       </div>
     </section>
@@ -106,16 +101,16 @@ const Chadhava = () => {
     {/* How it works */}
     <section className="bg-cream py-16">
       <div className="container">
-        <SectionHeading title="How Chadhava Works" />
+        <SectionHeading title={t("ch_how_title")} />
         <div className="grid gap-8 md:grid-cols-3">
           {[
-            { Icon: Search, title: "Choose Temple & Offering", desc: "Pick your preferred temple and the offering you wish to send." },
-            { Icon: Heart, title: "Add Your Sankalp", desc: "Share your name, gotra and intention behind the offering." },
-            { Icon: Gift, title: "Receive Prasad", desc: "Get prasad and a blessings certificate delivered to your home." },
+            { Icon: Search, title: t("ch_how_s1_title"), desc: t("ch_how_s1_desc") },
+            { Icon: Heart, title: t("ch_how_s2_title"), desc: t("ch_how_s2_desc") },
+            { Icon: Gift, title: t("ch_how_s3_title"), desc: t("ch_how_s3_desc") },
           ].map((s, i) => (
             <div key={s.title} className="rounded-2xl border border-gold/40 bg-ivory p-6 text-center">
               <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-saffron text-white"><s.Icon size={20} /></div>
-              <p className="mt-2 text-xs font-semibold text-saffron">STEP {i + 1}</p>
+              <p className="mt-2 text-xs font-semibold text-saffron">{t("ch_step_label")} {i + 1}</p>
               <h3 className="font-display text-maroon">{s.title}</h3>
               <p className="mt-2 text-sm text-brown/70">{s.desc}</p>
             </div>

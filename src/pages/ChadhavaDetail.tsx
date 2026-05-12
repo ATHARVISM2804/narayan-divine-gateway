@@ -244,7 +244,7 @@ const ChadhavaDetail = () => {
       </div>
 
       {/* ── Mobile Sticky Bottom Bar ── */}
-      <div className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-ivory border-t-2 border-gold/30 px-4 py-3 flex items-center gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+      <div className="fixed bottom-0 inset-x-0 z-[51] lg:hidden bg-ivory border-t-2 border-gold/30 px-4 py-3 flex items-center gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] safe-bottom">
         <div className="flex-1 min-w-0">
           <p className="font-bold text-maroon text-sm truncate">{displayItem}</p>
           <p className="font-bold text-saffron text-lg leading-tight">₹{chadhava.price.toLocaleString("en-IN")}</p>

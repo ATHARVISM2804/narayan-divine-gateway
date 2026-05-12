@@ -3,35 +3,37 @@ import { MapPin, Phone, Mail, Clock, Plus, Minus, Facebook, Instagram, Youtube, 
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import heroContact from "@/assets/hero-contact-page.png";
-
-const faqs = [
-  { q: "How do I book a puja?", a: "Choose a puja from our catalogue, share your sankalp details, and select a date — verified pandits handle the rest." },
-  { q: "Will I receive prasad?", a: "Yes — prasad and a blessings certificate are couriered to your registered address after the ritual." },
-  { q: "Are the pandits verified?", a: "Every pandit on Narayan Kripa is certified by recognised Vedic institutions and reviewed by our acharya panel." },
-  { q: "Can I attend the puja virtually?", a: "Absolutely — most pujas include a live or recorded video so you can witness every step." },
-  { q: "What is your refund policy?", a: "Cancellations made 24 hours before the puja are fully refundable. Read full terms on our policy page." },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 const Contact = () => {
   usePageTitle("Contact Narayan Kripa — Get in Touch");
+  const { t } = useLanguage();
   const [open, setOpen] = useState<number | null>(0);
   const social = [Facebook, Instagram, Youtube, Twitter];
 
+  const faqs = [
+    { q: t("ct_faq_q1"), a: t("ct_faq_a1") },
+    { q: t("ct_faq_q2"), a: t("ct_faq_a2") },
+    { q: t("ct_faq_q3"), a: t("ct_faq_a3") },
+    { q: t("ct_faq_q4"), a: t("ct_faq_a4") },
+    { q: t("ct_faq_q5"), a: t("ct_faq_a5") },
+  ];
+
   return (
     <main>
-      <PageHero title="Get in Touch" subtitle="We are here to help you walk the path of devotion" variant="ivory" breadcrumb="Contact" bgImage={heroContact} />
+      <PageHero title={t("ct_hero")} subtitle={t("ct_hero_sub")} variant="ivory" breadcrumb={t("ct_breadcrumb")} bgImage={heroContact} />
 
       <section className="bg-background py-16">
         <div className="container grid gap-10 lg:grid-cols-2">
           {/* Form */}
           <div className="rounded-2xl border border-gold/50 bg-ivory p-8">
-            <h2 className="font-display text-3xl text-maroon">Send a Message</h2>
-            <p className="mt-1 font-serif italic text-brown/70">We'll respond within 24 hours.</p>
+            <h2 className="font-display text-3xl text-maroon">{t("ct_form_title")}</h2>
+            <p className="mt-1 font-serif italic text-brown/70">{t("ct_form_sub")}</p>
             <form className="mt-6 space-y-4" onSubmit={(e) => e.preventDefault()}>
               {[
-                { label: "Name", type: "text" },
-                { label: "Email", type: "email" },
-                { label: "Phone", type: "tel" },
+                { label: t("ct_name"), type: "text" },
+                { label: t("ct_email"), type: "email" },
+                { label: t("ct_phone"), type: "tel" },
               ].map((f) => (
                 <div key={f.label}>
                   <label className="mb-1 block text-xs font-medium text-maroon">{f.label}</label>
@@ -39,21 +41,21 @@ const Contact = () => {
                 </div>
               ))}
               <div>
-                <label className="mb-1 block text-xs font-medium text-maroon">Subject</label>
+                <label className="mb-1 block text-xs font-medium text-maroon">{t("ct_subject")}</label>
                 <select className="w-full rounded-lg border border-gold bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron">
-                  <option>General Enquiry</option>
-                  <option>Puja Booking</option>
-                  <option>Chadhava Support</option>
-                  <option>Pandit Consultation</option>
-                  <option>Partnership</option>
+                  <option>{t("ct_general")}</option>
+                  <option>{t("ct_puja_booking")}</option>
+                  <option>{t("ct_chadhava_support")}</option>
+                  <option>{t("ct_pandit")}</option>
+                  <option>{t("ct_partnership")}</option>
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-maroon">Message</label>
+                <label className="mb-1 block text-xs font-medium text-maroon">{t("ct_message")}</label>
                 <textarea rows={5} className="w-full rounded-lg border border-gold bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" />
               </div>
               <button className="rounded-full bg-saffron px-6 py-3 text-sm font-semibold text-white hover:bg-maroon transition-colors">
-                Submit
+                {t("ct_submit")}
               </button>
             </form>
           </div>
@@ -61,10 +63,10 @@ const Contact = () => {
           {/* Info */}
           <div className="space-y-4">
             {[
-              { Icon: MapPin, title: "Address", text: "Narayan Kripa, Lanka, Varanasi 221005, India" },
-              { Icon: Phone, title: "Phone", text: "+91 92863 45941" },
-              { Icon: Mail, title: "Email", text: "Asknarayankripa@gmail.com" },
-              { Icon: Clock, title: "Support Hours", text: "Mon–Sat, 9 AM – 7 PM IST" },
+              { Icon: MapPin, title: t("ct_address_title"), text: t("ct_address_text") },
+              { Icon: Phone, title: t("ct_phone_title"), text: t("ct_phone_text") },
+              { Icon: Mail, title: t("ct_email_title"), text: t("ct_email_text") },
+              { Icon: Clock, title: t("ct_hours_title"), text: t("ct_hours_text") },
             ].map((c) => (
               <div key={c.title} className="flex gap-4 rounded-2xl border border-gold/40 bg-ivory p-5">
                 <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gold/30 text-saffron">
@@ -78,7 +80,7 @@ const Contact = () => {
             ))}
 
             <div className="rounded-2xl border border-gold/40 bg-ivory p-5">
-              <h4 className="font-display text-maroon">Follow Us</h4>
+              <h4 className="font-display text-maroon">{t("ct_follow")}</h4>
               <div className="mt-3 flex gap-3">
                 {social.map((Icon, i) => (
                   <a key={i} href="#" className="grid h-10 w-10 place-items-center rounded-full border border-gold text-saffron hover:bg-saffron hover:text-white transition-colors">
@@ -94,7 +96,7 @@ const Contact = () => {
       {/* FAQ */}
       <section className="bg-cream py-16">
         <div className="container max-w-3xl">
-          <h2 className="text-center font-display text-3xl text-maroon">Frequently Asked Questions</h2>
+          <h2 className="text-center font-display text-3xl text-maroon">{t("ct_faq_title")}</h2>
           <div className="mx-auto my-3 h-px w-20 bg-gold" />
           <div className="mt-8 space-y-3">
             {faqs.map((f, i) => (

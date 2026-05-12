@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -10,29 +10,43 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MobileCartBar from "@/components/MobileCartBar";
-import Home from "./pages/Home";
-import Puja from "./pages/Puja";
-import Chadhava from "./pages/Chadhava";
-import Astrology from "./pages/Astrology";
-import Temples from "./pages/Temples";
-import Contact from "./pages/Contact";
-import Cart from "./pages/Cart";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Grievance from "./pages/Grievance";
-import Refund from "./pages/Refund";
-import Shipping from "./pages/Shipping";
-import NotFound from "./pages/NotFound";
-import AdminLogin from "./pages/admin/AdminLogin";
-import AdminPanel from "./pages/admin/AdminPanel";
-import Checkout from "./pages/Checkout";
-import OrderSuccess from "./pages/OrderSuccess";
-import Login from "./pages/Login";
-import MyOrders from "./pages/MyOrders";
-import PujaDetail from "./pages/PujaDetail";
-import ChadhavaDetail from "./pages/ChadhavaDetail";
 
-const queryClient = new QueryClient();
+// ── Eager: Home (landing page — always needed first) ──
+import Home from "./pages/Home";
+
+// ── Lazy: All other pages (code-split by route) ──
+const Puja = lazy(() => import("./pages/Puja"));
+const PujaDetail = lazy(() => import("./pages/PujaDetail"));
+const Chadhava = lazy(() => import("./pages/Chadhava"));
+const ChadhavaDetail = lazy(() => import("./pages/ChadhavaDetail"));
+const Astrology = lazy(() => import("./pages/Astrology"));
+const Temples = lazy(() => import("./pages/Temples"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
+const Login = lazy(() => import("./pages/Login"));
+const MyOrders = lazy(() => import("./pages/MyOrders"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Grievance = lazy(() => import("./pages/Grievance"));
+const Refund = lazy(() => import("./pages/Refund"));
+const Shipping = lazy(() => import("./pages/Shipping"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// ── Lazy: Admin (never needed on public site) ──
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const AdminPanel = lazy(() => import("./pages/admin/AdminPanel"));
+
+// ── QueryClient with sensible caching ──
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,   // 5 min — avoid refetching static-ish data on every focus
+      retry: 1,
+    },
+  },
+});
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -42,11 +56,23 @@ const ScrollToTop = () => {
   return null;
 };
 
+/* ── Route loading fallback — branded spinner ── */
+const PageLoader = () => (
+  <div className="min-h-[50vh] flex items-center justify-center bg-background">
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-gold border-t-saffron" />
+      <p className="text-sm text-brown/50 font-serif italic">Loading…</p>
+    </div>
+  </div>
+);
+
 /* Public layout — Navbar + Footer wrap all public pages */
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
     <Navbar />
-    {children}
+    <Suspense fallback={<PageLoader />}>
+      {children}
+    </Suspense>
     <Footer />
     <MobileCartBar />
   </>
@@ -64,8 +90,8 @@ const App = () => (
           <ScrollToTop />
           <Routes>
             {/* ── Admin routes (standalone — no Navbar/Footer) ── */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/admin/login" element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>} />
+            <Route path="/admin" element={<Suspense fallback={<PageLoader />}><AdminPanel /></Suspense>} />
 
             {/* ── Public routes ── */}
             <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />

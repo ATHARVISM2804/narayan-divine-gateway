@@ -6,7 +6,7 @@ const Footer = () => {
   const { t } = useLanguage();
 
   const companyLinks = [
-    { label: "About Us", to: "/contact" },
+    { label: t("footer_about"), to: "/contact" },
     { label: t("nav_contact"), to: "/contact" },
     { label: t("nav_my_orders"), to: "/my-orders" },
   ];
@@ -55,7 +55,7 @@ const Footer = () => {
           ))}
         </svg>
 
-        <div className="container relative z-10 grid gap-10 py-14 md:grid-cols-4 lg:gap-14">
+        <div className="container relative z-10 grid gap-10 py-14 sm:grid-cols-2 md:grid-cols-4 lg:gap-14">
 
           {/* Col 1 — Brand */}
           <div className="md:col-span-1">
@@ -68,7 +68,7 @@ const Footer = () => {
               <span className="font-display text-xl text-gold drop-shadow-sm">Narayan Kripa</span>
             </div>
             <p className="text-sm text-cream/70 leading-relaxed">
-              Your trusted spiritual companion — connecting devotees with sacred temples, experienced pandits and authentic Vedic rituals. Book pujas, offer chadhava and receive blessed prasad at your doorstep.
+              {t("footer_description")}
             </p>
 
             {/* Sanskrit tagline */}
@@ -79,7 +79,7 @@ const Footer = () => {
 
           {/* Col 2 — Company */}
           <div>
-            <h4 className="mb-5 font-display text-base text-gold tracking-wide">Company</h4>
+            <h4 className="mb-5 font-display text-base text-gold tracking-wide">{t("footer_company")}</h4>
             <div className="mb-3 h-px w-10 bg-gradient-to-r from-gold/50 to-transparent" />
             <ul className="space-y-3 text-sm">
               {companyLinks.map((link) => (
@@ -98,7 +98,7 @@ const Footer = () => {
 
           {/* Col 3 — Our Services */}
           <div>
-            <h4 className="mb-5 font-display text-base text-gold tracking-wide">Our Services</h4>
+            <h4 className="mb-5 font-display text-base text-gold tracking-wide">{t("footer_our_services")}</h4>
             <div className="mb-3 h-px w-10 bg-gradient-to-r from-gold/50 to-transparent" />
             <ul className="space-y-3 text-sm">
               {serviceLinks.map((link) => (
@@ -117,7 +117,7 @@ const Footer = () => {
 
           {/* Col 4 — Get in Touch */}
           <div>
-            <h4 className="mb-5 font-display text-base text-gold tracking-wide">Get in Touch</h4>
+            <h4 className="mb-5 font-display text-base text-gold tracking-wide">{t("footer_get_in_touch")}</h4>
             <div className="mb-3 h-px w-10 bg-gradient-to-r from-gold/50 to-transparent" />
 
             <div className="space-y-3 text-sm text-cream/65">
@@ -168,15 +168,15 @@ const Footer = () => {
           {/* Trust badges */}
           <div className="flex items-center gap-4 flex-wrap justify-center">
             <span className="text-xs font-semibold text-cream/50 flex items-center gap-1.5">
-              <span className="text-base">🔒</span> Secure Payments
+              <span className="text-base">🔒</span> {t("footer_secure_payments")}
             </span>
             <span className="text-cream/20">|</span>
             <span className="text-xs font-semibold text-cream/50 flex items-center gap-1.5">
-              <span className="text-base">💳</span> Razorpay Trusted
+              <span className="text-base">💳</span> {t("footer_razorpay_trusted")}
             </span>
             <span className="text-cream/20">|</span>
             <span className="text-xs font-semibold text-cream/50 flex items-center gap-1.5">
-              <span className="text-base">📦</span> Prasad Delivery
+              <span className="text-base">📦</span> {t("footer_prasad_delivery")}
             </span>
           </div>
 
@@ -187,13 +187,13 @@ const Footer = () => {
               <span className="text-cream/20">·</span>
               <Link to="/terms" className="hover:text-gold transition-colors">{t("footer_terms")}</Link>
               <span className="text-cream/20">·</span>
-              <Link to="/refund-policy" className="hover:text-gold transition-colors">Refund Policy</Link>
+              <Link to="/refund-policy" className="hover:text-gold transition-colors">{t("footer_refund_policy")}</Link>
               <span className="text-cream/20">·</span>
-              <Link to="/shipping-policy" className="hover:text-gold transition-colors">Shipping Policy</Link>
+              <Link to="/shipping-policy" className="hover:text-gold transition-colors">{t("footer_shipping_policy")}</Link>
               <span className="text-cream/20">·</span>
               <Link to="/grievance" className="hover:text-gold transition-colors">{t("footer_grievance")}</Link>
             </div>
-            <p className="text-[11px] text-cream/30">© {new Date().getFullYear()} Narayan Kripa. All rights reserved.</p>
+            <p className="text-[11px] text-cream/30">{t("footer_copyright")}</p>
           </div>
         </div>
       </div>

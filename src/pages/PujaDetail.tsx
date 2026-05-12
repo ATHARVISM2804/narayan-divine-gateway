@@ -173,7 +173,7 @@ const PujaDetail = () => {
                     <p className="text-cream/60 text-xs font-semibold uppercase tracking-wider mb-2">
                       {t("timer_label")}
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                       {[
                         { val: timeLeft.days,  label: t("timer_days")  },
                         { val: timeLeft.hours, label: t("timer_hours") },
@@ -181,12 +181,12 @@ const PujaDetail = () => {
                         { val: timeLeft.secs,  label: t("timer_secs")  },
                       ].map(({ val, label }, i) => (
                         <div key={label} className="flex items-center gap-2">
-                          <div className={`flex flex-col items-center justify-center rounded-xl px-3 py-2 min-w-[52px] border ${
+                          <div className={`flex flex-col items-center justify-center rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 min-w-[44px] sm:min-w-[52px] border ${
                             timeLeft.days === 0
                               ? "bg-red-900/50 border-red-500/40"
                               : "bg-maroon-deep/60 border-gold/20"
                           }`}>
-                            <span className={`font-bold text-xl leading-none tabular-nums ${
+                            <span className={`font-bold text-lg sm:text-xl leading-none tabular-nums ${
                               timeLeft.days === 0 ? "text-red-300" : "text-gold"
                             }`}>
                               {String(val).padStart(2, "0")}
@@ -240,7 +240,7 @@ const PujaDetail = () => {
           <p className="text-sm text-brown/60 font-semibold mb-6">{t("select_package_sub")}</p>
 
           {/* Package Cards Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {(puja.prices || []).map((tier) => {
               const isSelected = selectedTier?.label === tier.label;
               const itemId = `puja-${puja.id}-${tier.label}`;

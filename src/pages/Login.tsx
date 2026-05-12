@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Flame, Eye, EyeOff, Loader2, User, Mail, Phone } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const Login = () => {
   usePageTitle("Login — Narayan Kripa");
   const nav = useNavigate();
   const { signIn, signUp } = useAuth();
+  const { t } = useLanguage();
 
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
@@ -25,7 +27,7 @@ const Login = () => {
     setLoading(true);
 
     if (mode === "signup") {
-      if (!form.name.trim()) { setError("Please enter your name"); setLoading(false); return; }
+      if (!form.name.trim()) { setError(t("co_err_name")); setLoading(false); return; }
       if (form.password.length < 6) { setError("Password must be at least 6 characters"); setLoading(false); return; }
       const { error: err } = await signUp(form.email, form.password, form.name, form.phone);
       setLoading(false);
@@ -45,7 +47,6 @@ const Login = () => {
 
   return (
     <main className="min-h-[70vh] bg-background flex items-center justify-center py-16">
-      {/* Decorative mandala */}
       <svg viewBox="0 0 200 200" className="pointer-events-none fixed -left-24 -bottom-24 h-[30rem] w-[30rem] text-gold/5" fill="none" stroke="currentColor" strokeWidth="0.4">
         <circle cx="100" cy="100" r="95" /><circle cx="100" cy="100" r="70" /><circle cx="100" cy="100" r="45" />
         {Array.from({ length: 12 }).map((_, i) => (
@@ -53,62 +54,50 @@ const Login = () => {
         ))}
       </svg>
 
-      <form onSubmit={handleSubmit} className="relative w-full max-w-md mx-4 rounded-3xl border border-gold/40 bg-ivory/95 p-8 shadow-2xl backdrop-blur md:p-10">
-        {/* Logo */}
+      <form onSubmit={handleSubmit} className="relative w-full max-w-md mx-3 sm:mx-4 rounded-3xl border border-gold/40 bg-ivory/95 p-6 sm:p-8 shadow-2xl backdrop-blur md:p-10">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-saffron to-maroon shadow-lg">
             <Flame size={28} className="text-gold" />
           </div>
           <h1 className="font-display text-2xl text-maroon">
-            {mode === "login" ? "Welcome Back" : "Create Account"}
+            {mode === "login" ? t("login_welcome") : t("login_create")}
           </h1>
           <p className="mt-1 font-serif italic text-sm text-brown/60">
-            {mode === "login" ? "Login to track your orders & blessings" : "Join Narayan Kripa — track orders & blessings"}
+            {mode === "login" ? t("login_sub") : t("login_signup_sub")}
           </p>
         </div>
 
-        {error && (
-          <div className="mb-5 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 animate-fadeIn">{error}</div>
-        )}
-        {success && (
-          <div className="mb-5 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 animate-fadeIn">{success}</div>
-        )}
+        {error && <div className="mb-5 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 animate-fadeIn">{error}</div>}
+        {success && <div className="mb-5 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 animate-fadeIn">{success}</div>}
 
         <div className="space-y-4">
-          {/* Name (signup only) */}
           {mode === "signup" && (
             <div>
               <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-maroon">
-                <User size={12} /> Full Name
+                <User size={12} /> {t("login_name")}
               </label>
-              <input type="text" value={form.name} onChange={set("name")} placeholder="Enter your full name"
+              <input type="text" value={form.name} onChange={set("name")} placeholder={t("login_ph_name")}
                 className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm text-brown outline-none transition-all focus:border-saffron focus:ring-2 focus:ring-saffron/20" />
             </div>
           )}
-
-          {/* Email */}
           <div>
             <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-maroon">
-              <Mail size={12} /> Email
+              <Mail size={12} /> {t("login_email")}
             </label>
-            <input type="email" required value={form.email} onChange={set("email")} placeholder="your@email.com"
+            <input type="email" required value={form.email} onChange={set("email")} placeholder={t("login_ph_email")}
               className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm text-brown outline-none transition-all focus:border-saffron focus:ring-2 focus:ring-saffron/20" />
           </div>
-
-          {/* Phone (signup only) */}
           {mode === "signup" && (
             <div>
               <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-maroon">
-                <Phone size={12} /> Phone
+                <Phone size={12} /> {t("co_phone")}
               </label>
               <input type="tel" value={form.phone} onChange={set("phone")} placeholder="+91 XXXXX XXXXX"
                 className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm text-brown outline-none transition-all focus:border-saffron focus:ring-2 focus:ring-saffron/20" />
             </div>
           )}
-
-          {/* Password */}
           <div>
-            <label className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-maroon block">Password</label>
+            <label className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-maroon block">{t("login_password")}</label>
             <div className="relative">
               <input type={showPw ? "text" : "password"} required value={form.password} onChange={set("password")} placeholder="••••••••"
                 className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 pr-11 text-sm text-brown outline-none transition-all focus:border-saffron focus:ring-2 focus:ring-saffron/20" />
@@ -121,19 +110,19 @@ const Login = () => {
 
         <button type="submit" disabled={loading}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-maroon py-3.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed">
-          {loading ? <><Loader2 size={18} className="animate-spin" /> {mode === "login" ? "Signing in…" : "Creating account…"}</> : mode === "login" ? "Sign In" : "Create Account"}
+          {loading ? <><Loader2 size={18} className="animate-spin" /> {mode === "login" ? t("login_signing") : t("login_creating")}</> : mode === "login" ? t("login_signin") : t("login_signup")}
         </button>
 
         <div className="mt-5 text-center text-sm text-brown/60">
           {mode === "login" ? (
-            <>Don't have an account? <button type="button" onClick={() => { setMode("signup"); setError(""); setSuccess(""); }} className="font-semibold text-saffron hover:text-maroon transition-colors">Sign Up</button></>
+            <>{t("login_no_account")} <button type="button" onClick={() => { setMode("signup"); setError(""); setSuccess(""); }} className="font-semibold text-saffron hover:text-maroon transition-colors">{t("login_signup_link")}</button></>
           ) : (
-            <>Already have an account? <button type="button" onClick={() => { setMode("login"); setError(""); setSuccess(""); }} className="font-semibold text-saffron hover:text-maroon transition-colors">Sign In</button></>
+            <>{t("login_has_account")} <button type="button" onClick={() => { setMode("login"); setError(""); setSuccess(""); }} className="font-semibold text-saffron hover:text-maroon transition-colors">{t("login_signin_link")}</button></>
           )}
         </div>
 
         <Link to="/" className="mt-4 block text-center text-xs text-brown/50 hover:text-saffron transition-colors">
-          ← Back to website
+          {t("login_back")}
         </Link>
       </form>
     </main>

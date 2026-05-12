@@ -19,10 +19,15 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
   },
   build: {
+    target: "es2020",
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ["react", "react-dom", "react-router-dom"],
+          supabase: ["@supabase/supabase-js"],
+          query: ["@tanstack/react-query", "@tanstack/query-core"],
+          i18n: ["i18next", "react-i18next"],
+          ui: ["lucide-react", "class-variance-authority", "clsx", "tailwind-merge"],
         },
       },
     },

@@ -6,8 +6,21 @@
     <title>Narayan Kripa — Sacred Pujas, Chadhava & Temple Services</title>
     <meta name="description" content="Book Vedic pujas, offer chadhava at 50+ sacred temples, consult expert pandits and watch live darshan — all from home. Trusted by 2 lakh+ devotees." />
     <meta name="author" content="Narayan Kripa" />
+    <meta name="theme-color" content="#5C1A1A" />
 
     <link rel="icon" type="image/png" href="https://res.cloudinary.com/dmhabztbf/image/upload/v1777662309/favicon_khlzjo.png" />
+
+    <!-- Preconnect to external origins for faster resource loading -->
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Google Fonts — loaded non-blocking via media swap pattern -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap" />
+    </noscript>
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -23,7 +36,7 @@
 
   <body>
     <div id="root"></div>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <!-- Razorpay script removed from here — loaded dynamically only on Checkout page -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

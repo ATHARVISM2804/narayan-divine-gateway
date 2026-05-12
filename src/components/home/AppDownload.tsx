@@ -1,4 +1,5 @@
 import { Check, Menu, Search, Phone, Flame, Flower2, ShoppingBag, Sparkles, Calendar, BookOpen, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const features = [
   "Daily Puja & Aarti Reminders",
@@ -26,16 +27,26 @@ const storeButtons = [
   },
 ];
 
-const AppDownload = () => (
-  <section className="overflow-hidden">
+const AppDownload = () => {
+  const { t } = useLanguage();
+
+  const features = [
+    t("app_f1"),
+    t("app_f2"),
+    t("app_f3"),
+    t("app_f4"),
+  ];
+
+  return (
+    <section className="overflow-hidden">
     <div className="grid md:grid-cols-2">
       {/* Left */}
       <div className="bg-cream p-8 md:p-12 lg:p-16">
-        <span className="inline-block rounded-full bg-gold/30 px-3 py-1 text-xs font-medium text-maroon">📱 Mobile App</span>
-        <h2 className="mt-3 font-display text-3xl text-maroon md:text-4xl">Narayan Kripa App</h2>
-        <h3 className="font-serif text-xl italic text-gold">Coming Soon</h3>
+        <span className="inline-block rounded-full bg-gold/30 px-3 py-1 text-xs font-medium text-maroon">{t("app_badge")}</span>
+        <h2 className="mt-3 font-display text-3xl text-maroon md:text-4xl">{t("app_title")}</h2>
+        <h3 className="font-serif text-xl italic text-gold">{t("app_coming")}</h3>
         <p className="mt-4 max-w-md text-brown/70">
-          Daily puja reminders, live darshan, instant pandit consultation, panchang & more — right in your pocket.
+          {t("app_desc")}
         </p>
 
         <ul className="mt-6 space-y-2.5">
@@ -56,7 +67,7 @@ const AppDownload = () => (
             className="flex-1 rounded-full border border-gold bg-ivory px-4 py-2.5 text-sm text-brown outline-none focus:border-saffron"
           />
           <button className="rounded-full bg-saffron px-6 py-2.5 text-sm font-semibold text-white hover:bg-maroon transition-colors">
-            Notify Me
+            {t("app_notify")}
           </button>
         </form>
 
@@ -66,11 +77,11 @@ const AppDownload = () => (
               <button disabled className="flex items-center gap-3 rounded-xl bg-maroon-deep/80 px-5 py-3 text-cream opacity-60">
                 {s.icon}
                 <div className="text-left leading-tight">
-                  <p className="text-[10px] opacity-80">Get it on</p>
+                  <p className="text-[10px] opacity-80">{t("app_get_on")}</p>
                   <p className="text-sm font-semibold">{s.name}</p>
                 </div>
               </button>
-              <span className="absolute -top-2 right-1 rounded-full bg-saffron px-2 py-0.5 text-[9px] font-bold text-white shadow-sm">Coming Soon</span>
+              <span className="absolute -top-2 right-1 rounded-full bg-saffron px-2 py-0.5 text-[9px] font-bold text-white shadow-sm">{t("app_coming_soon")}</span>
             </div>
           ))}
         </div>
@@ -82,7 +93,7 @@ const AppDownload = () => (
         <div className="absolute inset-0 opacity-15" style={{ backgroundImage: "radial-gradient(white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
         
         {/* Phone Frame */}
-        <div className="relative z-10 mx-auto w-[250px] sm:w-[280px] rounded-[2.5rem] sm:rounded-[3rem] border-[8px] sm:border-[10px] border-[#1a1a1a] bg-white shadow-2xl overflow-hidden aspect-[1/2.15] flex flex-col">
+        <div className="relative z-10 mx-auto w-[220px] xs:w-[250px] sm:w-[280px] max-w-[80vw] rounded-[2.5rem] sm:rounded-[3rem] border-[8px] sm:border-[10px] border-[#1a1a1a] bg-white shadow-2xl overflow-hidden aspect-[1/2.15] flex flex-col">
           {/* Top Notch / Dynamic Island area */}
           <div className="absolute top-0 inset-x-0 h-6 flex justify-center z-50">
             <div className="w-1/3 h-5 bg-[#1a1a1a] rounded-b-xl"></div>
@@ -210,6 +221,7 @@ const AppDownload = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default AppDownload;
