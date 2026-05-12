@@ -99,6 +99,10 @@
     @apply border-border;
   }
 
+  a, button, input, select, textarea, [tabindex]:not([tabindex="-1"]) {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/80 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
   /* Prevent horizontal overflow from negative-offset decorative elements */
   html {
     overflow-x: hidden;

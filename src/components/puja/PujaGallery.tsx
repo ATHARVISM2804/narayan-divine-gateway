@@ -27,16 +27,20 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
         {allImages.length > 1 && (
           <>
             <button onClick={() => setActive((active - 1 + allImages.length) % allImages.length)}
+              aria-label="Previous image"
               className="absolute left-2 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-full bg-maroon-deep/60 text-white backdrop-blur-sm hover:bg-maroon transition-colors">
               <ChevronLeft size={18} />
             </button>
             <button onClick={() => setActive((active + 1) % allImages.length)}
+              aria-label="Next image"
               className="absolute right-2 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-full bg-maroon-deep/60 text-white backdrop-blur-sm hover:bg-maroon transition-colors">
               <ChevronRight size={18} />
             </button>
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
               {allImages.map((_, i) => (
                 <button key={i} onClick={() => setActive(i)}
+                  aria-label={`Go to image ${i + 1}`}
+                  aria-current={i === active ? "true" : undefined}
                   className={`h-2 rounded-full transition-all ${i === active ? "w-6 bg-gold" : "w-2 bg-white/50 hover:bg-white/80"}`} />
               ))}
             </div>
@@ -48,6 +52,8 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
         <div className="flex gap-2 overflow-x-auto pb-1">
           {allImages.map((url, i) => (
             <button key={i} onClick={() => setActive(i)}
+              aria-label={`View image ${i + 1}`}
+              aria-current={i === active ? "true" : undefined}
               className={`shrink-0 h-16 w-20 rounded-lg overflow-hidden border-2 transition-all ${i === active ? "border-saffron shadow-md" : "border-gold/20 opacity-60 hover:opacity-100"}`}>
               <img src={url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
             </button>
