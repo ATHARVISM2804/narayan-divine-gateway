@@ -6,7 +6,7 @@ import { supabase, type Puja } from "@/lib/supabase";
 import { useLanguage } from "@/context/LanguageContext";
 
 const FeaturedPujas = () => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [pujas, setPujas] = useState<Puja[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,9 +54,9 @@ const FeaturedPujas = () => {
           {loading ? (
             <><Skeleton /><Skeleton /><Skeleton /></>
           ) : pujas.map((p) => {
-            const displayName = (p.name);
-            const displayLocation = (p.location);
-            const displayBenefit = (p.benefit);
+            const displayName = (lang === 'hi' && p.name_hi) ? p.name_hi : p.name;
+            const displayLocation = (lang === 'hi' && p.location_hi) ? p.location_hi : p.location;
+            const displayBenefit = (lang === 'hi' && p.benefit_hi) ? p.benefit_hi : p.benefit;
             return (
             <Link
               to={`/puja/${p.id}`}

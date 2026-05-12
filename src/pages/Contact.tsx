@@ -9,7 +9,12 @@ const Contact = () => {
   usePageTitle("Contact Narayan Kripa — Get in Touch");
   const { t } = useLanguage();
   const [open, setOpen] = useState<number | null>(0);
-  const social = [Facebook, Instagram, Youtube, Twitter];
+  const socialLinks = [
+    { Icon: Facebook, href: "https://www.facebook.com/share/18S8PGfHQ8/?mibextid=wwXIfr" },
+    { Icon: Instagram, href: "https://www.instagram.com/narayankripa.in?igsh=aHBjd2QybnBpemdi" },
+    { Icon: Youtube, href: "https://www.youtube.com" },
+    { Icon: Twitter, href: "https://x.com" }
+  ];
 
   const faqs = [
     { q: t("ct_faq_q1"), a: t("ct_faq_a1") },
@@ -82,8 +87,8 @@ const Contact = () => {
             <div className="rounded-2xl border border-gold/40 bg-ivory p-5">
               <h4 className="font-display text-maroon">{t("ct_follow")}</h4>
               <div className="mt-3 flex gap-3">
-                {social.map((Icon, i) => (
-                  <a key={i} href="#" className="grid h-10 w-10 place-items-center rounded-full border border-gold text-saffron hover:bg-saffron hover:text-white transition-colors">
+                {socialLinks.map(({ Icon, href }, i) => (
+                  <a key={i} href={href} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-full border border-gold text-saffron hover:bg-saffron hover:text-white transition-colors">
                     <Icon size={16} />
                   </a>
                 ))}

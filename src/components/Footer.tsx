@@ -20,7 +20,7 @@ const Footer = () => {
 
   const socialLinks = [
     { Icon: Facebook, label: "Facebook", href: "https://www.facebook.com/share/18S8PGfHQ8/?mibextid=wwXIfr" },
-    { Icon: Instagram, label: "Instagram", href: "https://www.facebook.com/share/18S8PGfHQ8/?mibextid=wwXIfr" },
+    { Icon: Instagram, label: "Instagram", href: "https://www.instagram.com/narayankripa.in?igsh=aHBjd2QybnBpemdi" },
     { Icon: Youtube, label: "YouTube", href: "https://www.youtube.com" },
     { Icon: Phone, label: "Phone", href: "tel:+919286345941" },
     { Icon: MessageCircle, label: "WhatsApp", href: "https://wa.me/919286345941" },
