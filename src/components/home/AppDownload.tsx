@@ -1,4 +1,4 @@
-import { Check, Menu, Search, Phone, Flame, ShoppingBag, Sparkles, Calendar, BookOpen, ChevronRight } from "lucide-react";
+import { Check, Menu, Search, Phone, Flame, Flower2, ShoppingBag, Sparkles, Calendar, BookOpen, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 
