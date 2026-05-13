@@ -131,16 +131,16 @@ const TemplePartners = () => {
                 {/* Chadhava Name */}
                 <h3 className="font-body text-[17px] font-bold text-maroon leading-snug mb-1">{dItem}</h3>
 
-                {/* Date */}
-                {c.date && (
-                  <p className="flex items-center gap-1.5 text-xs text-brown/60 font-semibold mb-1">
-                    <Calendar size={13} className="text-saffron" /> {c.date}
-                  </p>
-                )}
-
                 {/* Description */}
                 {dDesc && (
-                  <p className="text-xs text-saffron font-semibold line-clamp-2 mb-2">{dDesc}</p>
+                  <p className="text-xs text-saffron font-semibold line-clamp-2 mb-1">{dDesc}</p>
+                )}
+
+                {/* Date */}
+                {c.date && (
+                  <p className="flex items-center gap-1.5 text-xs text-brown/60 font-semibold mb-2">
+                    <Calendar size={13} className="text-saffron" /> {c.date}
+                  </p>
                 )}
 
                 {/* Temple name */}
