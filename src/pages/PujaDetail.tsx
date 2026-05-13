@@ -143,7 +143,7 @@ const PujaDetail = () => {
           <div className="flex flex-col md:flex-row gap-8 items-start">
 
             {/* Gallery */}
-            <div className="w-full md:w-[480px] lg:w-[560px] shrink-0">
+            <div className="w-full md:w-[480px] lg:w-[560px] xl:w-[800px] shrink-0">
               <PujaGallery images={galleryImages} fallbackUrl={puja.image_url} name={puja.name} />
             </div>
 
@@ -159,10 +159,10 @@ const PujaDetail = () => {
 
               <div className="mt-4 flex flex-col gap-2">
                 <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
-                  <Calendar size={16} className="text-gold" /> {puja.date}
+                  <span className="w-5 flex items-center justify-center shrink-0"><Calendar size={16} className="text-gold" /></span> {puja.date}
                 </span>
                 <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
-                  <span className="text-lg leading-none">🛕</span> {displayLocation}
+                  <span className="w-5 flex items-center justify-center shrink-0 text-base leading-none">🛕</span> {displayLocation}
                 </span>
               </div>
 

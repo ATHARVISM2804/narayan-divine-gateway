@@ -96,13 +96,13 @@ const Chadhava = () => {
                     {/* Date */}
                     {c.date && (
                       <p className="flex items-center gap-1.5 text-xs text-brown/70 font-semibold mb-2">
-                        <Calendar size={13} className="text-saffron" /> {c.date}
+                        <span className="w-4 flex items-center justify-center shrink-0"><Calendar size={13} className="text-saffron" /></span> {c.date}
                       </p>
                     )}
 
                     {/* Temple name — secondary */}
                     <div className="flex items-center gap-1.5 text-brown/70 mb-3">
-                      <span className="text-sm leading-none shrink-0">🛕</span>
+                      <span className="w-4 flex items-center justify-center shrink-0 text-sm leading-none">🛕</span>
                       <p className="text-xs font-semibold truncate">{dTemple}</p>
                     </div>
 

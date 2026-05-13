@@ -79,8 +79,8 @@ const FeaturedPujas = () => {
                 <h3 className="font-body text-[18px] font-bold text-maroon leading-snug mb-3">{displayName}</h3>
 
                 <div className="flex flex-col gap-1.5 text-xs text-brown/70 font-semibold">
-                  <span className="flex items-center gap-1.5"><Calendar size={13} className="text-saffron" /> {p.date}</span>
-                  <span className="flex items-center gap-1.5"><span className="text-sm leading-none">🛕</span> {displayLocation}</span>
+                  <span className="flex items-center gap-1.5"><span className="w-4 flex items-center justify-center shrink-0"><Calendar size={13} className="text-saffron" /></span> {p.date}</span>
+                  <span className="flex items-center gap-1.5"><span className="w-4 flex items-center justify-center shrink-0 text-sm leading-none">🛕</span> {displayLocation}</span>
                 </div>
 
                 {displayBenefit && (

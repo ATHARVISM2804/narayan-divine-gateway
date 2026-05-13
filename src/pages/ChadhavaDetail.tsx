@@ -148,7 +148,7 @@ const ChadhavaDetail = () => {
           <div className="flex flex-col md:flex-row gap-8 items-start">
 
             {/* Gallery — same sizing as PujaDetail */}
-            <div className="w-full md:w-[480px] lg:w-[560px] shrink-0">
+            <div className="w-full md:w-[480px] lg:w-[560px] xl:w-[800px] shrink-0">
               <PujaGallery images={galleryImages} fallbackUrl={chadhava.image_url} name={chadhava.item} />
             </div>
 
@@ -165,11 +165,11 @@ const ChadhavaDetail = () => {
               <div className="mt-4 flex flex-col gap-2">
                 {chadhava.date && (
                   <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
-                    <Calendar size={16} className="text-gold" /> {chadhava.date}
+                    <span className="w-5 flex items-center justify-center shrink-0"><Calendar size={16} className="text-gold" /></span> {chadhava.date}
                   </span>
                 )}
                 <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
-                  <span className="text-lg leading-none">🛕</span> {displayTemple}
+                  <span className="w-5 flex items-center justify-center shrink-0 text-base leading-none">🛕</span> {displayTemple}
                 </span>
               </div>
 
