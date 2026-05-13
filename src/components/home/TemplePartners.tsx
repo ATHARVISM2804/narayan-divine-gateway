@@ -45,6 +45,7 @@ const TemplePartners = () => {
         .from("chadhavas")
         .select("*")
         .eq("status", "active")
+        .eq("featured", true)
         .order("created_at", { ascending: false })
         .limit(3);
 
@@ -169,7 +170,7 @@ const TemplePartners = () => {
           to="/chadhava"
           className="inline-flex items-center gap-2 rounded-full border-2 border-gold bg-ivory px-8 py-3 font-semibold text-maroon shadow-soft transition-all hover:bg-gold hover:shadow-gold-glow"
         >
-          {t("chadhava_view_all") || "View All Chadhava"}
+          {t("featured_ch_view_all")}
         </Link>
       </div>
     </section>

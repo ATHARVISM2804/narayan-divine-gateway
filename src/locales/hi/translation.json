@@ -21,8 +21,10 @@
   "hero_s1_cta2": "मंदिर देखें",
 
   "timer_label": "⏳ पूजा बुकिंग बंद होगी",
+  "timer_label_chadhava": "⏳ चढ़ावा बुकिंग बंद होगी",
   "timer_days": "दिन", "timer_hours": "घंटे", "timer_mins": "मिनट", "timer_secs": "सेकंड",
   "timer_expired": "🔴 पूजा बुकिंग बंद हो गई",
+  "timer_expired_chadhava": "🔴 चढ़ावा बुकिंग बंद हो गई",
 
   "starting_from": "शुरुआत",
   "select_package": "🪔 पूजा पैकेज चुनें",
@@ -169,6 +171,10 @@
   "featured_packages": "उपलब्ध पैकेज",
   "featured_view_cart": "कार्ट देखें →",
   "featured_view_all": "सभी पूजाएं देखें →",
+
+  "featured_ch_title": "हर मंदिर के लिए पवित्र चढ़ावा",
+  "featured_ch_sub": "भारत के सबसे पूजनीय मंदिरों में अपनी श्रद्धा अर्पित करें — प्रसाद आपके दरवाजे पर",
+  "featured_ch_view_all": "सभी चढ़ावा देखें →",
 
   "stats_temples": "मंदिर साझेदार", "stats_devotees": "भक्त सेवित",
   "stats_pujas": "पूजाएं संपन्न", "stats_rating": "औसत रेटिंग",

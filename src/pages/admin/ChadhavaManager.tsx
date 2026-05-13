@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase, type Chadhava, type ChadhavaOffering } from "@/lib/supabase";
-import { Plus, Pencil, Trash2, X, Loader2, ChevronDown, ChevronUp, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Loader2, ChevronDown, ChevronUp, Image as ImageIcon, Star } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
 
@@ -9,8 +9,10 @@ interface Props { chadhavas: Chadhava[]; onRefresh: () => void }
 const emptyChadhava = (): Partial<Chadhava> => ({
   temple: "", item: "", date: "", price: 0, image_url: null, description: "",
   item_hi: "", temple_hi: "", description_hi: "",
+  occasion: "", occasion_hi: "",
   gallery: [], about: "", about_hi: "",
   faqs: [], faqs_hi: [],
+  featured: false,
   status: "draft",
 });
 
@@ -79,11 +81,14 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
       item_hi: editing.item_hi?.trim() || null,
       temple_hi: editing.temple_hi?.trim() || null,
       description_hi: editing.description_hi?.trim() || null,
+      occasion: editing.occasion?.trim() || null,
+      occasion_hi: editing.occasion_hi?.trim() || null,
       gallery: editing.gallery || [],
       about: editing.about?.trim() || null,
       about_hi: editing.about_hi?.trim() || null,
       faqs: editing.faqs || [],
       faqs_hi: editing.faqs_hi || [],
+      featured: editing.featured || false,
       status: editing.status || "draft",
     };
 
@@ -217,7 +222,10 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                 {c.image_url ? <img src={c.image_url} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-2xl">🛕</div>}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-display text-maroon text-base truncate">{c.item}</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-display text-maroon text-base truncate">{c.item}</h3>
+                  {c.featured && <Star size={14} className="text-saffron fill-saffron shrink-0" />}
+                </div>
                 <p className="text-xs text-brown/60 mt-0.5">🛕 {c.temple} • {offeringCounts[c.id] || 0} offerings</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -290,6 +298,12 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                     <textarea value={editing.description || ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                       rows={2} className={inputCls + " resize-none"} placeholder="e.g. For end of suffering and prosperity in life" />
                   </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Special Occasion Tag</label>
+                    <input value={editing.occasion || ""} onChange={(e) => setEditing({ ...editing, occasion: e.target.value })}
+                      className={inputCls} placeholder="e.g. Akshaya Tritiya Special" />
+                    <p className="text-[11px] text-brown/40 mt-1">Shown as a highlighted badge above the title (leave empty to hide)</p>
+                  </div>
 
                   {/* Hindi */}
                   <div className="rounded-xl border border-saffron/40 bg-saffron/5 p-4 space-y-4">
@@ -309,14 +323,26 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                       <textarea value={editing.description_hi || ""} onChange={(e) => setEditing({ ...editing, description_hi: e.target.value })}
                         rows={2} className={inputCls + " resize-none"} placeholder="जैसे: कष्ट निवारण और समृद्धि के लिए" />
                     </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-maroon">विशेष अवसर टैग</label>
+                      <input value={editing.occasion_hi || ""} onChange={(e) => setEditing({ ...editing, occasion_hi: e.target.value })}
+                        className={inputCls} placeholder="जैसे: अक्षय तृतीया विशेष" />
+                    </div>
                   </div>
 
-                  {/* Status */}
-                  <label className="flex items-center gap-2.5 cursor-pointer">
-                    <input type="checkbox" checked={editing.status === "active"} onChange={(e) => setEditing({ ...editing, status: e.target.checked ? "active" : "draft" })}
-                      className="h-4 w-4 rounded border-gold accent-saffron" />
-                    <span className="text-sm text-maroon font-medium">Active (visible on website)</span>
-                  </label>
+                  {/* Status & Featured */}
+                  <div className="flex flex-wrap gap-4">
+                    <label className="flex items-center gap-2.5 cursor-pointer">
+                      <input type="checkbox" checked={editing.status === "active"} onChange={(e) => setEditing({ ...editing, status: e.target.checked ? "active" : "draft" })}
+                        className="h-4 w-4 rounded border-gold accent-saffron" />
+                      <span className="text-sm text-maroon font-medium">Active (visible on website)</span>
+                    </label>
+                    <label className="flex items-center gap-2.5 cursor-pointer">
+                      <input type="checkbox" checked={editing.featured || false} onChange={(e) => setEditing({ ...editing, featured: e.target.checked })}
+                        className="h-4 w-4 rounded border-gold accent-saffron" />
+                      <span className="text-sm text-maroon font-medium">Featured on homepage</span>
+                    </label>
+                  </div>
                 </>
               )}
 

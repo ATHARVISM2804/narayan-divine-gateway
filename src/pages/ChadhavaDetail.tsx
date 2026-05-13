@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
@@ -7,6 +7,30 @@ import { Loader2, ShoppingCart, Check, ChevronRight, ChevronDown, ChevronUp, Plu
 import { toast } from "sonner";
 import PujaGallery from "@/components/puja/PujaGallery";
 import { useLanguage } from "@/context/LanguageContext";
+
+const parseChadhavaDate = (dateStr: string): Date => {
+  const year = new Date().getFullYear();
+  const hasYear = /\d{4}/.test(dateStr);
+  const fullStr = hasYear ? dateStr : `${dateStr} ${year}`;
+  const d = new Date(`${fullStr} 23:59:59`);
+  if (isNaN(d.getTime()) || d < new Date()) {
+    const next = new Date(`${dateStr} ${year + 1} 23:59:59`);
+    return isNaN(next.getTime()) ? d : next;
+  }
+  return d;
+};
+
+const getTimeLeft = (target: Date) => {
+  const diff = target.getTime() - Date.now();
+  if (diff <= 0) return { days: 0, hours: 0, mins: 0, secs: 0, expired: true };
+  return {
+    days: Math.floor(diff / 86400000),
+    hours: Math.floor((diff % 86400000) / 3600000),
+    mins: Math.floor((diff % 3600000) / 60000),
+    secs: Math.floor((diff % 60000) / 1000),
+    expired: false,
+  };
+};
 
 const ChadhavaDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +43,8 @@ const ChadhavaDetail = () => {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0, expired: false });
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   usePageTitle(chadhava ? `${chadhava.item} — Narayan Kripa` : "Loading…");
 
@@ -34,6 +60,14 @@ const ChadhavaDetail = () => {
       setLoading(false);
     });
   }, [id, nav]);
+
+  useEffect(() => {
+    if (!chadhava?.date) return;
+    const target = parseChadhavaDate(chadhava.date);
+    setTimeLeft(getTimeLeft(target));
+    timerRef.current = setInterval(() => setTimeLeft(getTimeLeft(target)), 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [chadhava?.date]);
 
   /* ── Selection logic ── */
   const toggleOffering = (offId: string) => {
@@ -94,6 +128,7 @@ const ChadhavaDetail = () => {
   const displayTemple = (lang === "hi" && chadhava.temple_hi) ? chadhava.temple_hi : chadhava.temple;
   const displayDesc = (lang === "hi" && chadhava.description_hi) ? chadhava.description_hi : chadhava.description;
   const displayAbout = (lang === "hi" && chadhava.about_hi) ? chadhava.about_hi : chadhava.about;
+  const displayOccasion = (lang === "hi" && chadhava.occasion_hi) ? chadhava.occasion_hi : chadhava.occasion;
   const faqs = (lang === "hi" && chadhava.faqs_hi?.length) ? chadhava.faqs_hi : chadhava.faqs;
   const galleryImages = chadhava.gallery?.length ? chadhava.gallery : [];
 
@@ -119,6 +154,12 @@ const ChadhavaDetail = () => {
 
             {/* Title + Info */}
             <div className="flex-1">
+              {/* Special Occasion badge */}
+              {displayOccasion && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/20 border border-gold/40 px-3 py-1 text-[11px] sm:text-xs font-bold text-gold tracking-wide uppercase mb-3">
+                  ✦ {displayOccasion}
+                </span>
+              )}
               <h1 className="font-body text-2xl md:text-3xl font-bold text-gold leading-snug">{displayItem}</h1>
 
               <div className="mt-4 flex flex-col gap-2">
@@ -131,6 +172,41 @@ const ChadhavaDetail = () => {
                   <span className="text-lg leading-none">🛕</span> {displayTemple}
                 </span>
               </div>
+
+              {/* Countdown Timer */}
+              {chadhava.date && (
+                <div className="mt-5">
+                  {timeLeft.expired ? (
+                    <div className="inline-flex items-center gap-2 rounded-xl bg-red-900/40 border border-red-500/30 px-4 py-2.5">
+                      <span className="text-red-300 font-bold text-sm">{t("timer_expired_chadhava")}</span>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-cream/60 text-xs font-semibold uppercase tracking-wider mb-2">{t("timer_label_chadhava")}</p>
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        {[
+                          { val: timeLeft.days, label: t("timer_days") },
+                          { val: timeLeft.hours, label: t("timer_hours") },
+                          { val: timeLeft.mins, label: t("timer_mins") },
+                          { val: timeLeft.secs, label: t("timer_secs") },
+                        ].map(({ val, label }, i) => (
+                          <div key={label} className="flex items-center gap-2">
+                            <div className={`flex flex-col items-center justify-center rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 min-w-[44px] sm:min-w-[52px] border ${
+                              timeLeft.days === 0 ? "bg-red-900/50 border-red-500/40" : "bg-maroon-deep/60 border-gold/20"
+                            }`}>
+                              <span className={`font-bold text-lg sm:text-xl leading-none tabular-nums ${timeLeft.days === 0 ? "text-red-300" : "text-gold"}`}>
+                                {String(val).padStart(2, "0")}
+                              </span>
+                              <span className="text-[10px] font-semibold text-cream/50 mt-0.5">{label}</span>
+                            </div>
+                            {i < 3 && <span className="text-gold/60 font-bold text-lg mb-3">:</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {displayDesc && (
                 <div className="mt-4 rounded-xl bg-white/10 border border-gold/30 px-4 py-3">

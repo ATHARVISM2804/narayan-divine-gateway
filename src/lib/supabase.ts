@@ -55,11 +55,14 @@ export interface Chadhava {
   item_hi: string | null;
   temple_hi: string | null;
   description_hi: string | null;
+  occasion?: string | null;
+  occasion_hi?: string | null;
   gallery?: string[];
   about?: string | null;
   about_hi?: string | null;
   faqs?: { question: string; answer: string }[];
   faqs_hi?: { question: string; answer: string }[];
+  featured?: boolean;
   status: 'active' | 'draft';
   created_at: string;
   updated_at: string;

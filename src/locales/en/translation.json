@@ -21,8 +21,10 @@
   "hero_s1_cta2": "View Temples",
 
   "timer_label": "⏳ Puja booking will close in",
+  "timer_label_chadhava": "⏳ Chadhava booking will close in",
   "timer_days": "Days", "timer_hours": "Hours", "timer_mins": "Mins", "timer_secs": "Secs",
   "timer_expired": "🔴 Puja booking is closed",
+  "timer_expired_chadhava": "🔴 Chadhava booking is closed",
 
   "starting_from": "Starting from",
   "select_package": "🪔 SELECT PUJA PACKAGE",
@@ -170,6 +172,10 @@
   "featured_packages": "Available Packages",
   "featured_view_cart": "View Cart →",
   "featured_view_all": "View All Pujas →",
+
+  "featured_ch_title": "Sacred Chadhava Offerings for Every Temple",
+  "featured_ch_sub": "Offer your devotion at India's most revered temples — prasad delivered to your doorstep",
+  "featured_ch_view_all": "View All Chadhava →",
 
   "stats_temples": "Temple Partners", "stats_devotees": "Devotees Served",
   "stats_pujas": "Pujas Conducted", "stats_rating": "Average Rating",

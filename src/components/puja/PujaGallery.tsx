@@ -13,7 +13,7 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
 
   if (allImages.length === 0) {
     return (
-      <div className="w-full h-80 md:h-[480px] rounded-2xl bg-gradient-to-br from-sacred/30 to-gold/20 grid place-items-center border-2 border-gold/30">
+      <div className="w-full aspect-square rounded-2xl bg-gradient-to-br from-sacred/30 to-gold/20 grid place-items-center border-2 border-gold/30">
         <span className="text-7xl drop-shadow-lg">🪔</span>
       </div>
     );
@@ -22,7 +22,7 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
   return (
     <div className="space-y-3">
       {/* Main image */}
-      <div className="relative rounded-2xl overflow-hidden border-2 border-gold/30 shadow-2xl bg-gradient-to-br from-saffron/10 to-maroon/10" style={{ minHeight: '320px', height: 'clamp(320px, 50vw, 560px)' }}>
+      <div className="relative rounded-2xl overflow-hidden border-2 border-gold/30 shadow-2xl bg-gradient-to-br from-saffron/10 to-maroon/10 aspect-square">
         <img src={allImages[active]} alt={name} fetchPriority="high" decoding="async" className="w-full h-full object-cover transition-opacity duration-300" />
         {allImages.length > 1 && (
           <>
@@ -54,7 +54,7 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
             <button key={i} onClick={() => setActive(i)}
               aria-label={`View image ${i + 1}`}
               aria-current={i === active ? "true" : undefined}
-              className={`shrink-0 h-16 w-20 rounded-lg overflow-hidden border-2 transition-all ${i === active ? "border-saffron shadow-md" : "border-gold/20 opacity-60 hover:opacity-100"}`}>
+              className={`shrink-0 h-16 w-16 rounded-lg overflow-hidden border-2 transition-all ${i === active ? "border-saffron shadow-md" : "border-gold/20 opacity-60 hover:opacity-100"}`}>
               <img src={url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
             </button>
           ))}
