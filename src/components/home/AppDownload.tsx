@@ -1,12 +1,6 @@
 import { Check, Menu, Search, Phone, Flame, ShoppingBag, Sparkles, Calendar, BookOpen, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
-const features = [
-  "Daily Puja & Aarti Reminders",
-  "Live Temple Darshan",
-  "Instant Pandit Chat",
-  "Personalized Panchang",
-];
 
 const storeButtons = [
   {
