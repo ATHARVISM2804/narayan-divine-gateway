@@ -115,6 +115,7 @@ const PujaDetail = () => {
   const displayName = (lang === "hi" && puja.name_hi) ? puja.name_hi : puja.name;
   const displayLocation = (lang === "hi" && puja.location_hi) ? puja.location_hi : puja.location;
   const displayBenefit = (lang === "hi" && puja.benefit_hi) ? puja.benefit_hi : puja.benefit;
+  const displayOccasion = (lang === "hi" && puja.occasion_hi) ? puja.occasion_hi : puja.occasion;
   const includes = (lang === "hi" && puja.includes_hi?.length) ? puja.includes_hi : puja.includes;
 
   // Determine which sections to show in the sticky nav
@@ -148,6 +149,12 @@ const PujaDetail = () => {
 
             {/* Title + Info */}
             <div className="flex-1">
+              {/* Special Occasion badge */}
+              {displayOccasion && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/20 border border-gold/40 px-3 py-1 text-[11px] sm:text-xs font-bold text-gold tracking-wide uppercase mb-3">
+                  ✦ {displayOccasion}
+                </span>
+              )}
               <h1 className="font-body text-2xl md:text-3xl font-bold text-gold leading-snug">{displayName}</h1>
 
               <div className="mt-4 flex flex-col gap-2">

@@ -7,7 +7,7 @@ import ImageUpload from "./ImageUpload";
 interface Props { pujas: Puja[]; onRefresh: () => void }
 
 const emptyPuja = (): Partial<Puja> => ({
-  name: "", location: "", date: "", image_url: null, benefit: "",
+  name: "", location: "", date: "", image_url: null, benefit: "", occasion: "", occasion_hi: "",
   name_hi: "", location_hi: "", benefit_hi: "",
   prices: [{ label: "Single", price: 951 }, { label: "Couple", price: 1551 }, { label: "4 Family", price: 2551 }, { label: "6 Members", price: 3551 }],
   status: "draft", featured: false,
@@ -123,6 +123,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
     const payload = {
       name: name.trim(), location: location.trim(), date: date.trim(),
       image_url: editing.image_url || null, benefit: editing.benefit?.trim() || null,
+      occasion: editing.occasion?.trim() || null, occasion_hi: editing.occasion_hi?.trim() || null,
       name_hi: editing.name_hi?.trim() || null, location_hi: editing.location_hi?.trim() || null, benefit_hi: editing.benefit_hi?.trim() || null,
       prices, status: editing.status || "draft", featured: editing.featured || false,
       gallery: editing.gallery || [], about: editing.about?.trim() || null, about_hi: editing.about_hi?.trim() || null,
@@ -245,6 +246,10 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Benefit (1 liner)</label>
                   <input value={editing.benefit || ""} onChange={(e) => setEditing({ ...editing, benefit: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Peace, prosperity" maxLength={150} /></div>
+                <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Special Occasion Tag</label>
+                  <input value={editing.occasion || ""} onChange={(e) => setEditing({ ...editing, occasion: e.target.value })}
+                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Ganga Dussehra Special" maxLength={80} />
+                  <p className="text-[11px] text-brown/40 mt-1">Shown as a badge above the puja name on the detail page</p></div>
               </Section>
 
               <Section title="🇮🇳 Hindi Translation">
@@ -254,6 +259,8 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="स्थान" />
                 <input value={editing.benefit_hi || ""} onChange={(e) => setEditing({ ...editing, benefit_hi: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="लाभ" maxLength={150} />
+                <input value={editing.occasion_hi || ""} onChange={(e) => setEditing({ ...editing, occasion_hi: e.target.value })}
+                  className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="विशेष अवसर" maxLength={80} />
               </Section>
 
               <Section title="🖼️ Photo Gallery (up to 6)">

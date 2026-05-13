@@ -21,6 +21,8 @@ export interface Puja {
   location_hi: string | null;
   benefit_hi: string | null;
   featured?: boolean;
+  occasion?: string | null;
+  occasion_hi?: string | null;
   /* ── Enhanced detail fields ── */
   gallery?: string[];
   about?: string | null;
