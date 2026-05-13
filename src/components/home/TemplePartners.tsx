@@ -138,15 +138,15 @@ const TemplePartners = () => {
 
                 {/* Date */}
                 {c.date && (
-                  <p className="flex items-center gap-1.5 text-xs text-brown/60 font-semibold mb-2">
+                  <p className="flex items-center gap-1.5 text-xs text-brown/70 font-semibold mb-2">
                     <Calendar size={13} className="text-saffron" /> {c.date}
                   </p>
                 )}
 
                 {/* Temple name */}
-                <div className="flex items-center gap-1.5 text-brown/50 mb-3">
+                <div className="flex items-center gap-1.5 text-brown/70 mb-3">
                   <span className="text-sm leading-none shrink-0">🛕</span>
-                  <p className="text-xs font-medium truncate">{dTemple}</p>
+                  <p className="text-xs font-semibold truncate">{dTemple}</p>
                 </div>
 
                 <div className="flex-1" />
