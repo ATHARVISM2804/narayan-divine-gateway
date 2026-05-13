@@ -63,7 +63,7 @@ const Footer = React.memo(() => {
           <div className="md:col-span-1">
             {/* Same Logo as navbar — click scrolls to top of home page */}
             <div
-              className="mb-5 brightness-[1.8] saturate-[0.6] hover:brightness-[2] transition-all cursor-pointer"
+              className="mb-5 brightness-[1.15] hover:brightness-[1.3] transition-all cursor-pointer"
               onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); }}
             >
               <Logo />
