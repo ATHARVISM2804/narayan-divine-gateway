@@ -113,7 +113,7 @@ const ChadhavaDetail = () => {
           <div className="flex flex-col md:flex-row gap-8 items-start">
 
             {/* Gallery — same sizing as PujaDetail */}
-            <div className="w-full md:w-[420px] lg:w-[480px] shrink-0">
+            <div className="w-full md:w-[480px] lg:w-[560px] shrink-0">
               <PujaGallery images={galleryImages} fallbackUrl={chadhava.image_url} name={chadhava.item} />
             </div>
 

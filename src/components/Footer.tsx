@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Youtube, Instagram, Phone, MessageCircle, Facebook, MapPin, Mail, Sparkles } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import Logo from "@/components/Logo";
 
 const Footer = React.memo(() => {
   const { t } = useLanguage();
@@ -60,13 +61,12 @@ const Footer = React.memo(() => {
 
           {/* Col 1 — Brand */}
           <div className="md:col-span-1">
-            <div className="mb-5 flex items-center gap-3">
-              <img
-                src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712834/favicon-removebg-preview_kx4s41.png"
-                alt="Narayan Kripa Logo"
-                className="h-12 w-auto object-contain drop-shadow-[0_0_12px_rgba(201,168,76,0.3)]"
-              />
-              <span className="font-display text-xl text-gold drop-shadow-sm">Narayan Kripa</span>
+            {/* Same Logo as navbar — click scrolls to top of home page */}
+            <div
+              className="mb-5 brightness-[1.8] saturate-[0.6] hover:brightness-[2] transition-all cursor-pointer"
+              onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            >
+              <Logo />
             </div>
             <p className="text-sm text-cream/70 leading-relaxed">
               {t("footer_description")}

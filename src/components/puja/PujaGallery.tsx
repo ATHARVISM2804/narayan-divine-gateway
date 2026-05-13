@@ -13,7 +13,7 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
 
   if (allImages.length === 0) {
     return (
-      <div className="w-full h-72 md:h-96 rounded-2xl bg-gradient-to-br from-sacred/30 to-gold/20 grid place-items-center border-2 border-gold/30">
+      <div className="w-full h-80 md:h-[480px] rounded-2xl bg-gradient-to-br from-sacred/30 to-gold/20 grid place-items-center border-2 border-gold/30">
         <span className="text-7xl drop-shadow-lg">🪔</span>
       </div>
     );
@@ -22,7 +22,7 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
   return (
     <div className="space-y-3">
       {/* Main image */}
-      <div className="relative rounded-2xl overflow-hidden border-2 border-gold/30 shadow-2xl aspect-[4/3] bg-gradient-to-br from-saffron/10 to-maroon/10">
+      <div className="relative rounded-2xl overflow-hidden border-2 border-gold/30 shadow-2xl bg-gradient-to-br from-saffron/10 to-maroon/10" style={{ minHeight: '320px', height: 'clamp(320px, 50vw, 560px)' }}>
         <img src={allImages[active]} alt={name} fetchPriority="high" decoding="async" className="w-full h-full object-cover transition-opacity duration-300" />
         {allImages.length > 1 && (
           <>
