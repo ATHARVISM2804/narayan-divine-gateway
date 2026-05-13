@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, ChevronRight } from "lucide-react";
+import { MapPin, ChevronRight, Calendar } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 import { supabase, type Chadhava as CType } from "@/lib/supabase";
 import { useLanguage } from "@/context/LanguageContext";
@@ -134,7 +134,7 @@ const TemplePartners = () => {
                 {/* Date */}
                 {c.date && (
                   <p className="flex items-center gap-1.5 text-xs text-brown/60 font-semibold mb-1">
-                    <span>📅</span> {c.date}
+                    <Calendar size={13} className="text-saffron" /> {c.date}
                   </p>
                 )}
 
@@ -169,7 +169,7 @@ const TemplePartners = () => {
           to="/chadhava"
           className="inline-flex items-center gap-2 rounded-full border-2 border-gold bg-ivory px-8 py-3 font-semibold text-maroon shadow-soft transition-all hover:bg-gold hover:shadow-gold-glow"
         >
-          {t("featured_view_all") || "View All Chadhavas"}
+          {t("chadhava_view_all") || "View All Chadhava"}
         </Link>
       </div>
     </section>

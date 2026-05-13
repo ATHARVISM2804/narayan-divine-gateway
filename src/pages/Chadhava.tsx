@@ -6,7 +6,7 @@ import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 import heroChadhava from "@/assets/hero-chadhava-page.png";
 import { useLanguage } from "@/context/LanguageContext";
-import { ChevronRight, MapPin } from "lucide-react";
+import { ChevronRight, MapPin, Calendar } from "lucide-react";
 
 const Chadhava = () => {
   usePageTitle("Offer Chadhava — Narayan Kripa");
@@ -91,7 +91,7 @@ const Chadhava = () => {
                     {/* Date */}
                     {c.date && (
                       <p className="flex items-center gap-1.5 text-xs text-brown/60 font-semibold mb-1">
-                        <span>📅</span> {c.date}
+                        <Calendar size={13} className="text-saffron" /> {c.date}
                       </p>
                     )}
 

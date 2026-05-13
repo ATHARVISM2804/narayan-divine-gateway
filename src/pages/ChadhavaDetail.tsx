@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
 import { supabase, type Chadhava, type ChadhavaOffering } from "@/lib/supabase";
-import { Loader2, ShoppingCart, Check, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, MapPin } from "lucide-react";
+import { Loader2, ShoppingCart, Check, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, MapPin, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import PujaGallery from "@/components/puja/PujaGallery";
 import { useLanguage } from "@/context/LanguageContext";
@@ -124,7 +124,7 @@ const ChadhavaDetail = () => {
               <div className="mt-4 flex flex-col gap-2">
                 {chadhava.date && (
                   <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
-                    <span className="text-gold">📅</span> {chadhava.date}
+                    <Calendar size={16} className="text-gold" /> {chadhava.date}
                   </span>
                 )}
                 <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
