@@ -122,6 +122,11 @@ const ChadhavaDetail = () => {
               <h1 className="font-body text-2xl md:text-3xl font-bold text-gold leading-snug">{displayItem}</h1>
 
               <div className="mt-4 flex flex-col gap-2">
+                {chadhava.date && (
+                  <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
+                    <span className="text-gold">📅</span> {chadhava.date}
+                  </span>
+                )}
                 <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
                   <span className="text-lg leading-none">🛕</span> {displayTemple}
                 </span>

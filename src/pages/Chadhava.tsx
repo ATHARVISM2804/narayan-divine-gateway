@@ -88,6 +88,13 @@ const Chadhava = () => {
                     {/* Chadhava Name — primary */}
                     <h3 className="font-body text-[17px] font-bold text-maroon leading-snug mb-1">{dItem}</h3>
 
+                    {/* Date */}
+                    {c.date && (
+                      <p className="flex items-center gap-1.5 text-xs text-brown/60 font-semibold mb-1">
+                        <span>📅</span> {c.date}
+                      </p>
+                    )}
+
                     {/* Benefit/description — colored */}
                     {dDesc && (
                       <p className="text-xs text-saffron font-semibold line-clamp-2 mb-2">{dDesc}</p>

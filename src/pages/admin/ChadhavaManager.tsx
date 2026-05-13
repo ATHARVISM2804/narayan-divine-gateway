@@ -7,7 +7,7 @@ import ImageUpload from "./ImageUpload";
 interface Props { chadhavas: Chadhava[]; onRefresh: () => void }
 
 const emptyChadhava = (): Partial<Chadhava> => ({
-  temple: "", item: "", price: 0, image_url: null, description: "",
+  temple: "", item: "", date: "", price: 0, image_url: null, description: "",
   item_hi: "", temple_hi: "", description_hi: "",
   gallery: [], about: "", about_hi: "",
   faqs: [], faqs_hi: [],
@@ -72,6 +72,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
     const payload = {
       temple: editing.temple?.trim() || "",
       item: editing.item.trim(),
+      date: editing.date?.trim() || null,
       price: editing.price || 0,
       image_url: editing.image_url || null,
       description: editing.description?.trim() || null,
@@ -277,6 +278,12 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Temple Name</label>
                     <input value={editing.temple || ""} onChange={(e) => setEditing({ ...editing, temple: e.target.value })}
                       className={inputCls} placeholder="e.g. Vrindavan Teerth Kshetra, Mathura" />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Date</label>
+                    <input value={editing.date || ""} onChange={(e) => setEditing({ ...editing, date: e.target.value })}
+                      className={inputCls} placeholder="e.g. 25 May" />
+                    <p className="text-[11px] text-brown/40 mt-1">Shown on cards and detail page (e.g. "25 May", "Every Monday")</p>
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Benefit / Short Description</label>

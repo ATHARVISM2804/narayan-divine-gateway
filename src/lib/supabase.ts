@@ -48,6 +48,7 @@ export interface Chadhava {
   id: string;
   temple: string;
   item: string;
+  date?: string | null;
   price: number;
   image_url: string | null;
   description: string | null;
