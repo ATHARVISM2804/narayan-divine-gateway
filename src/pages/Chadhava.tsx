@@ -102,7 +102,7 @@ const Chadhava = () => {
 
                     {/* Temple name — secondary */}
                     <div className="flex items-center gap-1.5 text-brown/50 mb-3">
-                      <MapPin size={12} className="shrink-0" />
+                      <span className="text-sm leading-none shrink-0">🛕</span>
                       <p className="text-xs font-medium truncate">{dTemple}</p>
                     </div>
 
