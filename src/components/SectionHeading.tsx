@@ -9,7 +9,7 @@ const SectionHeading = ({
   light?: boolean;
   eyebrow?: string;
 }) => (
-  <div className="mb-12 text-center">
+  <div className="mb-10 text-center">
     {eyebrow && (
       <p
         className={`mb-3 text-xs font-semibold uppercase tracking-[0.3em] ${

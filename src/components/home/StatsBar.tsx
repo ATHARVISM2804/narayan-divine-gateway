@@ -46,10 +46,10 @@ const StatsBar = () => {
   ];
 
   return (
-    <section className="relative border-y-2 border-gold/40 bg-gradient-to-b from-ivory via-cream to-ivory">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-saffron to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-saffron to-transparent" />
-      <div className="container grid grid-cols-2 gap-y-8 py-10 md:grid-cols-4 md:gap-0">
+    <section className="relative border-y border-gold/30 bg-gradient-to-b from-ivory via-cream to-ivory shadow-[0_4px_24px_-8px_hsl(var(--gold)/0.18)]">
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+      <div className="container grid grid-cols-2 gap-y-8 py-12 md:grid-cols-4 md:gap-0">
         {stats.map((s, i) => (
           <div
             key={s.label}

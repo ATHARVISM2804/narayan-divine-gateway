@@ -13,7 +13,9 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="bg-cream py-16">
+    <section className="relative bg-ivory py-20">
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
       <div className="container">
         <SectionHeading title={t("hiw_title")} />
 

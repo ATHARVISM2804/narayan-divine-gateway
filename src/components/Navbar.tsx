@@ -91,10 +91,14 @@ const Navbar = React.memo(() => {
     >
       {/* Top sacred ribbon */}
       <div className="hidden lg:block bg-gradient-to-r from-maroon via-maroon-deep to-maroon text-gold/90 text-[11px]">
-        <div className="container flex h-7 items-center justify-between font-serif italic tracking-wide">
-          <span>ॐ  सर्वे भवन्तु सुखिनः  •  May all beings be happy</span>
-          <div className="flex items-center gap-3">
-            <span className="hidden xl:inline">📞 +91 92863 45941  •  🕐 Mon–Sat, 9 AM – 7 PM IST</span>
+        <div className="container flex h-8 items-center justify-between font-sans tracking-normal">
+          <span className="text-gold/80">ॐ &nbsp;सर्वे भवन्तु सुखिनः &nbsp;•&nbsp; May all beings be happy</span>
+          <div className="flex items-center gap-4">
+            <span className="hidden xl:flex items-center gap-3 text-gold/90">
+              <span className="flex items-center gap-1.5">📞 <span>+91 92863 45941</span></span>
+              <span className="text-gold/50">•</span>
+              <span className="flex items-center gap-1.5">🕐 <span>Mon–Sat, 9 AM – 7 PM IST</span></span>
+            </span>
             {/* Language toggle in ribbon */}
             <div className="flex items-center gap-0.5 rounded-full border border-gold/30 bg-white/10 p-0.5">
               {(["en", "hi"] as const).map((l) => (

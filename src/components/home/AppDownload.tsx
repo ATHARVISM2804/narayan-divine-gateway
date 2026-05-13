@@ -1,4 +1,4 @@
-import { Check, Menu, Search, Phone, Flame, Flower2, ShoppingBag, Sparkles, Calendar, BookOpen, ChevronRight } from "lucide-react";
+import { Check, Menu, Search, Phone, Flame, ShoppingBag, Sparkles, Calendar, BookOpen, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 const features = [
@@ -38,7 +38,8 @@ const AppDownload = () => {
   ];
 
   return (
-    <section className="overflow-hidden">
+    <section className="relative overflow-hidden bg-gradient-to-b from-ivory to-cream">
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
     <div className="grid md:grid-cols-2">
       {/* Left */}
       <div className="bg-cream p-8 md:p-12 lg:p-16">
@@ -106,12 +107,12 @@ const AppDownload = () => {
             <div className="flex items-center justify-between px-4 py-2 bg-white shadow-sm shrink-0">
               <Menu size={20} className="text-gray-700" />
               <div className="flex items-center gap-2">
-                 <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-maroon to-saffron flex items-center justify-center shadow-sm">
-                   <Flower2 size={16} className="text-white" />
-                 </div>
-                 <span className="font-display font-bold text-maroon text-base tracking-tight leading-none pt-1">
-                   Narayan Kripa
-                 </span>
+                <div className="w-7 h-7 rounded-full overflow-hidden shadow-sm border border-gold/30">
+                  <img src="/favicon.png" alt="Narayan Kripa" className="w-full h-full object-cover" />
+                </div>
+                <span className="font-display font-bold text-maroon text-base tracking-tight leading-none pt-1">
+                  Narayan Kripa
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <Search size={18} className="text-gray-500" />

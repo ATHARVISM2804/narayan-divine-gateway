@@ -41,8 +41,9 @@ const FeaturedPujas = () => {
 
   return (
     <section className="relative texture-parchment py-20">
-      {/* decorative top border */}
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-gold to-transparent" />
+      {/* decorative top + bottom borders */}
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
 
       <div className="container">
         <SectionHeading

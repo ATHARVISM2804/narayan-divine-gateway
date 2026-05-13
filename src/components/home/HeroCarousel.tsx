@@ -115,56 +115,62 @@ const HeroCarousel = () => {
               }`}
               aria-hidden={!active}
             >
-              {/* Background image with slow Ken-Burns zoom — GPU composited */}
-              <div
-                className={`absolute inset-0 bg-cover bg-center will-change-transform transition-transform duration-[8000ms] ease-out ${
-                  active ? "scale-110" : "scale-100"
-                }`}
-                style={{ backgroundImage: `url(${s.image})` }}
-              />
-              {/* Color overlay for legibility */}
-              <div className={`absolute inset-0 ${s.overlay}`} />
-              {/* Mandala watermark */}
-              <Mandala
-                className={`pointer-events-none absolute -right-16 -top-16 h-48 w-48 md:-right-24 md:-top-24 md:h-[28rem] md:w-[28rem] ${
-                  idx === 2 ? "text-maroon/15" : "text-gold/25"
+              {/* ── Outer decorative gold frame sits on top of everything ── */}
+              {/* Corner ornaments — always on top */}
+              <CornerOrnament
+                className={`pointer-events-none absolute left-3 top-3 sm:left-5 sm:top-5 md:left-7 md:top-7 h-10 w-10 sm:h-12 sm:w-12 z-20 ${
+                  idx === 2 ? "text-maroon/70" : "text-gold/90"
                 }`}
               />
-              <Mandala
-                className={`pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 md:-left-32 md:-bottom-32 md:h-[24rem] md:w-[24rem] ${
-                  idx === 2 ? "text-maroon/10" : "text-gold/15"
+              <CornerOrnament
+                className={`pointer-events-none absolute right-3 top-3 sm:right-5 sm:top-5 md:right-7 md:top-7 h-10 w-10 sm:h-12 sm:w-12 -scale-x-100 z-20 ${
+                  idx === 2 ? "text-maroon/70" : "text-gold/90"
+                }`}
+              />
+              <CornerOrnament
+                className={`pointer-events-none absolute left-3 bottom-3 sm:left-5 sm:bottom-5 md:left-7 md:bottom-7 h-10 w-10 sm:h-12 sm:w-12 -scale-y-100 z-20 ${
+                  idx === 2 ? "text-maroon/70" : "text-gold/90"
+                }`}
+              />
+              <CornerOrnament
+                className={`pointer-events-none absolute right-3 bottom-3 sm:right-5 sm:bottom-5 md:right-7 md:bottom-7 h-10 w-10 sm:h-12 sm:w-12 -scale-100 z-20 ${
+                  idx === 2 ? "text-maroon/70" : "text-gold/90"
                 }`}
               />
 
-              {/* Ornate gold border frame */}
-              <div className="pointer-events-none absolute inset-3 sm:inset-4 md:inset-6 border border-gold/40 rounded-[2px]" aria-hidden="true" />
-              <div className="pointer-events-none absolute inset-5 sm:inset-6 md:inset-8 border border-gold/20" aria-hidden="true" />
-              <CornerOrnament
-                className={`pointer-events-none absolute left-3 top-3 sm:left-4 sm:top-4 h-10 w-10 sm:h-12 sm:w-12 ${
-                  idx === 2 ? "text-maroon/60" : "text-gold/80"
-                }`}
-              />
-              <CornerOrnament
-                className={`pointer-events-none absolute right-3 top-3 sm:right-4 sm:top-4 h-10 w-10 sm:h-12 sm:w-12 -scale-x-100 ${
-                  idx === 2 ? "text-maroon/60" : "text-gold/80"
-                }`}
-              />
-              <CornerOrnament
-                className={`pointer-events-none absolute left-3 bottom-3 sm:left-4 sm:bottom-4 h-10 w-10 sm:h-12 sm:w-12 -scale-y-100 ${
-                  idx === 2 ? "text-maroon/60" : "text-gold/80"
-                }`}
-              />
-              <CornerOrnament
-                className={`pointer-events-none absolute right-3 bottom-3 sm:right-4 sm:bottom-4 h-10 w-10 sm:h-12 sm:w-12 -scale-100 ${
-                  idx === 2 ? "text-maroon/60" : "text-gold/80"
-                }`}
-              />
+              {/* Gold frame borders — clipped to the photo area */}
+              <div className="pointer-events-none absolute inset-3 sm:inset-5 md:inset-7 border border-gold/50 z-20" aria-hidden="true" />
+              <div className="pointer-events-none absolute inset-5 sm:inset-7 md:inset-10 border border-gold/25 z-20" aria-hidden="true" />
+
+              {/* ── Photo + overlay clipped INSIDE the frame ── */}
+              <div className="absolute inset-3 sm:inset-5 md:inset-7 overflow-hidden">
+                {/* Background image with Ken-Burns zoom */}
+                <div
+                  className={`absolute inset-0 bg-cover bg-center will-change-transform transition-transform duration-[8000ms] ease-out ${
+                    active ? "scale-110" : "scale-100"
+                  }`}
+                  style={{ backgroundImage: `url(${s.image})` }}
+                />
+                {/* Color overlay for legibility */}
+                <div className={`absolute inset-0 ${s.overlay}`} />
+                {/* Mandala watermark */}
+                <Mandala
+                  className={`pointer-events-none absolute -right-16 -top-16 h-48 w-48 md:-right-24 md:-top-24 md:h-[28rem] md:w-[28rem] ${
+                    idx === 2 ? "text-maroon/15" : "text-gold/25"
+                  }`}
+                />
+                <Mandala
+                  className={`pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 md:-left-32 md:-bottom-32 md:h-[24rem] md:w-[24rem] ${
+                    idx === 2 ? "text-maroon/10" : "text-gold/15"
+                  }`}
+                />
+              </div>
 
               {/* Floating golden particles — reduced count for performance */}
               <FloatingParticles count={4} />
 
               {/* Content */}
-              <div className="container relative z-10 flex h-full flex-col justify-center pb-16 pt-20 sm:grid sm:items-center sm:py-10 md:grid-cols-12 md:gap-10">
+              <div className="absolute inset-0 z-10 container flex h-full flex-col justify-center pb-16 pt-20 sm:grid sm:items-center sm:py-10 md:grid-cols-12 md:gap-10">
                 <div className="space-y-3 sm:space-y-5 md:col-span-8 lg:col-span-7">
                   <span
                     className={`inline-flex items-center gap-2 rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-[10px] sm:text-xs font-semibold tracking-wide shadow-md ${s.pill.cls}`}
