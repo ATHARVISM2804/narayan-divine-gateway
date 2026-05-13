@@ -42,20 +42,31 @@ const PujaSectionNav = ({ visibleSections }: { visibleSections: string[] }) => {
 
   return (
     <div className="sticky top-[64px] z-30 bg-ivory/95 backdrop-blur-md border-b border-gold/30 shadow-sm">
-      <div className="container">
-        <div className="flex gap-1 overflow-x-auto scrollbar-hide py-1">
-          {filtered.map(s => (
-            <button key={s.id} onClick={() => scrollTo(s.id)}
-              className={`shrink-0 px-4 py-2.5 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${
-                activeId === s.id
-                  ? "text-saffron bg-saffron/10 border-b-2 border-saffron"
-                  : "text-brown/60 hover:text-maroon hover:bg-gold/10"
-              }`}>
-              {t(s.labelKey)}
-            </button>
-          ))}
-        </div>
-      </div>
+      <nav className="container">
+        <ul className="flex w-full items-stretch overflow-x-auto scrollbar-hide md:overflow-visible">
+          {filtered.map(s => {
+            const isActive = activeId === s.id;
+            return (
+              <li key={s.id} className="flex-1 min-w-0">
+                <button
+                  onClick={() => scrollTo(s.id)}
+                  className={`relative w-full px-2 py-3 text-[13px] md:text-sm font-bold text-center whitespace-nowrap transition-colors ${
+                    isActive
+                      ? "text-saffron"
+                      : "text-brown/55 hover:text-maroon"
+                  }`}
+                >
+                  {t(s.labelKey)}
+                  {/* Active underline accent */}
+                  {isActive && (
+                    <span className="absolute inset-x-2 bottom-0 h-[3px] rounded-full bg-gradient-to-r from-saffron to-gold" />
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
     </div>
   );
 };
