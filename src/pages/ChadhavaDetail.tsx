@@ -233,23 +233,13 @@ const ChadhavaDetail = () => {
             </div>
           )}
 
-          {/* Selected Summary — same style as PujaDetail action bar */}
-          {selectedCount > 0 && (
-            <div className="mt-6 rounded-2xl border-2 border-saffron/30 bg-ivory p-5 shadow-soft animate-fadeIn">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm text-brown/60 font-semibold">{selectedCount} {t("ch_items_selected")}</p>
-                  <p className="font-bold text-saffron text-2xl">₹{totalPrice.toLocaleString("en-IN")}</p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 sm:shrink-0">
-                  <button onClick={handleProceed}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-maroon px-6 py-4 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5">
-                    {t("ch_proceed")} <ChevronRight size={18} />
-                  </button>
-                </div>
-              </div>
-              <p className="mt-3 text-center text-xs text-brown/40 font-serif italic">{t("secure_pay")}</p>
-            </div>
+          {/* Selection hint */}
+          {selectedCount > 0 ? (
+            <p className="mt-5 text-center text-sm text-saffron font-semibold animate-fadeIn">
+              ✓ {selectedCount} {t("ch_items_selected")} — {t("ch_proceed")} ↓
+            </p>
+          ) : (
+            <p className="mt-5 text-center text-sm text-brown/50 font-semibold">{t("ch_select_hint") || "Tap offerings above to add them"}</p>
           )}
 
           {/* Trust row — same as PujaDetail packages section */}
@@ -358,17 +348,18 @@ const ChadhavaDetail = () => {
       )}
 
       {/* ══════════════════════════════════════════════
-          STICKY BOTTOM BAR (mobile) — same gradient as PujaDetail CTA
+          STICKY BOTTOM BAR (all screens) — always visible when items selected
           ══════════════════════════════════════════════ */}
       {selectedCount > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-[51] md:hidden bg-ivory border-t-2 border-gold/30 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] safe-bottom">
-          <div className="container py-3 flex items-center gap-4">
+        <div className="fixed bottom-0 inset-x-0 z-[51] bg-ivory/95 backdrop-blur-md border-t-2 border-gold/30 shadow-[0_-4px_24px_rgba(0,0,0,0.10)] safe-bottom">
+          <div className="container py-3 md:py-4 flex items-center gap-4">
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-brown/50 font-semibold">{selectedCount} {t("ch_items_selected")}</p>
-              <p className="font-bold text-saffron text-xl leading-tight">₹{totalPrice.toLocaleString("en-IN")}</p>
+              <p className="text-xs md:text-sm text-brown/50 font-semibold">{selectedCount} {t("ch_items_selected")}</p>
+              <p className="font-bold text-saffron text-xl md:text-2xl leading-tight">₹{totalPrice.toLocaleString("en-IN")}</p>
             </div>
+            <p className="hidden md:block text-xs text-brown/40 font-serif italic mr-2">{t("secure_pay")}</p>
             <button onClick={handleProceed}
-              className="shrink-0 flex items-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-maroon px-5 py-3 text-[14px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow">
+              className="shrink-0 flex items-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-maroon px-5 md:px-8 py-3 md:py-3.5 text-[14px] md:text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5">
               <ShoppingCart size={16} /> {t("ch_proceed")} <ChevronRight size={16} />
             </button>
           </div>
