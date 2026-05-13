@@ -1,14 +1,61 @@
 import { useState } from "react";
-import { MapPin, Phone, Mail, Clock, Plus, Minus, Facebook, Instagram, Youtube, Twitter } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Plus, Minus, Facebook, Instagram, Youtube, Twitter, Loader2, CheckCircle } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import heroContact from "@/assets/hero-contact-page.png";
 import { useLanguage } from "@/context/LanguageContext";
+import { toast } from "sonner";
+
+const WEB3FORMS_KEY = import.meta.env.VITE_WEB3FORMS_KEY || "";
 
 const Contact = () => {
   usePageTitle("Contact Narayan Kripa — Get in Touch");
   const { t } = useLanguage();
   const [open, setOpen] = useState<number | null>(0);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+      toast.error("Please fill in Name, Email and Message");
+      return;
+    }
+    setSending(true);
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_KEY,
+          from_name: "Narayan Kripa Website",
+          subject: `Contact: ${form.subject || "General Enquiry"} — ${form.name}`,
+          name: form.name,
+          email: form.email,
+          phone: form.phone || "Not provided",
+          message: form.message,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Message sent successfully! We'll get back to you soon 🙏");
+        setForm({ name: "", email: "", phone: "", subject: "", message: "" });
+        setSent(true);
+        setTimeout(() => setSent(false), 5000);
+      } else {
+        toast.error(data.message || "Something went wrong. Please try again.");
+      }
+    } catch {
+      toast.error("Network error. Please try again later.");
+    }
+    setSending(false);
+  };
+
   const socialLinks = [
     { Icon: Facebook, href: "https://www.facebook.com/share/18S8PGfHQ8/?mibextid=wwXIfr" },
     { Icon: Instagram, href: "https://www.instagram.com/narayankripa.in?igsh=aHBjd2QybnBpemdi" },
@@ -34,33 +81,37 @@ const Contact = () => {
           <div className="rounded-2xl border border-gold/50 bg-ivory p-8">
             <h2 className="font-display text-3xl text-maroon">{t("ct_form_title")}</h2>
             <p className="mt-1 font-serif italic text-brown/70">{t("ct_form_sub")}</p>
-            <form className="mt-6 space-y-4" onSubmit={(e) => e.preventDefault()}>
+            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               {[
-                { label: t("ct_name"), type: "text" },
-                { label: t("ct_email"), type: "email" },
-                { label: t("ct_phone"), type: "tel" },
+                { label: t("ct_name"), type: "text", name: "name" },
+                { label: t("ct_email"), type: "email", name: "email" },
+                { label: t("ct_phone"), type: "tel", name: "phone" },
               ].map((f) => (
-                <div key={f.label}>
+                <div key={f.name}>
                   <label className="mb-1 block text-xs font-medium text-maroon">{f.label}</label>
-                  <input type={f.type} className="w-full rounded-lg border border-gold bg-cream px-4 py-2.5 text-sm outline-none transition-colors focus:border-saffron" />
+                  <input type={f.type} name={f.name} value={form[f.name as keyof typeof form]} onChange={handleChange}
+                    className="w-full rounded-lg border border-gold bg-cream px-4 py-2.5 text-sm outline-none transition-colors focus:border-saffron" />
                 </div>
               ))}
               <div>
                 <label className="mb-1 block text-xs font-medium text-maroon">{t("ct_subject")}</label>
-                <select className="w-full rounded-lg border border-gold bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron">
-                  <option>{t("ct_general")}</option>
-                  <option>{t("ct_puja_booking")}</option>
-                  <option>{t("ct_chadhava_support")}</option>
-                  <option>{t("ct_pandit")}</option>
-                  <option>{t("ct_partnership")}</option>
+                <select name="subject" value={form.subject} onChange={handleChange}
+                  className="w-full rounded-lg border border-gold bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron">
+                  <option value="">{t("ct_general")}</option>
+                  <option value="Puja Booking">{t("ct_puja_booking")}</option>
+                  <option value="Chadhava Support">{t("ct_chadhava_support")}</option>
+                  <option value="Pandit Enquiry">{t("ct_pandit")}</option>
+                  <option value="Partnership">{t("ct_partnership")}</option>
                 </select>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-maroon">{t("ct_message")}</label>
-                <textarea rows={5} className="w-full rounded-lg border border-gold bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" />
+                <textarea rows={5} name="message" value={form.message} onChange={handleChange}
+                  className="w-full rounded-lg border border-gold bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" />
               </div>
-              <button className="rounded-full bg-saffron px-6 py-3 text-sm font-semibold text-white hover:bg-maroon transition-colors">
-                {t("ct_submit")}
+              <button type="submit" disabled={sending}
+                className="flex items-center justify-center gap-2 rounded-full bg-saffron px-6 py-3 text-sm font-semibold text-white hover:bg-maroon transition-colors disabled:opacity-60">
+                {sending ? <><Loader2 size={16} className="animate-spin" /> Sending...</> : sent ? <><CheckCircle size={16} /> Sent!</> : t("ct_submit")}
               </button>
             </form>
           </div>
