@@ -97,16 +97,15 @@ const ChadhavaDetail = () => {
     offerings.forEach(o => {
       const qty = selected[o.id];
       if (!qty) return;
-      for (let i = 0; i < qty; i++) {
-        addItem({
-          id: `chadhava-${chadhava.id}-${o.id}`,
-          name: `${o.name}`,
-          description: chadhava.item,
-          price: o.price,
-          category: "chadhava",
-          image: o.image_url || chadhava.image_url || undefined,
-        });
-      }
+      // Use only the offering ID so the edge function can look it up directly
+      addItem({
+        id: `chadhava-${o.id}`,
+        name: `${o.name}`,
+        description: chadhava.item,
+        price: o.price,
+        category: "chadhava",
+        image: o.image_url || chadhava.image_url || undefined,
+      }, qty);
     });
     toast.success(`${selectedCount} offering${selectedCount > 1 ? "s" : ""} added to cart!`);
     nav("/cart");

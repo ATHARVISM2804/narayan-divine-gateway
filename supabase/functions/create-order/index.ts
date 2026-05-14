@@ -80,25 +80,25 @@ Deno.serve(async (req) => {
         validatedItems.push({ ...item, price: tier.price, verified: true });
 
       } else if (item.category === "chadhava") {
-        // Chadhava items have id like "chadhava-<uuid>"
-        const chadhavaId = item.id.replace("chadhava-", "");
+        // Chadhava items have id like "chadhava-<offering_uuid>"
+        const offeringId = item.id.replace("chadhava-", "");
 
-        const { data: chadhava } = await supabase
-          .from("chadhavas")
-          .select("temple, item, price")
-          .eq("id", chadhavaId)
+        const { data: offering } = await supabase
+          .from("chadhava_offerings")
+          .select("name, price")
+          .eq("id", offeringId)
           .eq("status", "active")
           .single();
 
-        if (!chadhava) {
+        if (!offering) {
           return new Response(
-            JSON.stringify({ error: `Chadhava not found or inactive: ${item.name}` }),
+            JSON.stringify({ error: `Chadhava offering not found or inactive: ${item.name}` }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        totalPaise += chadhava.price * 100 * (item.quantity || 1);
-        validatedItems.push({ ...item, price: chadhava.price, verified: true });
+        totalPaise += offering.price * 100 * (item.quantity || 1);
+        validatedItems.push({ ...item, price: offering.price, verified: true });
       }
     }
 

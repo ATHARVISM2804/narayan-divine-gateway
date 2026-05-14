@@ -170,7 +170,7 @@ const HeroCarousel = () => {
               <FloatingParticles count={4} />
 
               {/* Content */}
-              <div className="absolute inset-0 z-10 container flex h-full flex-col justify-center pb-16 pt-20 sm:grid sm:items-center sm:py-10 md:grid-cols-12 md:gap-10">
+              <div className="absolute inset-0 z-10 flex h-full flex-col justify-center pb-16 pt-20 px-12 xs:px-14 sm:px-8 sm:container sm:grid sm:items-center sm:py-10 md:grid-cols-12 md:gap-10">
                 <div className="space-y-3 sm:space-y-5 md:col-span-8 lg:col-span-7">
                   <span
                     className={`inline-flex items-center gap-2 rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-[10px] sm:text-xs font-semibold tracking-wide shadow-md ${s.pill.cls}`}
@@ -205,17 +205,17 @@ const HeroCarousel = () => {
                     {s.subtitle}
                   </p>
 
-                  <div className="flex flex-col xs:flex-row flex-wrap gap-3 sm:gap-3 pt-1 sm:pt-2">
+                  <div className="flex flex-col xs:flex-row flex-wrap gap-3 sm:gap-3 pt-1 sm:pt-2 w-full">
                     <Link
                       to={s.linkPrimary}
-                      className={`inline-flex items-center justify-center rounded-full min-h-[48px] px-6 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold shadow-sacred transition-all hover:-translate-y-0.5 text-center ${s.ctaPrimaryCls}`}
+                      className={`inline-flex items-center justify-center rounded-full min-h-[48px] px-5 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold shadow-sacred transition-all hover:-translate-y-0.5 text-center w-full xs:w-auto ${s.ctaPrimaryCls}`}
                     >
                       {s.primaryCta}
                     </Link>
                     {s.secondaryCta && s.linkSecondary && (
                       <Link
                         to={s.linkSecondary}
-                        className={`inline-flex items-center justify-center rounded-full min-h-[48px] px-6 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold backdrop-blur-sm bg-white/5 transition-all hover:-translate-y-0.5 text-center ${s.ctaSecondaryCls}`}
+                        className={`inline-flex items-center justify-center rounded-full min-h-[48px] px-5 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base font-semibold backdrop-blur-sm bg-white/5 transition-all hover:-translate-y-0.5 text-center w-full xs:w-auto ${s.ctaSecondaryCls}`}
                       >
                         {s.secondaryCta}
                       </Link>

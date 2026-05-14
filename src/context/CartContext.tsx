@@ -12,7 +12,7 @@ export interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity">) => void;
+  addItem: (item: Omit<CartItem, "quantity">, initialQuantity?: number) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -53,15 +53,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     saveCart(items);
   }, [items]);
 
-  const addItem = useCallback((newItem: Omit<CartItem, "quantity">) => {
+  const addItem = useCallback((newItem: Omit<CartItem, "quantity">, initialQuantity = 1) => {
     setItems((prev) => {
       const existing = prev.find((i) => i.id === newItem.id);
       if (existing) {
         return prev.map((i) =>
-          i.id === newItem.id ? { ...i, quantity: i.quantity + 1 } : i
+          i.id === newItem.id ? { ...i, quantity: i.quantity + initialQuantity } : i
         );
       }
-      return [...prev, { ...newItem, quantity: 1 }];
+      return [...prev, { ...newItem, quantity: initialQuantity }];
     });
   }, []);
 

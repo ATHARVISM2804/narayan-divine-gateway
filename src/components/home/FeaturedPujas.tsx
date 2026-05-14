@@ -64,7 +64,7 @@ const FeaturedPujas = () => {
               key={p.id}
               className="group overflow-hidden rounded-2xl border border-gold/50 bg-ivory transition-all duration-500 hover:-translate-y-1.5 hover:border-saffron hover:shadow-sacred flex flex-col h-full shadow-soft"
             >
-              <div className="relative grid h-44 place-items-center bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent overflow-hidden border-b border-gold/30">
+              <div className="relative w-full overflow-hidden bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent border-b border-gold/30" style={{aspectRatio: '800/352'}}>
                 {p.image_url ? (
                   <img src={p.image_url} alt={p.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 ) : (

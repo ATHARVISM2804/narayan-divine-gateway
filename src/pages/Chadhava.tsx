@@ -75,7 +75,7 @@ const Chadhava = () => {
                 <Link to={`/chadhava/${c.id}`} key={c.id}
                   className="group overflow-hidden rounded-2xl border border-gold/50 bg-ivory transition-all duration-500 hover:-translate-y-1.5 hover:border-saffron hover:shadow-sacred flex flex-col h-full shadow-soft">
                   {/* Image */}
-                  <div className="relative h-44 overflow-hidden bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent border-b border-gold/30">
+                  <div className="relative w-full overflow-hidden bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent border-b border-gold/30" style={{aspectRatio: '800/352'}}>
                     {c.image_url ? (
                       <img src={c.image_url} alt={c.item} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     ) : (

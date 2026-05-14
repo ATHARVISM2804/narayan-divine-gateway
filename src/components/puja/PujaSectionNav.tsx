@@ -42,15 +42,15 @@ const PujaSectionNav = ({ visibleSections }: { visibleSections: string[] }) => {
 
   return (
     <div className="sticky top-[64px] z-30 bg-ivory/95 backdrop-blur-md border-b border-gold/30 shadow-sm">
-      <nav className="container">
-        <ul className="flex w-full items-stretch overflow-x-auto scrollbar-hide md:overflow-visible">
+      <nav className="container px-0 sm:px-4">
+        <ul className="flex items-stretch overflow-x-auto scrollbar-hide">
           {filtered.map(s => {
             const isActive = activeId === s.id;
             return (
-              <li key={s.id} className="flex-1 min-w-0">
+              <li key={s.id} className="shrink-0 md:flex-1">
                 <button
                   onClick={() => scrollTo(s.id)}
-                  className={`relative w-full px-2 py-3 text-[13px] md:text-sm font-bold text-center whitespace-nowrap transition-colors ${
+                  className={`relative w-full min-w-[90px] px-3 py-3 text-[12px] md:text-sm font-bold text-center whitespace-nowrap transition-colors ${
                     isActive
                       ? "text-saffron"
                       : "text-brown/55 hover:text-maroon"
