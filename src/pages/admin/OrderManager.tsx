@@ -7,7 +7,7 @@ interface Order {
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
   customer_name: string;
-  customer_email: string;
+  customer_email: string | null;
   customer_phone: string;
   customer_address: string | null;
   amount: number;
@@ -96,7 +96,7 @@ const OrderManager = (_props: Props) => {
         o.id,
         new Date(o.created_at).toLocaleString("en-IN"),
         o.customer_name,
-        o.customer_email,
+        o.customer_email || "",
         o.customer_phone,
         o.customer_address || "",
         itemsStr,
@@ -241,7 +241,7 @@ const OrderManager = (_props: Props) => {
                       {o.status.toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-xs text-brown/60 mt-0.5">{o.customer_email} • {o.customer_phone}</p>
+                  <p className="text-xs text-brown/60 mt-0.5">{o.customer_email ? `${o.customer_email} • ` : ""}{o.customer_phone}</p>
                   {/* Item names shown in card */}
                   {pujaNames && (
                     <p className="text-xs font-semibold text-saffron mt-1 truncate max-w-sm">
@@ -284,7 +284,7 @@ const OrderManager = (_props: Props) => {
               <div className="border-t border-gold/20 pt-3">
                 <p className="text-[11px] text-brown/50 uppercase mb-1">Customer</p>
                 <p className="font-medium text-maroon">{detail.customer_name}</p>
-                <p className="text-brown/60">{detail.customer_email}</p>
+                {detail.customer_email && <p className="text-brown/60">{detail.customer_email}</p>}
                 <p className="text-brown/60">{detail.customer_phone}</p>
                 {detail.customer_address && <p className="text-brown/60 mt-1">{detail.customer_address}</p>}
               </div>

@@ -54,8 +54,8 @@ const OrderSuccess = () => {
           <Link to="/" className="flex items-center gap-2 rounded-full bg-saffron px-6 py-3 text-sm font-semibold text-white hover:bg-maroon transition-colors">
             <Home size={16} /> {t("os_go_home")}
           </Link>
-          <Link to="/puja" className="flex items-center gap-2 rounded-full border-2 border-gold px-6 py-3 text-sm font-semibold text-maroon hover:bg-gold transition-colors">
-            <ShoppingBag size={16} /> {t("os_continue")}
+          <Link to="/my-orders" className="flex items-center gap-2 rounded-full border-2 border-gold px-6 py-3 text-sm font-semibold text-maroon hover:bg-gold transition-colors">
+            <ShoppingBag size={16} /> {t("mo_track_title")}
           </Link>
         </div>
       </div>

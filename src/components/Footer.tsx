@@ -10,7 +10,7 @@ const Footer = React.memo(() => {
   const companyLinks = [
     { label: t("footer_about"), to: "/contact" },
     { label: t("nav_contact"), to: "/contact" },
-    { label: t("nav_my_orders"), to: "/my-orders" },
+    { label: t("mo_track_title"), to: "/my-orders" },
   ];
 
   const serviceLinks = [

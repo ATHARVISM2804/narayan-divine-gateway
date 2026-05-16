@@ -55,7 +55,7 @@ const Navbar = React.memo(() => {
 
   const closeMenu = useCallback(() => setOpen(false), []);
 
-  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || user?.phone || "User";
 
   /* ── Language toggle pill ── */
   const LangToggle = ({ mobile = false }: { mobile?: boolean }) => (

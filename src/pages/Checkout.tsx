@@ -75,7 +75,7 @@ const Checkout = () => {
 
   const validate = () => {
     if (!form.name.trim()) { toast.error(t("co_err_name")); return false; }
-    if (!form.email.trim() || !form.email.includes("@")) { toast.error(t("co_err_email")); return false; }
+    if (form.email.trim() && !form.email.includes("@")) { toast.error(t("co_err_email")); return false; }
     if (!form.phone.trim() || form.phone.length < 10) { toast.error(t("co_err_phone")); return false; }
     if (memberCount > 0 && !syncedMemberNames[0].trim()) { toast.error("Please enter at least the first member's name"); return false; }
     return true;
@@ -101,7 +101,7 @@ const Checkout = () => {
       const { data: fnData, error: fnError } = await supabase.functions.invoke("create-order", {
         body: {
           items: items.map((i) => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, category: i.category })),
-          customer: { name: form.name, email: form.email, phone: form.phone, address: form.address },
+          customer: { name: form.name, email: form.email.trim() || null, phone: form.phone, address: form.address },
           puja_details: memberCount > 0 ? { member_names: syncedMemberNames.filter(n => n.trim()), gotra: gotraUnknown ? "Kashyap" : gotra } : undefined,
         },
       });
@@ -117,7 +117,7 @@ const Checkout = () => {
         name: "Narayan Kripa",
         description: `Order: ${items.length} item${items.length > 1 ? "s" : ""}`,
         order_id: fnData.order_id,
-        prefill: { name: form.name, email: form.email, contact: form.phone },
+        prefill: { name: form.name, ...(form.email.trim() && { email: form.email }), contact: form.phone },
         theme: { color: "#D4891A" },
         handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
           try {
@@ -206,9 +206,9 @@ const Checkout = () => {
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-maroon">
-                    <Mail size={13} /> {t("co_email")} *
+                    <Mail size={13} /> {t("co_email")} <span className="text-brown/40 normal-case font-medium">({t("co_optional")})</span>
                   </label>
-                  <input value={form.email} onChange={set("email")} type="email" required placeholder={t("co_ph_email")}
+                  <input value={form.email} onChange={set("email")} type="email" placeholder={t("co_ph_email")}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20" />
                 </div>
                 <div>

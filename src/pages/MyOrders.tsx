@@ -3,14 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase } from "@/lib/supabase";
-import { Package, LogOut, ShoppingBag, Eye, X, User } from "lucide-react";
+import { Package, LogOut, ShoppingBag, Eye, X, Phone, Search } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface Order {
   id: string;
   razorpay_payment_id: string | null;
   customer_name: string;
-  customer_email: string;
+  customer_email: string | null;
   amount: number;
   status: string;
   items: any[];
@@ -30,27 +30,79 @@ const MyOrders = () => {
   const nav = useNavigate();
   const { t } = useLanguage();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [detail, setDetail] = useState<Order | null>(null);
+  const [lookupPhone, setLookupPhone] = useState("");
+  const [lookupDone, setLookupDone] = useState(false);
+  const [lookupError, setLookupError] = useState("");
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      nav("/login");
-    }
-  }, [user, authLoading, nav]);
-
+  // For logged-in users: auto-fetch orders
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("orders")
-      .select("*")
-      .eq("customer_email", user.email)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        if (data) setOrders(data as Order[]);
-        setLoading(false);
-      });
+    setLoading(true);
+
+    const fetchOrders = async () => {
+      // Try matching by email or phone
+      const queries = [];
+      if (user.email) {
+        queries.push(
+          supabase.from("orders").select("*").eq("customer_email", user.email).order("created_at", { ascending: false })
+        );
+      }
+      if (user.user_metadata?.phone) {
+        queries.push(
+          supabase.from("orders").select("*").eq("customer_phone", user.user_metadata.phone).order("created_at", { ascending: false })
+        );
+      }
+      // If user has phone from auth
+      if (user.phone) {
+        queries.push(
+          supabase.from("orders").select("*").eq("customer_phone", user.phone).order("created_at", { ascending: false })
+        );
+      }
+
+      const results = await Promise.all(queries);
+      const allOrders = results.flatMap((r) => r.data || []);
+      // Deduplicate by id
+      const unique = Array.from(new Map(allOrders.map((o) => [o.id, o])).values()) as Order[];
+      unique.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setOrders(unique);
+      setLoading(false);
+      setLookupDone(true);
+    };
+
+    fetchOrders();
   }, [user]);
+
+  // Phone lookup for guests
+  const handlePhoneLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLookupError("");
+    const phone = lookupPhone.trim();
+    if (!phone || phone.length < 10) {
+      setLookupError(t("co_err_phone"));
+      return;
+    }
+    setLoading(true);
+    setLookupDone(false);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("lookup-orders", {
+        body: { phone },
+      });
+
+      if (error || !data?.orders) {
+        setLookupError("Something went wrong. Please try again.");
+        setLoading(false);
+        return;
+      }
+      setOrders(data.orders as Order[]);
+    } catch {
+      setLookupError("Something went wrong. Please try again.");
+    }
+    setLoading(false);
+    setLookupDone(true);
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -65,39 +117,97 @@ const MyOrders = () => {
     );
   }
 
-  if (!user) return null;
-
-  const userName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Devotee";
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Devotee";
 
   return (
     <main className="bg-background min-h-screen">
       {/* Header */}
       <div className="bg-gradient-to-r from-maroon via-maroon-deep to-maroon py-10">
         <div className="container">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gold/70 text-sm font-serif italic">🙏 Namaste</p>
-              <h1 className="font-display text-3xl text-gold md:text-4xl">{userName}</h1>
-              <p className="mt-1 text-cream/70 text-sm">{user.email}</p>
+          {user ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gold/70 text-sm font-serif italic">🙏 Namaste</p>
+                <h1 className="font-display text-3xl text-gold md:text-4xl">{userName}</h1>
+                <p className="mt-1 text-cream/70 text-sm">{user.email || user.phone || ""}</p>
+              </div>
+              <button onClick={handleLogout}
+                className="flex items-center gap-2 rounded-full border border-gold/50 px-4 py-2 text-sm text-gold hover:bg-gold/10 transition-colors">
+                <LogOut size={14} /> {t("mo_logout")}
+              </button>
             </div>
-            <button onClick={handleLogout}
-              className="flex items-center gap-2 rounded-full border border-gold/50 px-4 py-2 text-sm text-gold hover:bg-gold/10 transition-colors">
-              <LogOut size={14} /> {t("mo_logout")}
-            </button>
-          </div>
+          ) : (
+            <div>
+              <h1 className="font-display text-3xl text-gold md:text-4xl flex items-center gap-3">
+                <Package size={28} /> {t("mo_track_title")}
+              </h1>
+              <p className="mt-1 text-cream/70 font-serif italic">{t("mo_track_sub")}</p>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="container py-10">
-        <h2 className="font-display text-2xl text-maroon mb-6 flex items-center gap-2">
-          <Package size={22} className="text-saffron" /> {t("mo_title")}
-        </h2>
+        {/* Phone lookup form for guests */}
+        {!user && (
+          <div className="mb-8 rounded-2xl border border-gold/40 bg-ivory p-6 md:p-8 shadow-soft">
+            <div className="flex items-start gap-3 mb-5">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-saffron/20 to-gold/20">
+                <Phone size={20} className="text-saffron" />
+              </div>
+              <div>
+                <h2 className="font-display text-xl text-maroon">{t("mo_lookup_title")}</h2>
+                <p className="text-sm text-brown/60 mt-0.5">{t("mo_lookup_sub")}</p>
+              </div>
+            </div>
+            <form onSubmit={handlePhoneLookup} className="flex gap-3 flex-col sm:flex-row">
+              <div className="flex-1 relative">
+                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-brown/30" />
+                <input
+                  type="tel"
+                  value={lookupPhone}
+                  onChange={(e) => setLookupPhone(e.target.value)}
+                  placeholder={t("co_ph_phone")}
+                  className="w-full rounded-xl border border-gold/50 bg-cream pl-11 pr-4 py-3.5 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="rounded-xl bg-gradient-to-r from-saffron to-maroon px-8 py-3.5 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-60 flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                <Search size={16} /> {t("mo_lookup_btn")}
+              </button>
+            </form>
+            {lookupError && (
+              <p className="mt-3 text-sm text-red-600 animate-fadeIn">{lookupError}</p>
+            )}
+            <div className="mt-4 flex items-center gap-2 text-xs text-brown/50">
+              <span className="h-px flex-1 bg-gold/20" />
+              <span>{t("mo_or")}</span>
+              <span className="h-px flex-1 bg-gold/20" />
+            </div>
+            <div className="mt-3 text-center">
+              <Link to="/login" className="text-sm text-saffron font-semibold hover:text-maroon transition-colors">
+                {t("mo_login_link")}
+              </Link>
+            </div>
+          </div>
+        )}
 
+        {/* Logged-in user section header */}
+        {user && (
+          <h2 className="font-display text-2xl text-maroon mb-6 flex items-center gap-2">
+            <Package size={22} className="text-saffron" /> {t("mo_title")}
+          </h2>
+        )}
+
+        {/* Orders list */}
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => <div key={i} className="h-24 rounded-2xl bg-gold/10 animate-pulse" />)}
           </div>
-        ) : orders.length === 0 ? (
+        ) : lookupDone && orders.length === 0 ? (
           <div className="rounded-2xl border border-gold/30 bg-ivory p-16 text-center">
             <div className="mx-auto mb-4 grid h-20 w-20 place-items-center rounded-full bg-gold/10">
               <ShoppingBag size={36} className="text-gold/50" />
@@ -108,7 +218,7 @@ const MyOrders = () => {
               {t("mo_browse")}
             </Link>
           </div>
-        ) : (
+        ) : lookupDone ? (
           <div className="space-y-4">
             {orders.map((o) => (
               <div key={o.id} className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-gold/30 bg-ivory p-5 shadow-soft transition-all hover:border-gold/60">
@@ -140,7 +250,7 @@ const MyOrders = () => {
               </div>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Order detail modal */}

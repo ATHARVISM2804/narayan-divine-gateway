@@ -20,9 +20,9 @@ Deno.serve(async (req) => {
     const { items, customer } = await req.json();
 
     // Validate customer fields
-    if (!customer?.name || !customer?.email || !customer?.phone) {
+    if (!customer?.name || !customer?.phone) {
       return new Response(
-        JSON.stringify({ error: "Name, email, and phone are required" }),
+        JSON.stringify({ error: "Name and phone are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
       .from("orders")
       .insert({
         customer_name: customer.name,
-        customer_email: customer.email,
+        customer_email: customer.email || null,
         customer_phone: customer.phone,
         customer_address: customer.address || null,
         amount: totalPaise,
@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
         receipt: order.id,
         notes: {
           customer_name: customer.name,
-          customer_email: customer.email,
+          customer_phone: customer.phone,
         },
       }),
     });
