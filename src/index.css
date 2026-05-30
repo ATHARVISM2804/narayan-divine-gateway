@@ -107,6 +107,12 @@
   html {
     overflow-x: hidden;
     scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent; /* No blue flash on mobile taps */
+  }
+
+  /* Eliminate 300ms tap delay on interactive elements */
+  a, button {
+    touch-action: manipulation;
   }
 
   body {

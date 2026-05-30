@@ -5,6 +5,15 @@ import SectionHeading from "@/components/SectionHeading";
 import { supabase, type Chadhava } from "@/lib/supabase";
 import { useLanguage } from "@/context/LanguageContext";
 
+const parseDate = (d: string | null | undefined) => {
+  if (!d) return Infinity;
+  const year = new Date().getFullYear();
+  const dt = new Date(`${d} ${year}`);
+  if (isNaN(dt.getTime())) return Infinity;
+  if (dt < new Date()) dt.setFullYear(year + 1);
+  return dt.getTime();
+};
+
 const FeaturedChadhavas = () => {
   const { t, lang } = useLanguage();
   const [chadhavas, setChadhavas] = useState<Chadhava[]>([]);
@@ -17,11 +26,12 @@ const FeaturedChadhavas = () => {
         .from("chadhavas")
         .select("*")
         .eq("status", "active")
-        .eq("featured", true)
-        .order("created_at", { ascending: false })
-        .limit(3);
+        .eq("featured", true);
       if (chData && chData.length > 0) {
-        setChadhavas(chData as Chadhava[]);
+        const sorted = (chData as Chadhava[])
+          .sort((a, b) => parseDate(a.date) - parseDate(b.date))
+          .slice(0, 3);
+        setChadhavas(sorted);
         const { data: offData } = await supabase
           .from("chadhava_offerings")
           .select("chadhava_id, price")

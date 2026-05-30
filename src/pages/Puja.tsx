@@ -7,6 +7,14 @@ import PageHero from "@/components/PageHero";
 import heroPuja from "@/assets/hero-puja-page.png";
 import { useLanguage } from "@/context/LanguageContext";
 
+const parseDate = (d: string) => {
+  const year = new Date().getFullYear();
+  const dt = new Date(`${d} ${year}`);
+  if (isNaN(dt.getTime())) return Infinity;
+  if (dt < new Date()) dt.setFullYear(year + 1);
+  return dt.getTime();
+};
+
 const Puja = () => {
   usePageTitle("Sacred Pujas — Narayan Kripa");
   const { t, lang } = useLanguage();
@@ -19,9 +27,13 @@ const Puja = () => {
       .from("pujas")
       .select("*")
       .eq("status", "active")
-      .order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (data) setPujas(data as PujaType[]);
+        if (data) {
+          const sorted = (data as PujaType[]).sort(
+            (a, b) => parseDate(a.date) - parseDate(b.date)
+          );
+          setPujas(sorted);
+        }
         setLoading(false);
       });
   }, []);
@@ -73,9 +85,9 @@ const Puja = () => {
                 <div className="flex flex-col flex-1 p-5 bg-gradient-to-b from-ivory to-cream/30">
                   <h3 className="font-body text-[18px] font-bold text-maroon leading-snug mb-3">{displayName}</h3>
 
-                  <div className="flex flex-col gap-1.5 text-xs text-brown/70 font-semibold">
-                    <span className="flex items-center gap-1.5"><span className="w-4 flex items-center justify-center shrink-0"><Calendar size={13} className="text-saffron" /></span> {p.date}</span>
-                    <span className="flex items-center gap-1.5"><span className="w-4 flex items-center justify-center shrink-0 text-sm leading-none">🛕</span> {displayLocation}</span>
+                  <div className="flex flex-col gap-2 text-sm text-brown/70 font-semibold">
+                    <span className="flex items-center gap-2"><span className="w-5 flex items-center justify-center shrink-0"><Calendar size={15} className="text-saffron" /></span> {p.date}</span>
+                    <span className="flex items-center gap-2"><span className="w-5 flex items-center justify-center shrink-0 text-base leading-none">🛕</span> {displayLocation}</span>
                   </div>
 
                   {displayBenefit && (

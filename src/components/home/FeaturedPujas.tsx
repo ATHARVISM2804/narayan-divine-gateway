@@ -5,6 +5,14 @@ import SectionHeading from "@/components/SectionHeading";
 import { supabase, type Puja } from "@/lib/supabase";
 import { useLanguage } from "@/context/LanguageContext";
 
+const parseDate = (d: string) => {
+  const year = new Date().getFullYear();
+  const dt = new Date(`${d} ${year}`);
+  if (isNaN(dt.getTime())) return Infinity;
+  if (dt < new Date()) dt.setFullYear(year + 1);
+  return dt.getTime();
+};
+
 const FeaturedPujas = () => {
   const { t, lang } = useLanguage();
   const [pujas, setPujas] = useState<Puja[]>([]);
@@ -16,10 +24,13 @@ const FeaturedPujas = () => {
       .select("*")
       .eq("status", "active")
       .eq("featured", true)
-      .order("created_at", { ascending: false })
-      .limit(3)
       .then(({ data }) => {
-        if (data) setPujas(data as Puja[]);
+        if (data) {
+          const sorted = (data as Puja[])
+            .sort((a, b) => parseDate(a.date) - parseDate(b.date))
+            .slice(0, 3);
+          setPujas(sorted);
+        }
         setLoading(false);
       });
   }, []);

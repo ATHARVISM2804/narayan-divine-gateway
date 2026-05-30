@@ -109,3 +109,27 @@ INSERT INTO chadhavas (temple, item, price, status) VALUES
   ('Vaishno Devi', 'Chunari & Sindoor', 451, 'active'),
   ('Mahakaleshwar', 'Bhasma Aarti Offering', 1100, 'active'),
   ('Jagannath Puri', 'Mahaprasad Offering', 651, 'active');
+
+-- 10. Leads table — captures name + WhatsApp before checkout (for Meta Ads)
+CREATE TABLE IF NOT EXISTS leads (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name          TEXT NOT NULL,
+  phone         TEXT NOT NULL,
+  puja_name     TEXT,
+  package_label TEXT,
+  price         INTEGER,
+  source        TEXT DEFAULT 'puja_page',
+  created_at    TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can insert a lead (needed for unauthenticated visitors)
+CREATE POLICY "Public insert leads"
+  ON leads FOR INSERT
+  WITH CHECK (true);
+
+-- Only admin can read leads
+CREATE POLICY "Admin read leads"
+  ON leads FOR SELECT
+  USING (auth.role() = 'authenticated');

@@ -8,6 +8,16 @@ import heroChadhava from "@/assets/hero-chadhava-page.png";
 import { useLanguage } from "@/context/LanguageContext";
 import { ChevronRight, MapPin, Calendar } from "lucide-react";
 
+const parseDate = (d: string | null | undefined) => {
+  if (!d) return Infinity;
+  const year = new Date().getFullYear();
+  const dt = new Date(`${d} ${year}`);
+  if (isNaN(dt.getTime())) return Infinity;
+  if (dt < new Date()) dt.setFullYear(year + 1);
+  return dt.getTime();
+};
+
+
 const Chadhava = () => {
   usePageTitle("Offer Chadhava — Narayan Kripa");
   const { t, lang } = useLanguage();
@@ -20,10 +30,12 @@ const Chadhava = () => {
       const { data: chData } = await supabase
         .from("chadhavas")
         .select("*")
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
+        .eq("status", "active");
       if (chData) {
-        setChadhavas(chData as CType[]);
+        const sorted = (chData as CType[]).sort(
+          (a, b) => parseDate(a.date) - parseDate(b.date)
+        );
+        setChadhavas(sorted);
         const { data: offData } = await supabase
           .from("chadhava_offerings")
           .select("chadhava_id, price")

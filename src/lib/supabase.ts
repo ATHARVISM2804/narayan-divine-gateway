@@ -83,3 +83,18 @@ export interface ChadhavaOffering {
   updated_at: string;
 }
 
+export interface PujaOffering {
+  id: string;
+  puja_id: string;
+  name: string;
+  name_hi: string | null;
+  price: number;
+  image_url: string | null;
+  description: string | null;
+  description_hi: string | null;
+  status: 'active' | 'draft';
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+

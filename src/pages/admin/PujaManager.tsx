@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { supabase, type Puja } from "@/lib/supabase";
+import { useState, useEffect } from "react";
+import { supabase, type Puja, type PujaOffering } from "@/lib/supabase";
 import { Plus, Pencil, Trash2, X, Loader2, Star, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
@@ -109,10 +109,79 @@ const GalleryEditor = ({ images, onChange }: { images: string[]; onChange: (v: s
   </div>
 );
 
+const emptyOffering = (pujaId: string): Partial<PujaOffering> => ({
+  puja_id: pujaId, name: "", name_hi: "", price: 0, image_url: null,
+  description: "", description_hi: "", status: "active", sort_order: 0,
+});
+
 const PujaManager = ({ pujas, onRefresh }: Props) => {
   const [editing, setEditing] = useState<Partial<Puja> | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  // Offerings state
+  const [offerings, setOfferings] = useState<PujaOffering[]>([]);
+  const [editingOff, setEditingOff] = useState<Partial<PujaOffering> | null>(null);
+  const [savingOff, setSavingOff] = useState(false);
+  const [offeringCounts, setOfferingCounts] = useState<Record<string, number>>({});
+
+  // Load offering counts for list view
+  useEffect(() => {
+    const loadCounts = async () => {
+      const { data } = await supabase.from("puja_offerings").select("puja_id");
+      if (data) {
+        const counts: Record<string, number> = {};
+        data.forEach((o: { puja_id: string }) => { counts[o.puja_id] = (counts[o.puja_id] || 0) + 1; });
+        setOfferingCounts(counts);
+      }
+    };
+    loadCounts();
+  }, [pujas]);
+
+  const loadOfferings = async (pujaId: string) => {
+    const { data } = await supabase.from("puja_offerings").select("*").eq("puja_id", pujaId).order("sort_order");
+    if (data) setOfferings(data as PujaOffering[]);
+  };
+
+  const openEdit = async (p: Partial<Puja>) => {
+    setEditing(p);
+    if (p.id) await loadOfferings(p.id);
+    else setOfferings([]);
+  };
+
+  // Save offering
+  const saveOffering = async () => {
+    if (!editingOff || !editingOff.name?.trim() || !editingOff.price) {
+      toast.error("Offering name and price required"); return;
+    }
+    setSavingOff(true);
+    const payload = {
+      puja_id: editingOff.puja_id, name: editingOff.name.trim(),
+      name_hi: editingOff.name_hi?.trim() || null, price: editingOff.price,
+      image_url: editingOff.image_url || null,
+      description: editingOff.description?.trim() || null,
+      description_hi: editingOff.description_hi?.trim() || null,
+      status: editingOff.status || "active", sort_order: editingOff.sort_order || 0,
+    };
+    let err;
+    if (editingOff.id) {
+      ({ error: err } = await supabase.from("puja_offerings").update(payload).eq("id", editingOff.id));
+    } else {
+      ({ error: err } = await supabase.from("puja_offerings").insert(payload));
+    }
+    setSavingOff(false);
+    if (err) { toast.error(err.message); return; }
+    toast.success(editingOff.id ? "Offering updated" : "Offering created");
+    setEditingOff(null);
+    if (editing?.id) loadOfferings(editing.id);
+  };
+
+  const removeOffering = async (offId: string) => {
+    const { error: err } = await supabase.from("puja_offerings").delete().eq("id", offId);
+    if (err) { toast.error(err.message); return; }
+    toast.success("Offering deleted");
+    if (editing?.id) loadOfferings(editing.id);
+  };
 
   const save = async () => {
     if (!editing) return;
@@ -198,14 +267,14 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                   <h3 className="font-display text-maroon text-base truncate">{p.name}</h3>
                   {p.featured && <Star size={14} className="text-saffron fill-saffron shrink-0" />}
                 </div>
-                <p className="text-xs text-brown/60 mt-0.5">{p.location} • {p.date}</p>
+                <p className="text-xs text-brown/60 mt-0.5">{p.location} • {p.date} • {offeringCounts[p.id] || 0} offerings</p>
                 <p className="text-xs text-saffron font-semibold mt-0.5">From ₹{Math.min(...p.prices.map((t) => t.price)).toLocaleString("en-IN")}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={() => toggleStatus(p)} className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all ${p.status === "active" ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
                   {p.status === "active" ? "Active" : "Draft"}
                 </button>
-                <button onClick={() => setEditing({ ...p, gallery: p.gallery || [], benefits: p.benefits || [], benefits_hi: p.benefits_hi || [], process_steps: p.process_steps || [], process_steps_hi: p.process_steps_hi || [], faqs: p.faqs || [], faqs_hi: p.faqs_hi || [], includes: p.includes || [], includes_hi: p.includes_hi || [] })}
+                <button onClick={() => openEdit({ ...p, gallery: p.gallery || [], benefits: p.benefits || [], benefits_hi: p.benefits_hi || [], process_steps: p.process_steps || [], process_steps_hi: p.process_steps_hi || [], faqs: p.faqs || [], faqs_hi: p.faqs_hi || [], includes: p.includes || [], includes_hi: p.includes_hi || [] })}
                   className="grid h-8 w-8 place-items-center rounded-lg bg-gold/15 text-maroon hover:bg-gold/30 transition-colors"><Pencil size={14} /></button>
                 <button onClick={() => remove(p.id)} disabled={deleting === p.id}
                   className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors disabled:opacity-50">
@@ -311,6 +380,89 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                 <FaqEditor items={editing.faqs || []} onChange={(v) => setEditing({ ...editing, faqs: v })} />
                 <p className="text-xs text-brown/50 mb-2 mt-3">हिंदी</p>
                 <FaqEditor items={editing.faqs_hi || []} onChange={(v) => setEditing({ ...editing, faqs_hi: v })} />
+              </Section>
+
+              {/* ── Offerings ── */}
+              <Section title={`🌺 Offerings (${offerings.length})`}>
+                {!editing.id ? (
+                  <p className="text-sm text-brown/60 italic">Save the puja first, then add offerings.</p>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm text-brown/60">{offerings.length} offerings</p>
+                      <button onClick={() => setEditingOff(emptyOffering(editing.id!))}
+                        className="flex items-center gap-1 rounded-lg bg-saffron px-3 py-2 text-xs font-semibold text-white hover:bg-maroon transition-all">
+                        <Plus size={14} /> Add Offering
+                      </button>
+                    </div>
+
+                    {offerings.length === 0 ? (
+                      <p className="text-sm text-brown/40 italic text-center py-4">No offerings yet — add your first one</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {offerings.map(o => (
+                          <div key={o.id} className="flex items-center gap-3 rounded-xl border border-gold/20 bg-cream p-3">
+                            <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-gold/10">
+                              {o.image_url ? <img src={o.image_url} className="h-full w-full object-cover" /> : <div className="h-full w-full grid place-items-center text-lg">🌺</div>}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-maroon truncate">{o.name}</p>
+                              <p className="text-xs text-saffron font-bold">₹{o.price}</p>
+                            </div>
+                            <button onClick={() => setEditingOff({ ...o })} className="grid h-7 w-7 place-items-center rounded bg-gold/15 text-maroon hover:bg-gold/30"><Pencil size={12} /></button>
+                            <button onClick={() => removeOffering(o.id)} className="grid h-7 w-7 place-items-center rounded bg-red-50 text-red-400 hover:bg-red-100"><Trash2 size={12} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Offering edit form */}
+                    {editingOff && (
+                      <div className="mt-4 rounded-xl border-2 border-saffron/30 bg-saffron/5 p-4 space-y-3">
+                        <p className="text-sm font-bold text-maroon">{editingOff.id ? "Edit Offering" : "New Offering"}</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-[11px] font-semibold text-maroon">Name (EN) *</label>
+                            <input value={editingOff.name || ""} onChange={e => setEditingOff({ ...editingOff, name: e.target.value })}
+                              className="w-full rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" placeholder="e.g. Gau Seva" />
+                          </div>
+                          <div>
+                            <label className="text-[11px] font-semibold text-maroon">Name (HI)</label>
+                            <input value={editingOff.name_hi || ""} onChange={e => setEditingOff({ ...editingOff, name_hi: e.target.value })}
+                              className="w-full rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" placeholder="गौ सेवा" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-[11px] font-semibold text-maroon">Price (₹) *</label>
+                            <input type="number" value={editingOff.price || ""} onChange={e => setEditingOff({ ...editingOff, price: Number(e.target.value) || 0 })}
+                              className="w-full rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" />
+                          </div>
+                          <div>
+                            <label className="text-[11px] font-semibold text-maroon">Sort Order</label>
+                            <input type="number" value={editingOff.sort_order || 0} onChange={e => setEditingOff({ ...editingOff, sort_order: Number(e.target.value) || 0 })}
+                              className="w-full rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold text-maroon">Description (EN)</label>
+                          <input value={editingOff.description || ""} onChange={e => setEditingOff({ ...editingOff, description: e.target.value })}
+                            className="w-full rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" placeholder="Short description" />
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold text-maroon">Image</label>
+                          <ImageUpload value={editingOff.image_url || null} onChange={url => setEditingOff({ ...editingOff, image_url: url })} />
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={saveOffering} disabled={savingOff}
+                            className="flex-1 rounded-lg bg-saffron py-2 text-sm font-bold text-white hover:bg-maroon transition-all disabled:opacity-60">
+                            {savingOff ? "Saving…" : editingOff.id ? "Update" : "Create"}</button>
+                          <button onClick={() => setEditingOff(null)} className="rounded-lg border border-gold/50 px-4 py-2 text-sm text-maroon hover:bg-gold/10">Cancel</button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </Section>
 
               <Section title="📦 What's Included">

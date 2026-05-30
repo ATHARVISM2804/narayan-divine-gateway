@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Star, Sparkles } from "lucide-react";
 import heroTemple from "@/assets/hero-temple.jpg";
 import heroChadhava from "@/assets/hero-chadhava.jpg";
 import heroPandit from "@/assets/hero-pandit.jpg";
-import heroDarshan from "@/assets/hero-darshan.jpg";
+
 import { useLanguage } from "@/context/LanguageContext";
 import { CornerOrnament, Mandala, FloatingParticles } from "@/components/Ornaments";
 
@@ -74,20 +74,7 @@ const HeroCarousel = () => {
       ctaPrimaryCls: "bg-saffron text-white hover:bg-maroon",
       ctaSecondaryCls: "border border-maroon/40 text-maroon hover:bg-maroon hover:text-gold",
     },
-    {
-      id: 3, image: heroDarshan,
-      overlay: "bg-gradient-to-r from-maroon-deep/90 via-maroon-deep/70 to-maroon-deep/30",
-      pill: { text: "🔴  LIVE  —  Kashi Vishwanath Aarti", cls: "bg-saffron text-white animate-pulse" },
-      title: t("hero_s4_title") + " " + t("hero_s4_accent"),
-      titleAccent: t("hero_s4_rest"),
-      titleCls: "text-gold",
-      subtitle: t("hero_s4_sub"),
-      subtitleCls: "text-cream/85",
-      primaryCta: t("hero_s4_cta1") + "  →", linkPrimary: "/temples",
-      secondaryCta: t("hero_s4_cta2"), linkSecondary: "/temples",
-      ctaPrimaryCls: "bg-saffron text-white hover:bg-gold hover:text-maroon",
-      ctaSecondaryCls: "border border-gold text-gold hover:bg-gold hover:text-maroon",
-    },
+
   ], [t]);
 
   useEffect(() => {
@@ -273,17 +260,8 @@ const HeroCarousel = () => {
                     </div>
                   )}
 
-                  {idx === 3 && (
-                    <div className="flex items-center gap-3 pt-2">
-                      <span className="relative flex h-3 w-3">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-                        <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
-                      </span>
-                      <span className="text-sm text-cream/90 font-medium">
-                        12,438 devotees watching now
-                      </span>
-                    </div>
-                  )}
+
+
                 </div>
               </div>
             </div>

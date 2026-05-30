@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { items, customer } = await req.json();
+    const { items, customer, puja_details } = await req.json();
 
     // Validate customer fields
     if (!customer?.name || !customer?.phone) {
@@ -120,6 +120,7 @@ Deno.serve(async (req) => {
         amount: totalPaise,
         items: validatedItems,
         status: "pending",
+        puja_details: puja_details || null,
       })
       .select("id")
       .single();

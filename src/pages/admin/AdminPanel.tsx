@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, type Puja, type Chadhava } from "@/lib/supabase";
-import { LayoutDashboard, Flame, Flower2, ShoppingBag, LogOut, Menu, X, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Flame, Flower2, ShoppingBag, LogOut, Menu, X, ChevronRight, Users } from "lucide-react";
 import PujaManager from "./PujaManager";
 import ChadhavaManager from "./ChadhavaManager";
 import OrderManager from "./OrderManager";
+import LeadManager from "./LeadManager";
 
-type Section = "dashboard" | "pujas" | "chadhavas" | "orders";
+type Section = "dashboard" | "pujas" | "chadhavas" | "orders" | "leads";
 
 const NAV = [
   { id: "dashboard" as const, label: "Dashboard", Icon: LayoutDashboard },
-  { id: "pujas" as const, label: "Pujas", Icon: Flame },
+  { id: "pujas"     as const, label: "Pujas",     Icon: Flame },
   { id: "chadhavas" as const, label: "Chadhavas", Icon: Flower2 },
-  { id: "orders" as const, label: "Orders", Icon: ShoppingBag },
+  { id: "orders"    as const, label: "Orders",    Icon: ShoppingBag },
+  { id: "leads"     as const, label: "Leads",     Icon: Users },
 ];
 
 /* ───────── Main Admin Panel ───────── */
@@ -136,6 +138,9 @@ const AdminPanel = () => {
           )}
           {section === "orders" && (
             <OrderManager />
+          )}
+          {section === "leads" && (
+            <LeadManager />
           )}
         </main>
       </div>

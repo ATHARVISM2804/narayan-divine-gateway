@@ -197,8 +197,26 @@ const Navbar = React.memo(() => {
           </NavLink>
         </div>
 
-        {/* Mobile: cart + toggle — visible below lg */}
+        {/* Mobile: lang toggle + cart + hamburger — visible below lg */}
         <div className="flex items-center gap-2 lg:hidden">
+          {/* Language toggle — always visible on mobile */}
+          <div className="flex items-center rounded-full border border-gold/50 bg-saffron/5 p-0.5">
+            {(["en", "hi"] as const).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                aria-label={l === "en" ? "Switch to English" : "हिंदी में बदलें"}
+                className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition-all ${
+                  lang === l
+                    ? "bg-saffron text-white shadow-sm"
+                    : "text-brown/60 hover:text-maroon"
+                }`}
+              >
+                {l === "en" ? "EN" : "हिं"}
+              </button>
+            ))}
+          </div>
+
           {/* Mobile cart icon */}
           <NavLink
             to="/cart"
@@ -254,11 +272,6 @@ const Navbar = React.memo(() => {
               </li>
             )}
 
-            {/* Mobile language toggle */}
-            <li className="px-3 pt-2 pb-1">
-              <p className="text-xs text-brown/50 font-semibold mb-2 uppercase tracking-wider">Language / भाषा</p>
-              <LangToggle mobile />
-            </li>
 
             <li className="mt-2 flex gap-3 px-3">
               {user ? (

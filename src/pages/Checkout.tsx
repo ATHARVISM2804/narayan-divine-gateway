@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { supabase } from "@/lib/supabase";
-import { ShoppingBag, Shield, ArrowLeft, Loader2, User, Mail, Phone, MapPin, Users, Info } from "lucide-react";
+import { supabase, type PujaOffering } from "@/lib/supabase";
+import { ShoppingBag, Shield, ArrowLeft, Loader2, User, Mail, Phone, MapPin, Users, Info, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
@@ -32,16 +32,30 @@ const loadRazorpayScript = (): Promise<void> =>
 const Checkout = () => {
   usePageTitle("Checkout — Narayan Kripa");
   const nav = useNavigate();
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, totalPrice: cartTotal, clearCart } = useCart();
   const { user } = useAuth();
   const { t } = useLanguage();
 
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
+  const [form, setForm] = useState(() => {
+    // Pre-fill from lead capture modal if available
+    try {
+      const lead = JSON.parse(localStorage.getItem("nk_lead") || "{}");
+      localStorage.removeItem("nk_lead"); // consume it
+      return { name: lead.name || "", email: "", phone: lead.phone || "", address: "" };
+    } catch {
+      return { name: "", email: "", phone: "", address: "" };
+    }
+  });
   const [memberNames, setMemberNames] = useState<string[]>([]);
   const [gotra, setGotra] = useState("");
   const [gotraUnknown, setGotraUnknown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"form" | "paying">("form");
+  const [wantBox, setWantBox] = useState(false);
+  const [pujaOfferings, setPujaOfferings] = useState<PujaOffering[]>([]);
+  const [selectedOfferings, setSelectedOfferings] = useState<Record<string, boolean>>({});
+
+  const BLESSING_BOX_PRICE = 200;
 
   // Detect member count from puja items in cart
   const pujaItem = items.find(i => i.category === "puja");
@@ -55,6 +69,25 @@ const Checkout = () => {
     return 1;
   };
   const memberCount = getMemberCount();
+
+  // Extract puja UUID from cart item id (format: "puja-{uuid}-{label}")
+  const pujaId = pujaItem ? pujaItem.id.replace(/^puja-/, "").replace(/-[^-]+$/, "") : null;
+
+  // Fetch puja offerings
+  useEffect(() => {
+    if (!pujaId) return;
+    supabase.from("puja_offerings").select("*").eq("puja_id", pujaId).eq("status", "active").order("sort_order")
+      .then(({ data }) => { if (data) setPujaOfferings(data as PujaOffering[]); });
+  }, [pujaId]);
+
+  const toggleOffering = (id: string) => {
+    setSelectedOfferings(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const offeringsTotal = pujaOfferings.filter(o => selectedOfferings[o.id]).reduce((sum, o) => sum + o.price, 0);
+
+  // Total includes blessing box + selected offerings
+  const totalPrice = cartTotal + (wantBox && pujaItem ? BLESSING_BOX_PRICE : 0) + offeringsTotal;
 
   // Sync memberNames array length when memberCount changes
   const syncedMemberNames = Array.from({ length: memberCount }, (_, i) => memberNames[i] || "");
@@ -98,9 +131,18 @@ const Checkout = () => {
       // Load Razorpay script on demand (only on first checkout)
       await loadRazorpayScript();
 
+      const orderItems = items.map((i) => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, category: i.category }));
+      if (wantBox && pujaItem) {
+        orderItems.push({ id: "blessing-box", name: "Narayan Kripa Blessing Box", price: BLESSING_BOX_PRICE, quantity: 1, category: "addon" });
+      }
+      // Add selected puja offerings
+      pujaOfferings.filter(o => selectedOfferings[o.id]).forEach(o => {
+        orderItems.push({ id: `offering-${o.id}`, name: o.name, price: o.price, quantity: 1, category: "offering" });
+      });
+
       const { data: fnData, error: fnError } = await supabase.functions.invoke("create-order", {
         body: {
-          items: items.map((i) => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, category: i.category })),
+          items: orderItems,
           customer: { name: form.name, email: form.email.trim() || null, phone: form.phone, address: form.address },
           puja_details: memberCount > 0 ? { member_names: syncedMemberNames.filter(n => n.trim()), gotra: gotraUnknown ? "Kashyap" : gotra } : undefined,
         },
@@ -293,6 +335,126 @@ const Checkout = () => {
                   </label>
                 </div>
               )}
+
+              {/* ── Add More Offerings ── */}
+              {pujaItem && pujaOfferings.length > 0 && (
+                <div className="rounded-xl border-2 border-gold/30 bg-gradient-to-b from-ivory to-cream p-4 sm:p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="shrink-0 grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-saffron to-maroon text-white shadow-md">
+                      🌺
+                    </div>
+                    <div>
+                      <h3 className="text-[15px] font-bold text-maroon leading-snug">Add More Offerings</h3>
+                      <p className="text-xs text-brown/50">Enhance your puja with sacred offerings</p>
+                    </div>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {pujaOfferings.map(off => {
+                      const isSelected = !!selectedOfferings[off.id];
+                      return (
+                        <button
+                          key={off.id}
+                          onClick={() => toggleOffering(off.id)}
+                          className={`flex items-start gap-3 rounded-xl border-2 p-3.5 text-left transition-all ${
+                            isSelected
+                              ? "border-saffron bg-saffron/5 shadow-md"
+                              : "border-gold/30 bg-ivory hover:border-saffron/40"
+                          }`}
+                        >
+                          <div className="h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-gold/10">
+                            {off.image_url
+                              ? <img src={off.image_url} alt={off.name} className="h-full w-full object-cover" />
+                              : <div className="h-full w-full grid place-items-center text-xl">🌺</div>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-bold text-maroon truncate">{off.name}</p>
+                              <div className={`shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                                isSelected ? "border-saffron bg-saffron" : "border-gold/40 bg-white"
+                              }`}>
+                                {isSelected && <span className="text-white text-xs font-bold">✓</span>}
+                              </div>
+                            </div>
+                            {off.description && <p className="text-[11px] text-brown/50 mt-0.5 line-clamp-2">{off.description}</p>}
+                            <p className="text-sm font-bold text-saffron mt-1">₹{off.price.toLocaleString("en-IN")}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {offeringsTotal > 0 && (
+                    <div className="mt-3 flex items-center justify-between rounded-lg bg-saffron/10 border border-saffron/20 px-4 py-2">
+                      <span className="text-xs font-semibold text-brown/60">
+                        {pujaOfferings.filter(o => selectedOfferings[o.id]).length} offering(s) selected
+                      </span>
+                      <span className="text-sm font-bold text-saffron">+₹{offeringsTotal.toLocaleString("en-IN")}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Narayan Kripa Blessing Box ── */}
+              {pujaItem && (
+                <div className="rounded-xl border-2 border-saffron/30 bg-gradient-to-r from-saffron/5 via-gold/5 to-saffron/5 p-4 sm:p-5 overflow-hidden">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="shrink-0 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-saffron to-maroon text-white shadow-md">
+                        <Gift size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-[15px] font-bold text-maroon leading-snug">
+                          Would you like to receive the Narayan Kripa Blessing Box?
+                        </h3>
+                        <p className="text-xs text-brown/60 mt-1 leading-relaxed">
+                          The Blessing Box contains divine elements — Ganga Jal, Prasad, Sacred Thread (Mauli), and Kumkum — sourced from sacred Tirth locations.
+                        </p>
+                      </div>
+                    </div>
+                    {/* Yes / No toggle */}
+                    <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+                      <button
+                        onClick={() => setWantBox(true)}
+                        className={`px-5 py-2.5 sm:px-4 sm:py-2 rounded-lg text-sm font-bold transition-all min-h-[44px] sm:min-h-0 ${
+                          wantBox
+                            ? "bg-saffron text-white shadow-md"
+                            : "bg-cream border border-gold/40 text-brown/50 hover:border-saffron/50"
+                        }`}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setWantBox(false)}
+                        className={`px-5 py-2.5 sm:px-4 sm:py-2 rounded-lg text-sm font-bold transition-all min-h-[44px] sm:min-h-0 ${
+                          !wantBox
+                            ? "bg-maroon text-white shadow-md"
+                            : "bg-cream border border-gold/40 text-brown/50 hover:border-saffron/50"
+                        }`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Box contents preview (when Yes) */}
+                  {wantBox && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {[
+                        { icon: "💧", name: "Ganga Jal" },
+                        { icon: "🙏", name: "Prasad" },
+                        { icon: "📿", name: "Sacred Thread" },
+                        { icon: "🔴", name: "Kumkum" },
+                      ].map((item) => (
+                        <span key={item.name} className="flex items-center gap-1.5 rounded-full bg-white border border-gold/30 px-3 py-1.5 text-xs font-semibold text-maroon shadow-sm">
+                          {item.icon} {item.name}
+                        </span>
+                      ))}
+                      <span className="flex items-center gap-1.5 rounded-full bg-saffron/10 border border-saffron/30 px-3 py-1.5 text-xs font-bold text-saffron">
+                        ₹{BLESSING_BOX_PRICE}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="mt-6 flex flex-wrap gap-2">
               {[t("co_ssl"), t("co_razorpay"), t("co_prasad")].map((b) => (
@@ -313,6 +475,28 @@ const Checkout = () => {
                   </span>
                   <span className="font-semibold text-maroon whitespace-nowrap shrink-0">
                     ₹{(item.price * item.quantity).toLocaleString("en-IN")}
+                  </span>
+                </div>
+              ))}
+              {/* Blessing Box line item */}
+              {wantBox && pujaItem && (
+                <div className="flex justify-between gap-3 text-[13px]">
+                  <span className="text-brown/90 flex items-center gap-1.5">
+                    <Gift size={12} className="text-saffron" /> Narayan Kripa Blessing Box
+                  </span>
+                  <span className="font-semibold text-saffron whitespace-nowrap shrink-0">
+                    ₹{BLESSING_BOX_PRICE.toLocaleString("en-IN")}
+                  </span>
+                </div>
+              )}
+              {/* Selected offerings line items */}
+              {pujaOfferings.filter(o => selectedOfferings[o.id]).map(off => (
+                <div key={off.id} className="flex justify-between gap-3 text-[13px]">
+                  <span className="text-brown/90 flex items-center gap-1.5">
+                    🌺 {off.name}
+                  </span>
+                  <span className="font-semibold text-saffron whitespace-nowrap shrink-0">
+                    ₹{off.price.toLocaleString("en-IN")}
                   </span>
                 </div>
               ))}

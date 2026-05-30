@@ -10,6 +10,7 @@ import PujaGallery from "@/components/puja/PujaGallery";
 import PujaSectionNav from "@/components/puja/PujaSectionNav";
 import PujaSections from "@/components/puja/PujaSections";
 import PujaPackageModal from "@/components/puja/PujaPackageModal";
+import LeadCaptureModal from "@/components/puja/LeadCaptureModal";
 
 import pkgSingle from "@/assets/pkg-single.png";
 import pkgCouple from "@/assets/pkg-couple.png";
@@ -59,7 +60,8 @@ const PujaDetail = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedTier, setSelectedTier] = useState<{ label: string; price: number } | null>(null);
-  const [addedId, setAddedId] = useState<string | null>(null);
+  const [addedId,      setAddedId]      = useState<string | null>(null);
+  const [showLead,     setShowLead]     = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0, expired: false });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -95,10 +97,24 @@ const PujaDetail = () => {
   const handleAdd = (goToCheckout = false) => {
     if (!puja || !selectedTier) return;
     const itemId = `puja-${puja.id}-${selectedTier.label}`;
+    if (goToCheckout) {
+      // Show lead capture first
+      setShowLead(true);
+    } else {
+      addItem({ id: itemId, name: `${puja.name} (${selectedTier.label})`, description: `${puja.date} • ${puja.location}`, price: selectedTier.price, category: "puja", image: puja.image_url || undefined });
+      setAddedId(itemId);
+      toast.success(`${puja.name} (${selectedTier.label}) added to cart!`);
+      setTimeout(() => setAddedId(null), 1500);
+    }
+  };
+
+  const handleLeadConfirm = () => {
+    if (!puja || !selectedTier) return;
+    const itemId = `puja-${puja.id}-${selectedTier.label}`;
     addItem({ id: itemId, name: `${puja.name} (${selectedTier.label})`, description: `${puja.date} • ${puja.location}`, price: selectedTier.price, category: "puja", image: puja.image_url || undefined });
-    setAddedId(itemId);
-    if (goToCheckout) { toast.success("Proceeding to payment…"); nav("/checkout"); }
-    else { toast.success(`${puja.name} (${selectedTier.label}) added to cart!`); setTimeout(() => setAddedId(null), 1500); }
+    setShowLead(false);
+    toast.success("Proceeding to payment…");
+    nav("/checkout");
   };
 
   if (loading) return (
@@ -288,7 +304,7 @@ const PujaDetail = () => {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 sm:shrink-0">
                   <button onClick={() => handleAdd(true)} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-maroon px-6 py-4 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5">
-                    {t("btn_buy_now")} <ChevronRight size={18} />
+                    Proceed Now <ChevronRight size={18} />
                   </button>
                   <button onClick={() => handleAdd(false)} className="flex items-center justify-center gap-2 rounded-xl border-2 border-gold/50 bg-cream px-6 py-4 text-[14px] font-bold text-maroon transition-all hover:bg-gold/10 hover:border-saffron">
                     <ShoppingCart size={16} className="text-saffron" /> {t("btn_add_cart")}
@@ -317,28 +333,37 @@ const PujaDetail = () => {
         <PujaPackageModal puja={puja} onClose={() => setShowModal(false)} />
       )}
 
+      {/* Lead Capture Modal (from inline Proceed Now) */}
+      {showLead && puja && selectedTier && (
+        <LeadCaptureModal
+          pujaName={puja.name}
+          packageLabel={selectedTier.label}
+          price={selectedTier.price}
+          onConfirm={handleLeadConfirm}
+          onClose={() => setShowLead(false)}
+        />
+      )}
+
       {/* ── How It Works (fallback) ── */}
       {(!puja.process_steps || puja.process_steps.length === 0) && (
         <div className="container py-10">
-          <div className="max-w-4xl mx-auto rounded-2xl border border-gold/40 bg-ivory p-6 shadow-soft">
-            <h2 className="font-body text-xl font-bold text-maroon mb-4">{t("how_works")}</h2>
-            <div className="flex flex-col gap-5">
-              {[
-                { step: "1", title: t("step1t"), desc: t("step1d") },
-                { step: "2", title: t("step2t"), desc: t("step2d") },
-                { step: "3", title: t("step3t"), desc: t("step3d") },
-              ].map((s) => (
-                <div key={s.step} className="flex items-start gap-4">
-                  <div className="shrink-0 grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-saffron to-maroon text-white font-bold text-sm shadow-md">
+          <h2 className="font-body text-xl md:text-2xl font-bold text-maroon mb-6">{t("how_works")}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              { step: "1", title: t("step1t"), desc: t("step1d") },
+              { step: "2", title: t("step2t"), desc: t("step2d") },
+              { step: "3", title: t("step3t"), desc: t("step3d") },
+            ].map((s) => (
+              <div key={s.step} className="rounded-2xl bg-ivory border border-gold/30 p-5 shadow-soft hover:shadow-md hover:-translate-y-0.5 transition-all">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="shrink-0 grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-saffron to-maroon text-white font-bold text-base shadow-md">
                     {s.step}
                   </div>
-                  <div>
-                    <p className="font-bold text-maroon text-sm">{s.title}</p>
-                    <p className="text-xs text-brown/60 mt-0.5">{s.desc}</p>
-                  </div>
                 </div>
-              ))}
-            </div>
+                <p className="font-bold text-maroon text-sm md:text-[15px]">{s.title}</p>
+                <p className="text-xs text-brown/60 mt-1.5 leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}
