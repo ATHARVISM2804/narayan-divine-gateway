@@ -7,7 +7,7 @@ import ImageUpload from "./ImageUpload";
 interface Props { pujas: Puja[]; onRefresh: () => void }
 
 const emptyPuja = (): Partial<Puja> => ({
-  name: "", location: "", date: "", image_url: null, benefit: "", occasion: "", occasion_hi: "",
+  name: "", deity: "", location: "", date: "", image_url: null, benefit: "", occasion: "", occasion_hi: "",
   name_hi: "", location_hi: "", benefit_hi: "",
   prices: [{ label: "Single", price: 951 }, { label: "Couple", price: 1551 }, { label: "4 Family", price: 2551 }, { label: "6 Members", price: 3551 }],
   status: "draft", featured: false,
@@ -121,7 +121,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
     if (!prices?.length || prices.some((t) => !t.label.trim() || t.price <= 0)) { toast.error("Each tier needs label & price > 0"); return; }
     setSaving(true);
     const payload = {
-      name: name.trim(), location: location.trim(), date: date.trim(),
+      name: name.trim(), deity: editing.deity?.trim() || name.trim(), location: location.trim(), date: date.trim(),
       image_url: editing.image_url || null, benefit: editing.benefit?.trim() || null,
       occasion: editing.occasion?.trim() || null, occasion_hi: editing.occasion_hi?.trim() || null,
       name_hi: editing.name_hi?.trim() || null, location_hi: editing.location_hi?.trim() || null, benefit_hi: editing.benefit_hi?.trim() || null,
@@ -237,6 +237,9 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Name *</label>
                   <input value={editing.name || ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Maha Rudrabhishek" /></div>
+                <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Deity</label>
+                  <input value={editing.deity || ""} onChange={(e) => setEditing({ ...editing, deity: e.target.value })}
+                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Shiva, Vishnu, Ganga" /></div>
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Date *</label>
                   <input value={editing.date || ""} onChange={(e) => setEditing({ ...editing, date: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. 13 May" /></div>
