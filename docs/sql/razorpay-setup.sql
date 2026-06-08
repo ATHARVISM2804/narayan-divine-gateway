@@ -14,7 +14,7 @@ CREATE TABLE orders (
 
   -- Customer details
   customer_name TEXT NOT NULL,
-  customer_email TEXT NOT NULL,
+  customer_email TEXT,
   customer_phone TEXT NOT NULL,
   customer_address TEXT,
 
@@ -23,6 +23,7 @@ CREATE TABLE orders (
   currency TEXT DEFAULT 'INR',
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'failed', 'refunded')),
   items JSONB NOT NULL DEFAULT '[]',  -- snapshot of cart items at time of order
+  puja_details JSONB,                 -- member names + gotra for puja orders
 
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()

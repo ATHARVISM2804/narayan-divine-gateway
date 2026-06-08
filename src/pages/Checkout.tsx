@@ -149,7 +149,16 @@ const Checkout = () => {
       });
 
       if (fnError || !fnData?.order_id) {
-        throw new Error(fnData?.error || "Failed to create order");
+        // supabase-js v2 returns data=null for non-2xx — read actual error from response body
+        let errorMsg: string = fnData?.error || "Failed to create order";
+        if (!fnData?.error && fnError && (fnError as any).context) {
+          try {
+            const errBody = await (fnError as any).context.json();
+            errorMsg = errBody.error || errorMsg;
+          } catch {}
+        }
+        console.error("create-order failed:", { fnError, fnData });
+        throw new Error(errorMsg);
       }
 
       const options = {

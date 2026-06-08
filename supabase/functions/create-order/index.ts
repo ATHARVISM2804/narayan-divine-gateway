@@ -10,8 +10,25 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Matches IDs like "puja-<uuid>-<tier label (may contain spaces or hyphens)>"
+const PUJA_ID_RE = /^puja-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-(.+)$/i;
+
+// Matches IDs like "chadhava-<uuid>"
+const CHADHAVA_ID_RE = /^chadhava-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+
+// Matches IDs like "offering-<uuid>"
+const OFFERING_ID_RE = /^offering-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+
+const BLESSING_BOX_PRICE = 200; // matches frontend constant
+
+function err(msg: string, status = 400) {
+  return new Response(
+    JSON.stringify({ error: msg }),
+    { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -19,38 +36,24 @@ Deno.serve(async (req) => {
   try {
     const { items, customer, puja_details } = await req.json();
 
-    // Validate customer fields
-    if (!customer?.name || !customer?.phone) {
-      return new Response(
-        JSON.stringify({ error: "Name and phone are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    if (!customer?.name || !customer?.phone) return err("Name and phone are required");
+    if (!items?.length) return err("Cart is empty");
 
-    if (!items?.length) {
-      return new Response(
-        JSON.stringify({ error: "Cart is empty" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // ── Server-side price recalculation (SECURITY: never trust frontend prices) ──
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
     let totalPaise = 0;
     const validatedItems = [];
 
     for (const item of items) {
-      if (item.category === "puja") {
-        // Puja items have id like "puja-<uuid>-<tier_label>"
-        const parts = item.id.split("-");
-        const pujaId = parts.slice(1, -1).join("-"); // extract UUID (handles hyphens in UUID)
-        const tierLabel = parts[parts.length - 1];
 
-        // Handle multi-word tier labels
-        const fullTierLabel = item.id.replace(`puja-${pujaId}-`, "");
+      // ── Puja tier ──
+      if (item.category === "puja") {
+        const match = PUJA_ID_RE.exec(item.id);
+        if (!match) return err(`Invalid puja item ID format: ${item.id}`);
+        const [, pujaId, tierLabel] = match;
 
         const { data: puja } = await supabase
           .from("pujas")
@@ -59,29 +62,20 @@ Deno.serve(async (req) => {
           .eq("status", "active")
           .single();
 
-        if (!puja) {
-          return new Response(
-            JSON.stringify({ error: `Puja not found or inactive: ${item.name}` }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
+        if (!puja) return err(`Puja not found or inactive: ${item.name}`);
 
-        const tier = (puja.prices as { label: string; price: number }[]).find(
-          (t) => t.label === fullTierLabel
-        );
-        if (!tier) {
-          return new Response(
-            JSON.stringify({ error: `Invalid tier: ${fullTierLabel}` }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
+        const tier = (puja.prices as { label: string; price: number }[])
+          .find((t) => t.label === tierLabel);
+        if (!tier) return err(`Invalid tier "${tierLabel}" for puja: ${puja.name}`);
 
         totalPaise += tier.price * 100 * (item.quantity || 1);
         validatedItems.push({ ...item, price: tier.price, verified: true });
 
+      // ── Chadhava offering ──
       } else if (item.category === "chadhava") {
-        // Chadhava items have id like "chadhava-<offering_uuid>"
-        const offeringId = item.id.replace("chadhava-", "");
+        const match = CHADHAVA_ID_RE.exec(item.id);
+        if (!match) return err(`Invalid chadhava item ID format: ${item.id}`);
+        const [, offeringId] = match;
 
         const { data: offering } = await supabase
           .from("chadhava_offerings")
@@ -90,24 +84,41 @@ Deno.serve(async (req) => {
           .eq("status", "active")
           .single();
 
-        if (!offering) {
-          return new Response(
-            JSON.stringify({ error: `Chadhava offering not found or inactive: ${item.name}` }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
+        if (!offering) return err(`Chadhava offering not found or inactive: ${item.name}`);
 
         totalPaise += offering.price * 100 * (item.quantity || 1);
         validatedItems.push({ ...item, price: offering.price, verified: true });
+
+      // ── Puja add-on offering ──
+      } else if (item.category === "offering") {
+        const match = OFFERING_ID_RE.exec(item.id);
+        if (!match) return err(`Invalid offering item ID format: ${item.id}`);
+        const [, offeringId] = match;
+
+        const { data: offering } = await supabase
+          .from("puja_offerings")
+          .select("name, price")
+          .eq("id", offeringId)
+          .eq("status", "active")
+          .single();
+
+        if (!offering) return err(`Puja offering not found or inactive: ${item.name}`);
+
+        totalPaise += offering.price * 100 * (item.quantity || 1);
+        validatedItems.push({ ...item, price: offering.price, verified: true });
+
+      // ── Blessing box (fixed price, no DB record) ──
+      } else if (item.category === "addon" && item.id === "blessing-box") {
+        totalPaise += BLESSING_BOX_PRICE * 100 * (item.quantity || 1);
+        validatedItems.push({ ...item, price: BLESSING_BOX_PRICE, verified: true });
+
+      // ── Unknown category — reject to avoid price manipulation ──
+      } else {
+        return err(`Unknown item category: ${item.category}`);
       }
     }
 
-    if (totalPaise <= 0) {
-      return new Response(
-        JSON.stringify({ error: "Invalid order amount" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    if (totalPaise <= 0) return err("Invalid order amount");
 
     // ── Create order in database ──
     const { data: order, error: dbError } = await supabase
@@ -127,7 +138,7 @@ Deno.serve(async (req) => {
 
     if (dbError || !order) {
       return new Response(
-        JSON.stringify({ error: "Failed to create order" }),
+        JSON.stringify({ error: dbError?.message || "Failed to create order in DB" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -146,10 +157,7 @@ Deno.serve(async (req) => {
         amount: totalPaise,
         currency: "INR",
         receipt: order.id,
-        notes: {
-          customer_name: customer.name,
-          customer_phone: customer.phone,
-        },
+        notes: { customer_name: customer.name, customer_phone: customer.phone },
       }),
     });
 
@@ -168,7 +176,6 @@ Deno.serve(async (req) => {
       .update({ razorpay_order_id: razorpayOrder.id })
       .eq("id", order.id);
 
-    // ── Return to frontend (only public key, never secret) ──
     return new Response(
       JSON.stringify({
         order_id: razorpayOrder.id,
