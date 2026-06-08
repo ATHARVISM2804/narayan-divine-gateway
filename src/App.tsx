@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -50,8 +50,16 @@ const queryClient = new QueryClient({
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
     window.scrollTo(0, 0);
+    // Track Meta Pixel pageview on route change (skip first render as it's tracked in index.html)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+    } else if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'PageView');
+    }
   }, [pathname]);
   return null;
 };
