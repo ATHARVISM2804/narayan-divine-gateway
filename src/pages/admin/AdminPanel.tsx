@@ -34,8 +34,8 @@ const AdminPanel = () => {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
         nav("/admin/login");
-      } else if (ADMIN_EMAIL && data.user.email !== ADMIN_EMAIL) {
-        // Not the admin — redirect away
+      } else if (!ADMIN_EMAIL || data.user.email !== ADMIN_EMAIL) {
+        // No admin email configured, or user is not the admin — deny access
         nav("/");
       } else {
         setLoading(false);

@@ -37,10 +37,10 @@ CREATE TRIGGER orders_updated_at
 -- 3. Enable RLS
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 
--- 4. RLS Policies — orders are private, only admin can see
+-- 4. RLS Policies — only the admin email can read/manage orders
 CREATE POLICY "Admin full access orders"
   ON orders FOR ALL
-  USING (auth.role() = 'authenticated');
+  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
 
 -- 5. Allow Edge Functions to insert/update orders (service role bypasses RLS,
 --    but for anon-key calls we need a policy for inserts from checkout)

@@ -4,14 +4,7 @@ import { Link } from "react-router-dom";
 import SectionHeading from "@/components/SectionHeading";
 import { supabase, type Puja } from "@/lib/supabase";
 import { useLanguage } from "@/context/LanguageContext";
-
-const parseDate = (d: string) => {
-  const year = new Date().getFullYear();
-  const dt = new Date(`${d} ${year}`);
-  if (isNaN(dt.getTime())) return Infinity;
-  if (dt < new Date()) dt.setFullYear(year + 1);
-  return dt.getTime();
-};
+import { parseDate } from "@/lib/parseDate";
 
 const FeaturedPujas = () => {
   const { t, lang } = useLanguage();

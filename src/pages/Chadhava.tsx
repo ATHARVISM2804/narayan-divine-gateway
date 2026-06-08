@@ -7,15 +7,7 @@ import SectionHeading from "@/components/SectionHeading";
 import heroChadhava from "@/assets/hero-chadhava-page.png";
 import { useLanguage } from "@/context/LanguageContext";
 import { ChevronRight, MapPin, Calendar } from "lucide-react";
-
-const parseDate = (d: string | null | undefined) => {
-  if (!d) return Infinity;
-  const year = new Date().getFullYear();
-  const dt = new Date(`${d} ${year}`);
-  if (isNaN(dt.getTime())) return Infinity;
-  if (dt < new Date()) dt.setFullYear(year + 1);
-  return dt.getTime();
-};
+import { parseDate } from "@/lib/parseDate";
 
 
 const Chadhava = () => {

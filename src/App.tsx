@@ -1,10 +1,10 @@
 import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -66,6 +66,16 @@ const PageLoader = () => (
   </div>
 );
 
+/* Guards the /admin route — redirects before rendering AdminPanel at all */
+const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
+  if (loading) return <PageLoader />;
+  if (!user) return <Navigate to="/admin/login" replace />;
+  if (!ADMIN_EMAIL || user.email !== ADMIN_EMAIL) return <Navigate to="/" replace />;
+  return <>{children}</>;
+};
+
 /* Public layout — Navbar + Footer wrap all public pages */
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
@@ -91,7 +101,7 @@ const App = () => (
           <Routes>
             {/* ── Admin routes (standalone — no Navbar/Footer) ── */}
             <Route path="/admin/login" element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>} />
-            <Route path="/admin" element={<Suspense fallback={<PageLoader />}><AdminPanel /></Suspense>} />
+            <Route path="/admin" element={<ProtectedAdminRoute><Suspense fallback={<PageLoader />}><AdminPanel /></Suspense></ProtectedAdminRoute>} />
 
             {/* ── Public routes ── */}
             <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />

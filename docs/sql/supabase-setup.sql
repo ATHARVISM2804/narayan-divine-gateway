@@ -51,22 +51,46 @@ CREATE TRIGGER chadhavas_updated_at
 ALTER TABLE pujas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chadhavas ENABLE ROW LEVEL SECURITY;
 
--- 5. RLS Policies — Public can read active, admin can do everything
+-- 5. RLS Policies — Public reads active rows; only the admin email can write
 CREATE POLICY "Public read active pujas"
   ON pujas FOR SELECT
   USING (status = 'active');
 
-CREATE POLICY "Admin full access pujas"
-  ON pujas FOR ALL
-  USING (auth.role() = 'authenticated');
+CREATE POLICY "Admin read all pujas"
+  ON pujas FOR SELECT
+  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+
+CREATE POLICY "Admin insert pujas"
+  ON pujas FOR INSERT
+  WITH CHECK (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+
+CREATE POLICY "Admin update pujas"
+  ON pujas FOR UPDATE
+  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+
+CREATE POLICY "Admin delete pujas"
+  ON pujas FOR DELETE
+  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
 
 CREATE POLICY "Public read active chadhavas"
   ON chadhavas FOR SELECT
   USING (status = 'active');
 
-CREATE POLICY "Admin full access chadhavas"
-  ON chadhavas FOR ALL
-  USING (auth.role() = 'authenticated');
+CREATE POLICY "Admin read all chadhavas"
+  ON chadhavas FOR SELECT
+  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+
+CREATE POLICY "Admin insert chadhavas"
+  ON chadhavas FOR INSERT
+  WITH CHECK (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+
+CREATE POLICY "Admin update chadhavas"
+  ON chadhavas FOR UPDATE
+  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+
+CREATE POLICY "Admin delete chadhavas"
+  ON chadhavas FOR DELETE
+  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
 
 -- 6. Create storage bucket for product images
 INSERT INTO storage.buckets (id, name, public)
@@ -79,15 +103,15 @@ CREATE POLICY "Public read product images"
 
 CREATE POLICY "Admin upload product images"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+  WITH CHECK (bucket_id = 'product-images' AND auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
 
 CREATE POLICY "Admin update product images"
   ON storage.objects FOR UPDATE
-  USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+  USING (bucket_id = 'product-images' AND auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
 
 CREATE POLICY "Admin delete product images"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+  USING (bucket_id = 'product-images' AND auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
 
 -- 8. Seed data — existing pujas
 INSERT INTO pujas (name, deity, location, date, prices, status, featured) VALUES
@@ -132,4 +156,4 @@ CREATE POLICY "Public insert leads"
 -- Only admin can read leads
 CREATE POLICY "Admin read leads"
   ON leads FOR SELECT
-  USING (auth.role() = 'authenticated');
+  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');

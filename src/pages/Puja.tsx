@@ -6,14 +6,7 @@ import { supabase, type Puja as PujaType } from "@/lib/supabase";
 import PageHero from "@/components/PageHero";
 import heroPuja from "@/assets/hero-puja-page.png";
 import { useLanguage } from "@/context/LanguageContext";
-
-const parseDate = (d: string) => {
-  const year = new Date().getFullYear();
-  const dt = new Date(`${d} ${year}`);
-  if (isNaN(dt.getTime())) return Infinity;
-  if (dt < new Date()) dt.setFullYear(year + 1);
-  return dt.getTime();
-};
+import { parseDate } from "@/lib/parseDate";
 
 const Puja = () => {
   usePageTitle("Sacred Pujas — Narayan Kripa");
