@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
 import { supabase, type Chadhava, type ChadhavaOffering } from "@/lib/supabase";
+import { trackViewContent } from "@/lib/pixel";
 import { Loader2, ShoppingCart, Check, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, MapPin, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import PujaGallery from "@/components/puja/PujaGallery";
@@ -60,6 +61,14 @@ const ChadhavaDetail = () => {
       setLoading(false);
     });
   }, [id, nav]);
+
+  useEffect(() => {
+    if (!chadhava) return;
+    const lowestPrice = offerings.length > 0
+      ? Math.min(...offerings.map((o) => o.price))
+      : undefined;
+    trackViewContent({ id: chadhava.id, name: chadhava.item, value: lowestPrice });
+  }, [chadhava?.id]);
 
   useEffect(() => {
     if (!chadhava?.date) return;

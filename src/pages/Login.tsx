@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { Flame, Eye, EyeOff, Loader2, User, Mail, Phone } from "lucide-react";
+import { trackCompleteRegistration } from "@/lib/pixel";
 import { useLanguage } from "@/context/LanguageContext";
 
 const Login = () => {
@@ -32,6 +33,7 @@ const Login = () => {
       const { error: err } = await signUp(form.email, form.password, form.name, form.phone);
       setLoading(false);
       if (err) { setError(err); return; }
+      trackCompleteRegistration();
       setSuccess("Account created! Please check your email to verify, then login.");
       setMode("login");
     } else {

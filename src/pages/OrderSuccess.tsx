@@ -1,7 +1,9 @@
+import { useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { CheckCircle, Home, ShoppingBag } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { trackPurchase } from "@/lib/pixel";
 
 const OrderSuccess = () => {
   usePageTitle("Order Confirmed — Narayan Kripa");
@@ -9,6 +11,25 @@ const OrderSuccess = () => {
   const [params] = useSearchParams();
   const orderId = params.get("id");
   const paymentId = params.get("payment");
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    if (!orderId || firedRef.current) return;
+    firedRef.current = true;
+    try {
+      const raw = sessionStorage.getItem("nk_purchase");
+      if (raw) {
+        const { value, orderId: storedId } = JSON.parse(raw);
+        sessionStorage.removeItem("nk_purchase");
+        trackPurchase({ value, orderId: storedId ?? orderId });
+      } else {
+        // Fallback: fire without value (e.g. direct URL load, tab restore)
+        trackPurchase({ value: 0, orderId });
+      }
+    } catch {
+      trackPurchase({ value: 0, orderId });
+    }
+  }, [orderId]);
 
   return (
     <main className="min-h-[70vh] bg-background flex items-center justify-center py-16">
