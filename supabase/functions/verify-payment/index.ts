@@ -10,57 +10,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-async function sha256(text: string): Promise<string> {
-  const data = new TextEncoder().encode(text.trim().toLowerCase());
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function sendCAPIPurchase(
-  req: Request,
-  order: { amount: number; customer_email: string | null; customer_phone: string | null },
-  dbOrderId: string
-): Promise<void> {
-  const pixelId = Deno.env.get("META_PIXEL_ID");
-  const accessToken = Deno.env.get("META_CAPI_ACCESS_TOKEN");
-  if (!pixelId || !accessToken) return; // not configured — skip silently
-
-  const userData: Record<string, string> = {};
-  if (order.customer_email) userData.em = await sha256(order.customer_email);
-  if (order.customer_phone) userData.ph = await sha256(order.customer_phone.replace(/\D/g, ""));
-  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? req.headers.get("cf-connecting-ip") ?? "";
-  const clientUa = req.headers.get("user-agent") ?? "";
-  if (clientIp) userData.client_ip_address = clientIp;
-  if (clientUa) userData.client_user_agent = clientUa;
-
-  const payload = {
-    data: [{
-      event_name: "Purchase",
-      event_time: Math.floor(Date.now() / 1000),
-      event_id: `purchase_${dbOrderId}`,
-      action_source: "website",
-      user_data: userData,
-      custom_data: {
-        value: order.amount / 100,
-        currency: "INR",
-        content_type: "product",
-        order_id: dbOrderId,
-      },
-    }],
-  };
-
-  try {
-    const res = await fetch(
-      `https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${accessToken}`,
-      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }
-    );
-    const result = await res.json();
-    console.log("CAPI sent:", res.status, JSON.stringify(result));
-  } catch (err) {
-    console.error("CAPI error (non-fatal):", err);
-  }
-}
-
 async function hmacSHA256(key: string, message: string): Promise<string> {
   const encoder = new TextEncoder();
   const cryptoKey = await crypto.subtle.importKey(
@@ -114,7 +63,7 @@ Deno.serve(async (req) => {
     // Check order exists and is still pending (idempotent)
     const { data: order } = await supabase
       .from("orders")
-      .select("id, status, amount, customer_email, customer_phone")
+      .select("id, status")
       .eq("id", db_order_id)
       .single();
 
@@ -149,9 +98,6 @@ Deno.serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    // ── Fire CAPI Purchase (fire-and-forget — never blocks the response) ──
-    sendCAPIPurchase(req, order, db_order_id);
 
     return new Response(
       JSON.stringify({ success: true, message: "Payment verified successfully" }),

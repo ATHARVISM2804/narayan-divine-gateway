@@ -8,7 +8,6 @@ import { ShoppingBag, Shield, ArrowLeft, Loader2, User, Mail, Phone, MapPin, Use
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
-import { trackInitiateCheckout } from "@/lib/pixel";
 
 declare global {
   interface Window {
@@ -92,12 +91,6 @@ const Checkout = () => {
 
   // Sync memberNames array length when memberCount changes
   const syncedMemberNames = Array.from({ length: memberCount }, (_, i) => memberNames[i] || "");
-
-  // Fire InitiateCheckout once when the page mounts
-  useEffect(() => {
-    trackInitiateCheckout({ value: cartTotal, numItems: items.length });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     if (user) {
@@ -188,7 +181,6 @@ const Checkout = () => {
               },
             });
             if (verifyError || !verifyData?.success) throw new Error("Payment verification failed");
-            sessionStorage.setItem("nk_purchase", JSON.stringify({ value: totalPrice, orderId: fnData.db_order_id }));
             clearCart();
             nav(`/order-success?id=${fnData.db_order_id}&payment=${response.razorpay_payment_id}`);
           } catch {

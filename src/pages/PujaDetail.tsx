@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
 import { supabase, type Puja } from "@/lib/supabase";
-import { trackViewContent } from "@/lib/pixel";
 import { Calendar, ShoppingCart, Check, Loader2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
@@ -77,14 +76,6 @@ const PujaDetail = () => {
         setLoading(false);
       });
   }, [id, nav]);
-
-  useEffect(() => {
-    if (!puja) return;
-    const lowestPrice = Array.isArray(puja.prices) && puja.prices.length > 0
-      ? Math.min(...(puja.prices as Array<{ price: number }>).map((p) => p.price))
-      : undefined;
-    trackViewContent({ id: puja.id, name: puja.name, value: lowestPrice });
-  }, [puja?.id]);
 
   useEffect(() => {
     if (!puja?.date) return;
