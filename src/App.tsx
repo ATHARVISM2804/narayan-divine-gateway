@@ -37,6 +37,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 // ── Lazy: Admin (never needed on public site) ──
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminPanel = lazy(() => import("./pages/admin/AdminPanel"));
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // ── QueryClient with sensible caching ──
 const queryClient = new QueryClient({
@@ -88,9 +89,11 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
     <Navbar />
-    <Suspense fallback={<PageLoader />}>
-      {children}
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        {children}
+      </Suspense>
+    </ErrorBoundary>
     <Footer />
     <MobileCartBar />
     <WhatsAppButton />
@@ -108,8 +111,8 @@ const App = () => (
           <ScrollToTop />
           <Routes>
             {/* ── Admin routes (standalone — no Navbar/Footer) ── */}
-            <Route path="/admin/login" element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>} />
-            <Route path="/admin" element={<ProtectedAdminRoute><Suspense fallback={<PageLoader />}><AdminPanel /></Suspense></ProtectedAdminRoute>} />
+            <Route path="/admin/login" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><AdminLogin /></Suspense></ErrorBoundary>} />
+            <Route path="/admin" element={<ProtectedAdminRoute><ErrorBoundary><Suspense fallback={<PageLoader />}><AdminPanel /></Suspense></ErrorBoundary></ProtectedAdminRoute>} />
 
             {/* ── Public routes ── */}
             <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />

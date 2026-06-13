@@ -47,7 +47,7 @@ const PageHero = ({
           <FloatingParticles count={4} />
 
           {/* Content */}
-          <div className="container relative z-10 grid h-full items-center py-8 sm:py-10">
+          <div className="container relative z-10 grid h-full items-center px-6 sm:px-8 py-8 sm:py-10">
             <div className="max-w-3xl space-y-4 sm:space-y-6">
               {breadcrumb && (
                 <nav className="mb-4 sm:mb-6 text-xs md:text-sm font-medium text-gold/80 tracking-wide uppercase" aria-label="Breadcrumb">

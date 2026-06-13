@@ -62,3 +62,6 @@ coverage
 # Temp / scratch files
 *.tmp
 *.temp
+
+# Google Search Console verification (sensitive)
+public/google*.html

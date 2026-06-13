@@ -8,7 +8,7 @@ const Footer = React.memo(() => {
   const { t } = useLanguage();
 
   const companyLinks = [
-    { label: t("footer_about"), to: "/contact" },
+    { label: t("footer_about"), to: "/contact#about" },
     { label: t("nav_contact"), to: "/contact" },
     { label: t("mo_track_title"), to: "/my-orders" },
   ];

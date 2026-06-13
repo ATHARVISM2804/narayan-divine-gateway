@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useLocation } from "react-router-dom";
 
@@ -7,7 +5,6 @@ const WA_NUMBER = "919286345941"; // +91 prefix
 const CART_BAR_HIDDEN_PATHS = ["/checkout", "/order-success", "/cart"];
 
 const WhatsAppButton = () => {
-  const [showTooltip, setShowTooltip] = useState(true);
   const { totalItems } = useCart();
   const { pathname } = useLocation();
 
@@ -15,42 +12,10 @@ const WhatsAppButton = () => {
     totalItems > 0 &&
     !CART_BAR_HIDDEN_PATHS.some((p) => pathname.startsWith(p));
 
-  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
-    "🙏 Jai Shri Ram! I need help with a Puja / Chadhava booking on Narayan Kripa."
-  )}`;
+  const url = `https://wa.me/${WA_NUMBER}`;
 
   return (
-    <div className={`fixed right-4 z-50 flex flex-col items-end gap-2 sm:bottom-8 sm:right-6 ${cartBarVisible ? "bottom-24" : "bottom-6"}`}>
-
-      {/* Tooltip bubble */}
-      {showTooltip && (
-        <div className="relative flex items-start gap-2 rounded-2xl bg-white border border-green-200 shadow-xl px-4 py-3 max-w-[220px] animate-fadeIn">
-          {/* Close */}
-          <button
-            onClick={() => setShowTooltip(false)}
-            className="absolute -top-2 -right-2 grid h-5 w-5 place-items-center rounded-full bg-gray-200 text-gray-500 hover:bg-gray-300 transition-colors"
-            aria-label="Close"
-          >
-            <X size={10} />
-          </button>
-
-          {/* Avatar */}
-          <div className="shrink-0 h-8 w-8 rounded-full bg-green-500 grid place-items-center text-white text-sm font-bold shadow-sm">
-            NK
-          </div>
-
-          <div>
-            <p className="text-[12px] font-bold text-gray-800 leading-tight">Narayan Kripa</p>
-            <p className="text-[11px] text-gray-500 mt-0.5">Hi! 🙏 How can we help you today?</p>
-            <span className="inline-block mt-1.5 text-[10px] bg-green-50 text-green-600 font-semibold px-2 py-0.5 rounded-full border border-green-200">
-              Typically replies instantly
-            </span>
-          </div>
-
-          {/* Triangle pointer */}
-          <div className="absolute -bottom-2 right-8 h-3 w-3 rotate-45 bg-white border-r border-b border-green-200" />
-        </div>
-      )}
+    <div className={`fixed right-4 z-50 flex flex-col items-end gap-2 sm:bottom-8 sm:right-6 ${cartBarVisible ? "bottom-36" : "bottom-20"}`}>
 
       {/* WhatsApp FAB */}
       <a
@@ -58,7 +23,6 @@ const WhatsAppButton = () => {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with us on WhatsApp"
-        onClick={() => setShowTooltip(false)}
         className="relative flex h-16 w-16 items-center justify-center rounded-full shadow-2xl transition-transform hover:scale-110 active:scale-95"
         style={{ background: "linear-gradient(135deg, #25d366 0%, #128c7e 100%)" }}
       >

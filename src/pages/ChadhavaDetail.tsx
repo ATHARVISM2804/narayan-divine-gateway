@@ -161,14 +161,14 @@ const ChadhavaDetail = () => {
               )}
               <h1 className="font-body text-2xl md:text-3xl font-bold text-gold leading-snug">{displayItem}</h1>
 
-              <div className="mt-4 flex flex-col gap-2">
+              <div className="mt-4 flex flex-col gap-2.5">
                 {chadhava.date && (
-                  <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
-                    <span className="w-5 flex items-center justify-center shrink-0"><Calendar size={16} className="text-gold" /></span> {chadhava.date}
+                  <span className="flex items-center gap-2.5 text-cream/90 text-lg font-semibold">
+                    <span className="w-6 flex items-center justify-center shrink-0"><Calendar size={20} className="text-gold" /></span> {chadhava.date}
                   </span>
                 )}
-                <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
-                  <span className="w-5 flex items-center justify-center shrink-0 text-base leading-none">🛕</span> {displayTemple}
+                <span className="flex items-center gap-2.5 text-cream/90 text-lg font-semibold">
+                  <span className="w-6 flex items-center justify-center shrink-0 text-xl leading-none">🛕</span> {displayTemple}
                 </span>
               </div>
 

@@ -173,12 +173,12 @@ const PujaDetail = () => {
               )}
               <h1 className="font-body text-2xl md:text-3xl font-bold text-gold leading-snug">{displayName}</h1>
 
-              <div className="mt-4 flex flex-col gap-2">
-                <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
-                  <span className="w-5 flex items-center justify-center shrink-0"><Calendar size={16} className="text-gold" /></span> {puja.date}
+              <div className="mt-4 flex flex-col gap-2.5">
+                <span className="flex items-center gap-2.5 text-cream/90 text-lg font-semibold">
+                  <span className="w-6 flex items-center justify-center shrink-0"><Calendar size={20} className="text-gold" /></span> {puja.date}
                 </span>
-                <span className="flex items-center gap-2 text-cream/90 text-base font-semibold">
-                  <span className="w-5 flex items-center justify-center shrink-0 text-base leading-none">🛕</span> {displayLocation}
+                <span className="flex items-center gap-2.5 text-cream/90 text-lg font-semibold">
+                  <span className="w-6 flex items-center justify-center shrink-0 text-xl leading-none">🛕</span> {displayLocation}
                 </span>
               </div>
 
@@ -367,6 +367,31 @@ const PujaDetail = () => {
           </div>
         </div>
       )}
+
+      {/* ── Sticky Mobile CTA Bar ── */}
+      {puja.prices && puja.prices.length > 0 && (
+        <div className="fixed bottom-0 inset-x-0 z-40 md:hidden border-t border-gold/30 bg-ivory/95 backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.1)]"
+             style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-brown/50">{t("pd_packages")}</p>
+              <p className="font-bold text-maroon text-lg leading-tight">
+                ₹{Math.min(...puja.prices.map(p => p.price)).toLocaleString("en-IN")}
+                <span className="text-xs font-semibold text-brown/40 ml-1">{lang === "hi" ? "से" : "onwards"}</span>
+              </p>
+            </div>
+            <button
+              onClick={() => document.getElementById("packages")?.scrollIntoView({ behavior: "smooth" })}
+              className="shrink-0 flex items-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-gold px-5 py-3 text-sm font-bold text-white shadow-lg transition-all active:scale-95"
+            >
+              {t("pd_scroll_packages")} <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Spacer to prevent content from being hidden behind sticky bar on mobile */}
+      <div className="h-20 md:hidden" />
     </main>
   );
 };

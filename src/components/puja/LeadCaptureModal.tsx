@@ -169,7 +169,7 @@ const LeadCaptureModal = ({ pujaName, packageLabel, price, onConfirm, onClose }:
             {loading ? (
               <><Loader2 size={18} className="animate-spin" /> Saving…</>
             ) : (
-              <>Next — Proceed to Pay <ChevronRight size={18} /></>
+              <><ChevronRight size={18} /> Next — Review Booking</>
             )}
           </button>
 

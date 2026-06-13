@@ -57,31 +57,6 @@ const Navbar = React.memo(() => {
 
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || user?.phone || "User";
 
-  /* ── Language toggle pill ── */
-  const LangToggle = ({ mobile = false }: { mobile?: boolean }) => (
-    <div
-      className={`flex items-center gap-1 rounded-full border border-gold/40 bg-white/10 p-0.5 ${mobile ? "mx-3 mt-2" : ""}`}
-      role="radiogroup"
-      aria-label="Language selection"
-    >
-      {(["en", "hi"] as const).map((l) => (
-        <button
-          key={l}
-          onClick={() => setLang(l)}
-          role="radio"
-          aria-checked={lang === l}
-          aria-label={l === "en" ? "Switch to English" : "हिंदी में बदलें"}
-          className={`flex items-center justify-center rounded-full px-4 py-2 min-w-[44px] min-h-[44px] text-xs font-bold transition-all ${
-            lang === l
-              ? "bg-saffron text-white shadow-sm"
-              : "text-brown/60 hover:text-maroon"
-          }`}
-        >
-          {l === "en" ? "EN" : "हिं"}
-        </button>
-      ))}
-    </div>
-  );
 
   return (
     <header
