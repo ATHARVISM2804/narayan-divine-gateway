@@ -381,7 +381,7 @@ const PujaDetail = () => {
               </p>
             </div>
             <button
-              onClick={() => document.getElementById("packages")?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() => setShowModal(true)}
               className="shrink-0 flex items-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-gold px-5 py-3 text-sm font-bold text-white shadow-lg transition-all active:scale-95"
             >
               {t("pd_scroll_packages")} <ChevronRight size={16} />
