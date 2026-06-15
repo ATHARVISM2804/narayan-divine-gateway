@@ -7,7 +7,7 @@ import ImageUpload from "./ImageUpload";
 interface Props { chadhavas: Chadhava[]; onRefresh: () => void }
 
 const emptyChadhava = (): Partial<Chadhava> => ({
-  temple: "", item: "", date: "", price: 0, image_url: null, description: "",
+  temple: "", item: "", date: "", countdown_datetime: "", price: 0, image_url: null, description: "",
   item_hi: "", temple_hi: "", description_hi: "",
   occasion: "", occasion_hi: "",
   gallery: [], about: "", about_hi: "",
@@ -75,6 +75,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
       temple: editing.temple?.trim() || "",
       item: editing.item.trim(),
       date: editing.date?.trim() || null,
+      countdown_datetime: editing.countdown_datetime?.trim() || null,
       price: editing.price || 0,
       image_url: editing.image_url || null,
       description: editing.description?.trim() || null,
@@ -291,7 +292,13 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Date</label>
                     <input value={editing.date || ""} onChange={(e) => setEditing({ ...editing, date: e.target.value })}
                       className={inputCls} placeholder="e.g. 25 May" />
-                    <p className="text-[11px] text-brown/40 mt-1">Shown on cards and detail page (e.g. "25 May", "Every Monday")</p>
+                    <p className="text-[11px] text-brown/40 mt-1">Display text shown to users (e.g. "25 May", "Every Monday")</p>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Countdown Date & Time</label>
+                    <input type="datetime-local" value={editing.countdown_datetime || ""} onChange={(e) => setEditing({ ...editing, countdown_datetime: e.target.value })}
+                      className={inputCls} />
+                    <p className="text-[11px] text-brown/40 mt-1">Timer counts down to this exact date & time. Leave empty to use end of day.</p>
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Benefit / Short Description</label>

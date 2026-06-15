@@ -8,7 +8,13 @@ import { toast } from "sonner";
 import PujaGallery from "@/components/puja/PujaGallery";
 import { useLanguage } from "@/context/LanguageContext";
 
-const parseChadhavaDate = (dateStr: string): Date => {
+const parseChadhavaDate = (dateStr: string, countdownDatetime?: string | null): Date => {
+  // If an exact ISO datetime is provided (e.g. "2026-07-12T16:00:00+05:30"), use it directly
+  if (countdownDatetime) {
+    const exact = new Date(countdownDatetime);
+    if (!isNaN(exact.getTime())) return exact;
+  }
+  // Fallback: parse the display date string with end-of-day time
   const year = new Date().getFullYear();
   const hasYear = /\d{4}/.test(dateStr);
   const fullStr = hasYear ? dateStr : `${dateStr} ${year}`;
@@ -63,11 +69,11 @@ const ChadhavaDetail = () => {
 
   useEffect(() => {
     if (!chadhava?.date) return;
-    const target = parseChadhavaDate(chadhava.date);
+    const target = parseChadhavaDate(chadhava.date, chadhava.countdown_datetime);
     setTimeLeft(getTimeLeft(target));
     timerRef.current = setInterval(() => setTimeLeft(getTimeLeft(target)), 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [chadhava?.date]);
+  }, [chadhava?.date, chadhava?.countdown_datetime]);
 
   /* ── Selection logic ── */
   const toggleOffering = (offId: string) => {
@@ -161,6 +167,12 @@ const ChadhavaDetail = () => {
               )}
               <h1 className="font-body text-2xl md:text-3xl font-bold text-gold leading-snug">{displayItem}</h1>
 
+              {displayDesc && (
+                <div className="mt-3 rounded-xl bg-white/10 border border-gold/30 px-4 py-3">
+                  <p className="text-base font-bold text-gold leading-snug">✦ {displayDesc}</p>
+                </div>
+              )}
+
               <div className="mt-4 flex flex-col gap-2.5">
                 {chadhava.date && (
                   <span className="flex items-center gap-2.5 text-cream/90 text-lg font-semibold">
@@ -207,11 +219,7 @@ const ChadhavaDetail = () => {
                 </div>
               )}
 
-              {displayDesc && (
-                <div className="mt-4 rounded-xl bg-white/10 border border-gold/30 px-4 py-3">
-                  <p className="text-base font-bold text-gold leading-snug">✦ {displayDesc}</p>
-                </div>
-              )}
+
 
               {/* Scroll to offerings CTA — same style as PujaDetail "Select Package" */}
               <button onClick={() => document.getElementById("offerings")?.scrollIntoView({ behavior: "smooth" })}

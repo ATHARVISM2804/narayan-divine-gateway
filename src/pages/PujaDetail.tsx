@@ -26,7 +26,13 @@ const getTierImage = (label: string): string => {
 };
 
 
-const parsePujaDate = (dateStr: string): Date => {
+const parsePujaDate = (dateStr: string, countdownDatetime?: string | null): Date => {
+  // If an exact ISO datetime is provided (e.g. "2026-07-12T16:00:00+05:30"), use it directly
+  if (countdownDatetime) {
+    const exact = new Date(countdownDatetime);
+    if (!isNaN(exact.getTime())) return exact;
+  }
+  // Fallback: parse the display date string with end-of-day time
   const year = new Date().getFullYear();
   const hasYear = /\d{4}/.test(dateStr);
   const fullStr = hasYear ? dateStr : `${dateStr} ${year}`;
@@ -79,11 +85,11 @@ const PujaDetail = () => {
 
   useEffect(() => {
     if (!puja?.date) return;
-    const target = parsePujaDate(puja.date);
+    const target = parsePujaDate(puja.date, puja.countdown_datetime);
     setTimeLeft(getTimeLeft(target));
     timerRef.current = setInterval(() => setTimeLeft(getTimeLeft(target)), 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [puja?.date]);
+  }, [puja?.date, puja?.countdown_datetime]);
 
   // Scroll to #packages on page load if hash is present
   useEffect(() => {
@@ -173,6 +179,12 @@ const PujaDetail = () => {
               )}
               <h1 className="font-body text-2xl md:text-3xl font-bold text-gold leading-snug">{displayName}</h1>
 
+              {displayBenefit && (
+                <div className="mt-3 rounded-xl bg-white/10 border border-gold/30 px-4 py-3">
+                  <p className="text-base font-bold text-gold leading-snug">✦ {displayBenefit}</p>
+                </div>
+              )}
+
               <div className="mt-4 flex flex-col gap-2.5">
                 <span className="flex items-center gap-2.5 text-cream/90 text-lg font-semibold">
                   <span className="w-6 flex items-center justify-center shrink-0"><Calendar size={20} className="text-gold" /></span> {puja.date}
@@ -215,11 +227,7 @@ const PujaDetail = () => {
                 )}
               </div>
 
-              {displayBenefit && (
-                <div className="mt-4 rounded-xl bg-white/10 border border-gold/30 px-4 py-3">
-                  <p className="text-base font-bold text-gold leading-snug">✦ {displayBenefit}</p>
-                </div>
-              )}
+
 
               {/* Select Package CTA - opens modal */}
               <button onClick={() => setShowModal(true)}

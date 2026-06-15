@@ -23,7 +23,7 @@ const Puja = () => {
       .then(({ data }) => {
         if (data) {
           const sorted = (data as PujaType[]).sort(
-            (a, b) => parseDate(a.date) - parseDate(b.date)
+            (a, b) => parseDate(a.date, a.countdown_datetime) - parseDate(b.date, b.countdown_datetime)
           );
           setPujas(sorted);
         }

@@ -86,19 +86,24 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 /* Public layout — Navbar + Footer wrap all public pages */
-const PublicLayout = ({ children }: { children: React.ReactNode }) => (
-  <>
-    <Navbar />
-    <ErrorBoundary>
-      <Suspense fallback={<PageLoader />}>
-        {children}
-      </Suspense>
-    </ErrorBoundary>
-    <Footer />
-    <MobileCartBar />
-    <WhatsAppButton />
-  </>
-);
+const PublicLayout = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const isCheckout = location.pathname === "/checkout";
+  
+  return (
+    <>
+      <Navbar />
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          {children}
+        </Suspense>
+      </ErrorBoundary>
+      {!isCheckout && <Footer />}
+      <MobileCartBar />
+      <WhatsAppButton />
+    </>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

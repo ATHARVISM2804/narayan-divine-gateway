@@ -25,7 +25,7 @@ const Chadhava = () => {
         .eq("status", "active");
       if (chData) {
         const sorted = (chData as CType[]).sort(
-          (a, b) => parseDate(a.date) - parseDate(b.date)
+          (a, b) => parseDate(a.date, a.countdown_datetime) - parseDate(b.date, b.countdown_datetime)
         );
         setChadhavas(sorted);
         const { data: offData } = await supabase

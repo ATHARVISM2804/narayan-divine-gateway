@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -73,7 +73,11 @@ const Checkout = () => {
   const { t, lang } = useLanguage();
 
   /* ── Steps ── */
-  const [checkoutStep, setCheckoutStep] = useState<"review" | "details">("review");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const checkoutStep = searchParams.get("step") === "details" ? "details" : "review";
+  const setCheckoutStep = (step: "review" | "details") => {
+    setSearchParams({ step });
+  };
 
   /* ── Form (no email) ── */
   const [form, setForm] = useState(() => {
@@ -344,7 +348,7 @@ const Checkout = () => {
         </div>
       </div>
 
-      <div className="container py-6 sm:py-10 pb-10">
+      <div className="container py-6 sm:py-10 pb-28 lg:pb-10">
         <div className="grid gap-6 sm:gap-8 lg:grid-cols-[1fr_380px]">
 
           {/* ════════════════════════════════════════════════════════════════ */}
@@ -469,10 +473,10 @@ const Checkout = () => {
                 </div>
               </div>
 
-              {/* ── Continue Button ── */}
+              {/* ── Continue Button (desktop only — mobile uses sticky bar) ── */}
               <button
                 onClick={() => { setCheckoutStep("details"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-saffron to-maroon py-4 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5"
+                className="hidden lg:flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-saffron to-maroon py-4 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5"
               >
                 Continue <ChevronRight size={18} />
               </button>
@@ -496,8 +500,8 @@ const Checkout = () => {
 
                 {/* ── WhatsApp Number ── */}
                 <div>
-                  <h3 className="text-base font-bold text-maroon mb-1">Your WhatsApp Number</h3>
-                  <p className="text-xs text-brown/50 mb-3 leading-snug">
+                  <h3 className="text-lg font-bold text-maroon mb-1">Your WhatsApp Number</h3>
+                  <p className="text-sm text-brown/50 mb-3 leading-snug">
                     Your Puja booking updates like Photos, Videos and other details will be sent on WhatsApp on below number.
                   </p>
                   <div className="flex items-center gap-2 rounded-xl border-2 border-gold/40 bg-cream px-3 py-3 focus-within:border-saffron transition-all">
@@ -526,10 +530,10 @@ const Checkout = () => {
                 {/* ── Member Names ── */}
                 {memberCount > 0 && (
                   <div>
-                    <h3 className="text-base font-bold text-maroon mb-1 flex items-center gap-2">
-                      <Users size={16} className="text-saffron" /> Name of Members Participating in Puja
+                    <h3 className="text-lg font-bold text-maroon mb-1 flex items-center gap-2">
+                      <Users size={18} className="text-saffron" /> Name of Members Participating in Puja
                     </h3>
-                    <p className="text-xs text-brown/50 mb-3">
+                    <p className="text-sm text-brown/50 mb-3">
                       Panditji will take these names along with gotra during the puja.
                     </p>
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -662,9 +666,9 @@ const Checkout = () => {
                   </div>
                 )}
 
-                {/* ── Proceed to Pay ── */}
+                {/* ── Proceed to Pay (desktop only — mobile uses sticky bar) ── */}
                 <button onClick={handleCheckout} disabled={loading}
-                  className="w-full overflow-hidden rounded-full bg-gradient-to-r from-saffron to-maroon py-4 text-center text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed lg:hidden">
+                  className="hidden lg:block w-full overflow-hidden rounded-full bg-gradient-to-r from-saffron to-maroon py-4 text-center text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed">
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 size={18} className="animate-spin" />
@@ -689,6 +693,39 @@ const Checkout = () => {
 
           {/* ── Order Summary Sidebar (both steps) ── */}
           <OrderSummary showPayButton={checkoutStep === "details"} />
+        </div>
+      </div>
+
+      {/* ── Sticky bottom CTA bar (mobile only) ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-ivory/95 backdrop-blur-md border-t border-gold/30 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col">
+            <span className="text-[11px] text-brown/50 font-medium">{t("co_total")}</span>
+            <span className="text-lg font-bold text-saffron">₹{totalPrice.toLocaleString("en-IN")}</span>
+          </div>
+          {checkoutStep === "review" ? (
+            <button
+              onClick={() => { setCheckoutStep("details"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              className="flex-1 max-w-[240px] flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-saffron to-maroon py-3.5 text-[15px] font-bold text-white shadow-md transition-all active:scale-[0.97]"
+            >
+              Continue <ChevronRight size={18} />
+            </button>
+          ) : (
+            <button
+              onClick={handleCheckout}
+              disabled={loading}
+              className="flex-1 max-w-[240px] flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-saffron to-maroon py-3.5 text-[15px] font-bold text-white shadow-md transition-all active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  {t("co_processing")}
+                </>
+              ) : (
+                <>Proceed to Book</>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </main>

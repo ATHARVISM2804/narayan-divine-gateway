@@ -7,7 +7,7 @@ import ImageUpload from "./ImageUpload";
 interface Props { pujas: Puja[]; onRefresh: () => void }
 
 const emptyPuja = (): Partial<Puja> => ({
-  name: "", deity: "", location: "", date: "", image_url: null, benefit: "", occasion: "", occasion_hi: "",
+  name: "", deity: "", location: "", date: "", countdown_datetime: "", image_url: null, benefit: "", occasion: "", occasion_hi: "",
   name_hi: "", location_hi: "", benefit_hi: "",
   prices: [{ label: "Single", price: 951 }, { label: "Couple", price: 1551 }, { label: "4 Family", price: 2551 }, { label: "6 Members", price: 3551 }],
   status: "draft", featured: false,
@@ -191,6 +191,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
     setSaving(true);
     const payload = {
       name: name.trim(), deity: editing.deity?.trim() || name.trim(), location: location.trim(), date: date.trim(),
+      countdown_datetime: editing.countdown_datetime?.trim() || null,
       image_url: editing.image_url || null, benefit: editing.benefit?.trim() || null,
       occasion: editing.occasion?.trim() || null, occasion_hi: editing.occasion_hi?.trim() || null,
       name_hi: editing.name_hi?.trim() || null, location_hi: editing.location_hi?.trim() || null, benefit_hi: editing.benefit_hi?.trim() || null,
@@ -311,7 +312,12 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Shiva, Vishnu, Ganga" /></div>
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Date *</label>
                   <input value={editing.date || ""} onChange={(e) => setEditing({ ...editing, date: e.target.value })}
-                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. 13 May" /></div>
+                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. 13 May" />
+                  <p className="text-[11px] text-brown/40 mt-1">Display text shown to users (e.g. "13 May", "12 July 2026")</p></div>
+                <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Countdown Date & Time</label>
+                  <input type="datetime-local" value={editing.countdown_datetime || ""} onChange={(e) => setEditing({ ...editing, countdown_datetime: e.target.value })}
+                    className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" />
+                  <p className="text-[11px] text-brown/40 mt-1">Timer counts down to this exact date & time. Leave empty to use end of day.</p></div>
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Location *</label>
                   <input value={editing.location || ""} onChange={(e) => setEditing({ ...editing, location: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Badrinath Dham" /></div>

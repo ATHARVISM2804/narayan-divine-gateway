@@ -13,6 +13,7 @@ export interface Puja {
   deity?: string;
   location: string;
   date: string;
+  countdown_datetime?: string | null;
   image_url: string | null;
   prices: { label: string; price: number }[];
   status: 'active' | 'draft';
@@ -49,6 +50,7 @@ export interface Chadhava {
   temple: string;
   item: string;
   date?: string | null;
+  countdown_datetime?: string | null;
   price: number;
   image_url: string | null;
   description: string | null;
