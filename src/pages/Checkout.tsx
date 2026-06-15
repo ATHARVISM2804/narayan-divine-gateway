@@ -79,6 +79,11 @@ const Checkout = () => {
     setSearchParams({ step });
   };
 
+  // Scroll to top after step change renders
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [checkoutStep]);
+
   /* ── Form (no email) ── */
   const [form, setForm] = useState(() => {
     try {
@@ -475,7 +480,7 @@ const Checkout = () => {
 
               {/* ── Continue Button (desktop only — mobile uses sticky bar) ── */}
               <button
-                onClick={() => { setCheckoutStep("details"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                onClick={() => setCheckoutStep("details")}
                 className="hidden lg:flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-saffron to-maroon py-4 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5"
               >
                 Continue <ChevronRight size={18} />
@@ -705,7 +710,7 @@ const Checkout = () => {
           </div>
           {checkoutStep === "review" ? (
             <button
-              onClick={() => { setCheckoutStep("details"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              onClick={() => setCheckoutStep("details")}
               className="flex-1 max-w-[240px] flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-saffron to-maroon py-3.5 text-[15px] font-bold text-white shadow-md transition-all active:scale-[0.97]"
             >
               Continue <ChevronRight size={18} />
