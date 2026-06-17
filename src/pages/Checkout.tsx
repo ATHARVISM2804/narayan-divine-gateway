@@ -4,7 +4,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase, type PujaOffering } from "@/lib/supabase";
-import { ShoppingBag, Shield, ArrowLeft, Loader2, MapPin, Users, Info, Gift, ChevronRight, Check, Calendar } from "lucide-react";
+import { ShoppingBag, Shield, ArrowLeft, Loader2, MapPin, Users, Info, Gift, ChevronRight, Check, Calendar, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { useLanguage } from "@/context/LanguageContext";
@@ -500,8 +500,28 @@ const Checkout = () => {
           {/* ════════════════════════════════════════════════════════════════ */}
           {checkoutStep === "details" && (
             <div className="rounded-2xl border border-gold/40 bg-ivory p-4 sm:p-6 md:p-8 shadow-soft">
-              <h2 className="font-display text-xl text-maroon mb-6">Enter Details for Your Puja</h2>
+              <h2 className="font-display text-xl text-maroon mb-6">{pujaItem ? "Enter Details for Your Puja" : "Enter Your Details"}</h2>
               <div className="space-y-6">
+
+                {/* ── Your Name ── */}
+                <div>
+                  <h3 className="text-lg font-bold text-maroon mb-1 flex items-center gap-2">
+                    <User size={18} className="text-saffron" /> {lang === "hi" ? "आपका नाम" : "Your Name"}
+                  </h3>
+                  <p className="text-sm text-brown/50 mb-3 leading-snug">
+                    {lang === "hi" ? "कृपया अपना पूरा नाम दर्ज करें।" : "Please enter your full name for the booking."}
+                  </p>
+                  <input
+                    value={form.name}
+                    onChange={set("name")}
+                    type="text"
+                    placeholder={lang === "hi" ? "अपना पूरा नाम दर्ज करें" : "Enter your full name"}
+                    className="w-full rounded-xl border-2 border-gold/40 bg-cream px-4 py-3 text-sm font-semibold text-maroon outline-none placeholder:text-brown/30 focus:border-saffron focus:ring-2 focus:ring-saffron/20 transition-all"
+                  />
+                </div>
+
+                {/* Gold divider */}
+                <div className="h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
 
                 {/* ── WhatsApp Number ── */}
                 <div>
