@@ -109,7 +109,7 @@ const PujaDetail = () => {
     } else {
       addItem({ id: itemId, name: `${puja.name} (${selectedTier.label})`, description: `${puja.date} • ${puja.location}`, price: selectedTier.price, category: "puja", image: puja.image_url || undefined });
       setAddedId(itemId);
-      toast.success(`${puja.name} (${selectedTier.label}) added to cart!`);
+      toast.success(`${puja.name} (${selectedTier.label}) ${t("toast_added_to_cart")}`);
       setTimeout(() => setAddedId(null), 1500);
     }
   };
@@ -119,7 +119,7 @@ const PujaDetail = () => {
     const itemId = `puja-${puja.id}-${selectedTier.label}`;
     addItem({ id: itemId, name: `${puja.name} (${selectedTier.label})`, description: `${puja.date} • ${puja.location}`, price: selectedTier.price, category: "puja", image: puja.image_url || undefined });
     setShowLead(false);
-    toast.success("Proceeding to payment…");
+    toast.success(t("toast_proceed_payment"));
     nav("/checkout");
   };
 

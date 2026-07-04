@@ -77,7 +77,7 @@ const PujaPackageModal = ({ puja, onClose }: Props) => {
       category:    "puja",
       image:       puja.image_url || undefined,
     });
-    toast.success("Proceeding to payment…");
+    toast.success(t("toast_proceed_payment"));
     nav("/checkout");
     onClose();
   };
@@ -92,7 +92,7 @@ const PujaPackageModal = ({ puja, onClose }: Props) => {
       category:    "puja",
       image:       puja.image_url || undefined,
     });
-    toast.success(`${selectedTier.label} added to cart!`);
+    toast.success(`${tierLabel(selectedTier.label)} ${t("toast_added_to_cart")}`);
     onClose();
   };
 

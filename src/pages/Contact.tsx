@@ -23,7 +23,7 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
-      toast.error("Please fill in Name, Email and Message");
+      toast.error(t("contact_err_fill"));
       return;
     }
     setSending(true);
@@ -43,15 +43,15 @@ const Contact = () => {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success("Message sent successfully! We'll get back to you soon 🙏");
+        toast.success(t("contact_success"));
         setForm({ name: "", email: "", phone: "", subject: "", message: "" });
         setSent(true);
         setTimeout(() => setSent(false), 5000);
       } else {
-        toast.error(data.message || "Something went wrong. Please try again.");
+        toast.error(data.message || t("contact_err_generic"));
       }
     } catch {
-      toast.error("Network error. Please try again later.");
+      toast.error(t("contact_err_network"));
     }
     setSending(false);
   };

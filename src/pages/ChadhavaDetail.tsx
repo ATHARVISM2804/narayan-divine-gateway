@@ -113,7 +113,7 @@ const ChadhavaDetail = () => {
         image: o.image_url || chadhava.image_url || undefined,
       }, qty);
     });
-    toast.success(`${selectedCount} offering${selectedCount > 1 ? "s" : ""} added to cart!`);
+    toast.success(`${selectedCount} ${t("toast_offerings_added")}`);
     nav("/cart");
   };
 

@@ -193,13 +193,13 @@ const Checkout = () => {
   const validateDetails = () => {
     if (!form.name.trim()) { toast.error(t("co_err_name")); return false; }
     if (!form.phone.trim() || form.phone.length < 10) { toast.error(t("co_err_phone")); return false; }
-    if (memberCount > 0 && !syncedMemberNames[0].trim()) { toast.error("Please enter at least the first member's name"); return false; }
+    if (memberCount > 0 && !syncedMemberNames[0].trim()) { toast.error(t("co_err_member")); return false; }
     if (wantBox) {
-      if (!isValidPincode) { toast.error("Please enter a valid 6-digit pincode for delivery"); return false; }
-      if (!addr.flat.trim())  { toast.error("Please enter your Flat / House / Building"); return false; }
-      if (!addr.area.trim())  { toast.error("Please enter your Area / Street / Locality"); return false; }
-      if (!addr.city.trim())  { toast.error("Please enter your delivery city"); return false; }
-      if (!addr.state.trim()) { toast.error("Please enter your delivery state"); return false; }
+      if (!isValidPincode) { toast.error(t("co_err_pincode")); return false; }
+      if (!addr.flat.trim())  { toast.error(t("co_err_flat")); return false; }
+      if (!addr.area.trim())  { toast.error(t("co_err_area")); return false; }
+      if (!addr.city.trim())  { toast.error(t("co_err_city")); return false; }
+      if (!addr.state.trim()) { toast.error(t("co_err_state")); return false; }
     }
     return true;
   };
@@ -270,23 +270,23 @@ const Checkout = () => {
             clearCart();
             nav(`/order-success?id=${fnData.db_order_id}&payment=${response.razorpay_payment_id}`);
           } catch {
-            toast.error("Payment verification failed. Please contact support.");
+            toast.error(t("co_err_verify"));
             setLoading(false);
           }
         },
         modal: {
-          ondismiss: () => { setLoading(false); toast.info("Payment cancelled"); },
+          ondismiss: () => { setLoading(false); toast.info(t("co_payment_cancelled")); },
         },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", (response: any) => {
-        toast.error(response.error?.description || "Payment failed");
+        toast.error(response.error?.description || t("co_payment_failed"));
         setLoading(false);
       });
       rzp.open();
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
+      toast.error(err.message || t("co_err_generic"));
       setLoading(false);
     }
   };
