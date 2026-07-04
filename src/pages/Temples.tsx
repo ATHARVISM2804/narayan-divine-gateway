@@ -5,8 +5,26 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import heroTemples from "@/assets/hero-temples-page.png";
 import fallbackTemple from "@/assets/hero-temple.jpg";
+import imgShiva from "@/assets/puja-shiva.jpg";
+import imgVishnu from "@/assets/puja-vishnu.jpg";
+import imgGanesh from "@/assets/puja-ganesh.jpg";
+import imgDurga from "@/assets/puja-durga.jpg";
+import imgDarshan from "@/assets/hero-darshan.jpg";
 import { useLanguage } from "@/context/LanguageContext";
 import { supabase, type Temple } from "@/lib/supabase";
+
+/* Fallback photo per seeded temple (used only until an admin uploads a real
+   image_url). Matches the images the site originally shipped with. */
+const SEED_IMAGES: Record<string, string> = {
+  "Kashi Vishwanath": imgDarshan,
+  "Tirupati Balaji": imgVishnu,
+  "Siddhivinayak": imgGanesh,
+  "Vaishno Devi": imgDurga,
+  "Jagannath Puri": fallbackTemple,
+  "Mahakaleshwar": imgShiva,
+};
+/* Uploaded image wins; else the seed image for that temple; else generic. */
+const templeImg = (tp: Temple) => tp.image_url || SEED_IMAGES[tp.name] || fallbackTemple;
 
 const Temples = () => {
   const { t, lang } = useLanguage();
@@ -96,7 +114,7 @@ const Temples = () => {
                 >
                   {/* Image */}
                   <div className="relative h-52 overflow-hidden">
-                    <img src={tp.image_url || fallbackTemple} alt={dName(tp)} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <img src={templeImg(tp)} alt={dName(tp)} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/80 via-maroon-deep/20 to-transparent" />
                     {/* Gold strip */}
                     <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-saffron via-gold to-saffron" />
@@ -176,7 +194,7 @@ const Temples = () => {
 
             {/* Hero image */}
             <div className="relative h-56 sm:h-64 overflow-hidden rounded-t-3xl sm:rounded-t-3xl">
-              <img src={selected.image_url || fallbackTemple} alt={selected.name} className="w-full h-full object-cover" />
+              <img src={templeImg(selected)} alt={selected.name} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/90 via-maroon-deep/40 to-transparent" />
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-saffron via-gold to-saffron" />
 
