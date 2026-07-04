@@ -58,7 +58,7 @@ const AppDownload = () => {
         <form className="mt-6 flex max-w-md flex-col gap-2 sm:flex-row" onSubmit={(e) => e.preventDefault()}>
           <input
             type="email"
-            placeholder="Enter your email"
+            placeholder={t("app_email_placeholder")}
             className="flex-1 rounded-full border border-gold bg-ivory px-4 py-2.5 text-sm text-brown outline-none focus:border-saffron"
           />
           <button className="rounded-full bg-saffron px-6 py-2.5 text-sm font-semibold text-white hover:bg-maroon transition-colors">

@@ -50,9 +50,21 @@ const Temples = () => {
       });
   }, []);
 
-  /* Filter options derived from the actual temples */
-  const states = ["All", ...Array.from(new Set(temples.map((tp) => tp.state).filter(Boolean) as string[])).sort()];
-  const deities = ["All", ...Array.from(new Set(temples.map((tp) => tp.deity).filter(Boolean) as string[])).sort()];
+  /* Filter options derived from the actual temples.
+     value stays English (used by the filter); label is localized. */
+  const isHi = lang === "hi";
+  const stateOptions = [
+    { value: "All", label: t("filter_all") },
+    ...Array.from(
+      new Map(temples.filter((tp) => tp.state).map((tp) => [tp.state as string, (isHi && tp.state_hi ? tp.state_hi : tp.state) as string])).entries()
+    ).sort((a, b) => a[1].localeCompare(b[1])).map(([value, label]) => ({ value, label })),
+  ];
+  const deityOptions = [
+    { value: "All", label: t("filter_all") },
+    ...Array.from(
+      new Map(temples.filter((tp) => tp.deity).map((tp) => [tp.deity as string, (isHi && tp.deity_hi ? tp.deity_hi : tp.deity) as string])).entries()
+    ).sort((a, b) => a[1].localeCompare(b[1])).map(([value, label]) => ({ value, label })),
+  ];
 
   const filtered = temples.filter(
     (tp) =>
@@ -81,10 +93,10 @@ const Temples = () => {
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("tmp_search")} className="w-full bg-transparent text-sm outline-none placeholder:text-brown/40" />
             </div>
             <select value={state} onChange={(e) => setState(e.target.value)} className="rounded-full border border-gold/60 bg-cream px-4 py-2 text-sm text-maroon outline-none">
-              {states.map((s) => <option key={s}>{s}</option>)}
+              {stateOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
             <select value={deity} onChange={(e) => setDeity(e.target.value)} className="rounded-full border border-gold/60 bg-cream px-4 py-2 text-sm text-maroon outline-none">
-              {deities.map((s) => <option key={s}>{s}</option>)}
+              {deityOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
 

@@ -19,16 +19,16 @@ const Astrology = () => {
   ];
 
   const steps = [
-    { icon: "📞", title: "Choose Your Pandit", desc: "Browse certified experts by specialty" },
-    { icon: "🗓️", title: "Pick a Slot", desc: "Book a convenient time — same day available" },
-    { icon: "🔮", title: "Get Guidance", desc: "Personalised Vedic consultation via call/chat" },
+    { icon: "📞", title: t("ast_step1"), desc: t("ast_step1_desc") },
+    { icon: "🗓️", title: t("ast_step2"), desc: t("ast_step2_desc") },
+    { icon: "🔮", title: t("ast_step3"), desc: t("ast_step3_desc") },
   ];
 
   const trustBadges = [
-    { icon: "✅", text: "Government Certified" },
-    { icon: "🎓", text: "Sanskrit Scholars" },
-    { icon: "🔒", text: "100% Confidential" },
-    { icon: "⭐", text: "4.8★ Avg Rating" },
+    { icon: "✅", text: t("ast_trust1") },
+    { icon: "🎓", text: t("ast_trust2") },
+    { icon: "🔒", text: t("ast_trust3") },
+    { icon: "⭐", text: t("ast_trust4") },
   ];
 
   return (
@@ -87,14 +87,13 @@ const Astrology = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
               </span>
-              Pandits Available Now
+              {t("ast_available")}
             </span>
             <h2 className="font-display text-3xl md:text-4xl text-maroon">
-              Speak to a <span className="text-gold-shimmer">Certified Pandit</span>
+              {t("ast_speak_pre")} <span className="text-gold-shimmer">{t("ast_speak_accent")}</span>
             </h2>
             <p className="mt-3 font-serif italic text-brown/60 max-w-xl mx-auto text-base">
-              Get personalised Vedic guidance from verified Sanskrit scholars —
-              instantly, from the comfort of your home.
+              {t("ast_speak_sub")}
             </p>
           </div>
 
@@ -109,7 +108,7 @@ const Astrology = () => {
 
           {/* How it works card */}
           <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-ivory via-cream to-ivory p-6 md:p-10 shadow-soft">
-            <h3 className="font-display text-2xl text-maroon text-center mb-8">How It Works</h3>
+            <h3 className="font-display text-2xl text-maroon text-center mb-8">{t("ast_how_it_works")}</h3>
             <div className="grid gap-8 sm:grid-cols-3">
               {steps.map((s, i) => (
                 <div key={s.title} className="flex flex-col items-center text-center gap-3">
@@ -135,10 +134,10 @@ const Astrology = () => {
                 to="/contact"
                 className="inline-flex items-center gap-2.5 rounded-full bg-gradient-to-r from-saffron to-maroon px-8 py-4 text-sm font-bold text-white shadow-md hover:shadow-gold-glow hover:-translate-y-0.5 transition-all"
               >
-                🙏 Book Your Free Consultation
+                {t("ast_book_free")}
               </Link>
               <p className="mt-3 text-xs text-brown/40 font-serif italic">
-                No credit card required • First session free
+                {t("ast_no_card")}
               </p>
             </div>
           </div>

@@ -308,6 +308,7 @@ const HeroCarousel = () => {
 };
 
 const MuhuratCountdown = () => {
+  const { t } = useLanguage();
   const [time, setTime] = useState({ h: 0, m: 0, s: 0 });
   useEffect(() => {
     const tick = () => {
@@ -328,7 +329,7 @@ const MuhuratCountdown = () => {
   return (
     <div className="inline-flex items-center gap-2 sm:gap-3 rounded-2xl border border-gold/50 bg-maroon-deep/60 backdrop-blur px-3 py-2 sm:gap-4 sm:px-5 sm:py-3 shadow-gold-glow">
       <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-gold/80">
-        Next Muhurat
+        {t("hero_next_muhurat")}
       </span>
       <div className="flex items-center gap-1 sm:gap-2">
         {(["h", "m", "s"] as const).map((k, i) => (
@@ -338,7 +339,7 @@ const MuhuratCountdown = () => {
                 {String(time[k]).padStart(2, "0")}
               </div>
               <div className="mt-0.5 text-[8px] sm:text-[9px] uppercase tracking-wider text-cream/60">
-                {k === "h" ? "Hrs" : k === "m" ? "Min" : "Sec"}
+                {k === "h" ? t("timer_hours") : k === "m" ? t("timer_mins") : t("timer_secs")}
               </div>
             </div>
             {i < 2 && <span className="text-gold/60">:</span>}

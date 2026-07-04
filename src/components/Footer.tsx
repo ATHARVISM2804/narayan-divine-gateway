@@ -184,15 +184,15 @@ const Footer = React.memo(() => {
           {/* Policy links + Copyright */}
           <div className="flex flex-col items-center gap-1.5 md:items-end">
             <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-cream/45">
-              <Link to="/privacy-policy" className="hover:text-gold transition-colors py-2">Privacy Policy</Link>
+              <Link to="/privacy-policy" className="hover:text-gold transition-colors py-2">{t("footer_privacy")}</Link>
               <span className="text-cream/20 py-2">·</span>
-              <Link to="/terms" className="hover:text-gold transition-colors py-2">Terms & Conditions</Link>
+              <Link to="/terms" className="hover:text-gold transition-colors py-2">{t("footer_terms")}</Link>
               <span className="text-cream/20 py-2">·</span>
-              <Link to="/refund-policy" className="hover:text-gold transition-colors py-2">Refund Policy</Link>
+              <Link to="/refund-policy" className="hover:text-gold transition-colors py-2">{t("footer_refund_policy")}</Link>
               <span className="text-cream/20 py-2">·</span>
-              <Link to="/shipping-policy" className="hover:text-gold transition-colors py-2">Shipping Policy</Link>
+              <Link to="/shipping-policy" className="hover:text-gold transition-colors py-2">{t("footer_shipping_policy")}</Link>
               <span className="text-cream/20 py-2">·</span>
-              <Link to="/grievance" className="hover:text-gold transition-colors py-2">Grievance</Link>
+              <Link to="/grievance" className="hover:text-gold transition-colors py-2">{t("footer_grievance")}</Link>
             </div>
             <p className="text-[11px] text-cream/30">{t("footer_copyright")}</p>
           </div>

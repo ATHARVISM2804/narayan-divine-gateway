@@ -22,10 +22,24 @@ const getTierImage = (label: string): string => {
 
 const getPersonCount = (label: string): string => {
   const l = label.toLowerCase();
-  if (l.includes("6") || l.includes("joint"))  return "6 Person";
-  if (l.includes("4") || l.includes("family"))  return "4 Person";
-  if (l.includes("couple") || l.includes("2"))  return "2 Person";
-  return "1 Person";
+  if (l.includes("6") || l.includes("joint"))  return "6";
+  if (l.includes("4") || l.includes("family"))  return "4";
+  if (l.includes("couple") || l.includes("2"))  return "2";
+  return "1";
+};
+
+/* Hindi labels for the common default package tiers (DB stores English labels;
+   the cart still uses the original label so order data stays consistent). */
+const TIER_LABEL_HI: Record<string, string> = {
+  "single": "एकल",
+  "individual": "व्यक्तिगत",
+  "couple": "दंपति",
+  "family": "परिवार",
+  "4 family": "4 परिवार",
+  "4 members": "4 सदस्य",
+  "6 members": "6 सदस्य",
+  "6 joint": "6 संयुक्त",
+  "joint": "संयुक्त",
 };
 
 interface Props {
@@ -44,6 +58,7 @@ const PujaPackageModal = ({ puja, onClose }: Props) => {
   const fallbackIncludes = [t("rcv1"), t("rcv2"), t("rcv3"), t("rcv4"), t("rcv5")];
   const displayIncludes  = includes?.length ? includes : fallbackIncludes;
   const selectedTier     = (puja.prices || [])[selectedIdx];
+  const tierLabel = (label: string) => (lang === "hi" ? TIER_LABEL_HI[label.trim().toLowerCase()] || label : label);
 
   // Step 1: open lead modal
   const handleProceed = () => {
@@ -154,7 +169,7 @@ const PujaPackageModal = ({ puja, onClose }: Props) => {
                       <span className={`inline-block text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full ${
                         isSelected ? "bg-saffron text-white" : "bg-black/40 text-white"
                       }`}>
-                        {getPersonCount(tier.label)}
+                        {getPersonCount(tier.label)} {t("pkg_person")}
                       </span>
                     </div>
 
@@ -169,7 +184,7 @@ const PujaPackageModal = ({ puja, onClose }: Props) => {
 
                     {/* Label + price — compact on mobile */}
                     <div className={`px-2 py-1.5 sm:px-3 sm:py-2.5 ${isSelected ? "bg-saffron/5" : "bg-cream"}`}>
-                      <p className="text-xs sm:text-sm font-bold text-maroon leading-tight">{tier.label}</p>
+                      <p className="text-xs sm:text-sm font-bold text-maroon leading-tight">{tierLabel(tier.label)}</p>
                       <p className="text-sm sm:text-base font-bold text-saffron mt-0.5">₹{tier.price.toLocaleString("en-IN")}</p>
                     </div>
                   </button>
@@ -197,7 +212,7 @@ const PujaPackageModal = ({ puja, onClose }: Props) => {
                  style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-gold text-lg sm:text-xl leading-tight">₹{selectedTier.price.toLocaleString("en-IN")}</p>
-                <p className="text-[11px] text-cream/70 font-semibold truncate">{selectedTier.label}</p>
+                <p className="text-[11px] text-cream/70 font-semibold truncate">{tierLabel(selectedTier.label)}</p>
               </div>
               <button
                 onClick={handleAddCart}
@@ -209,7 +224,7 @@ const PujaPackageModal = ({ puja, onClose }: Props) => {
                 onClick={handleProceed}
                 className="shrink-0 flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-saffron to-gold px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:shadow-gold-glow hover:-translate-y-0.5"
               >
-                Proceed Now <ChevronRight size={16} />
+                {t("pd_proceed_now")} <ChevronRight size={16} />
               </button>
             </div>
           )}
