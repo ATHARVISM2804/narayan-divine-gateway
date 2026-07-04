@@ -291,13 +291,13 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
       {editing && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setEditing(null)} />
-          <div className="relative w-full max-w-lg overflow-y-auto bg-ivory shadow-2xl animate-fadeIn">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gold/30 bg-ivory/95 px-6 py-4 backdrop-blur">
+          <div className="relative flex h-full w-full max-w-lg flex-col bg-ivory shadow-2xl animate-fadeIn">
+            <div className="shrink-0 flex items-center justify-between border-b border-gold/30 bg-ivory/95 px-4 sm:px-6 py-4 backdrop-blur">
               <h3 className="font-display text-lg text-maroon">{editing.id ? "Edit Puja" : "New Puja"}</h3>
               <button onClick={() => setEditing(null)} className="text-brown/50 hover:text-maroon transition-colors"><X size={20} /></button>
             </div>
 
-            <div className="space-y-5 p-6">
+            <div className="flex-1 overflow-y-auto space-y-5 p-4 sm:p-6">
               {/* Core fields */}
               <Section title="📷 Main Image" defaultOpen>
                 <ImageUpload value={editing.image_url || null} onChange={(url) => setEditing({ ...editing, image_url: url })} />
@@ -426,7 +426,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                     {editingOff && (
                       <div className="mt-4 rounded-xl border-2 border-saffron/30 bg-saffron/5 p-4 space-y-3">
                         <p className="text-sm font-bold text-maroon">{editingOff.id ? "Edit Offering" : "New Offering"}</p>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <label className="text-[11px] font-semibold text-maroon">Name (EN) *</label>
                             <input value={editingOff.name || ""} onChange={e => setEditingOff({ ...editingOff, name: e.target.value })}
@@ -438,7 +438,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                               className="w-full rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" placeholder="गौ सेवा" />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <label className="text-[11px] font-semibold text-maroon">Price (₹) *</label>
                             <input type="number" value={editingOff.price || ""} onChange={e => setEditingOff({ ...editingOff, price: Number(e.target.value) || 0 })}
@@ -515,14 +515,16 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                 </label>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-3 pt-3 border-t border-gold/20">
-                <button onClick={save} disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-saffron py-3 text-sm font-bold text-white shadow-md hover:bg-maroon transition-all disabled:opacity-60">
-                  {saving ? <><Loader2 size={16} className="animate-spin" />Saving…</> : editing.id ? "Update Puja" : "Create Puja"}
-                </button>
-                <button onClick={() => setEditing(null)} className="rounded-xl border border-gold/50 px-6 py-3 text-sm font-medium text-maroon hover:bg-gold/10">Cancel</button>
-              </div>
+            </div>
+
+            {/* Sticky action bar — always reachable on mobile */}
+            <div className="shrink-0 flex gap-3 border-t border-gold/20 bg-ivory px-4 sm:px-6 py-3"
+                 style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)" }}>
+              <button onClick={save} disabled={saving}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-saffron py-3 text-sm font-bold text-white shadow-md hover:bg-maroon transition-all disabled:opacity-60">
+                {saving ? <><Loader2 size={16} className="animate-spin" />Saving…</> : editing.id ? "Update Puja" : "Create Puja"}
+              </button>
+              <button onClick={() => setEditing(null)} className="rounded-xl border border-gold/50 px-6 py-3 text-sm font-medium text-maroon hover:bg-gold/10">Cancel</button>
             </div>
           </div>
         </div>

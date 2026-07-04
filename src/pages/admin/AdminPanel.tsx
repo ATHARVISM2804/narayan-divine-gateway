@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase, type Puja, type Chadhava } from "@/lib/supabase";
-import { LayoutDashboard, Flame, Flower2, ShoppingBag, LogOut, Menu, X, ChevronRight, Users } from "lucide-react";
+import { supabase, type Puja, type Chadhava, type Temple } from "@/lib/supabase";
+import { LayoutDashboard, Flame, Flower2, ShoppingBag, LogOut, Menu, X, ChevronRight, Users, Landmark } from "lucide-react";
 import PujaManager from "./PujaManager";
 import ChadhavaManager from "./ChadhavaManager";
 import OrderManager from "./OrderManager";
 import LeadManager from "./LeadManager";
+import TempleManager from "./TempleManager";
 
-type Section = "dashboard" | "pujas" | "chadhavas" | "orders" | "leads";
+type Section = "dashboard" | "pujas" | "chadhavas" | "temples" | "orders" | "leads";
 
 const NAV = [
   { id: "dashboard" as const, label: "Dashboard", Icon: LayoutDashboard },
   { id: "pujas"     as const, label: "Pujas",     Icon: Flame },
   { id: "chadhavas" as const, label: "Chadhavas", Icon: Flower2 },
+  { id: "temples"   as const, label: "Temples",   Icon: Landmark },
   { id: "orders"    as const, label: "Orders",    Icon: ShoppingBag },
   { id: "leads"     as const, label: "Leads",     Icon: Users },
 ];
@@ -26,6 +28,7 @@ const AdminPanel = () => {
   const [mobileNav, setMobileNav] = useState(false);
   const [pujas, setPujas] = useState<Puja[]>([]);
   const [chadhavas, setChadhavas] = useState<Chadhava[]>([]);
+  const [temples, setTemples] = useState<Temple[]>([]);
 
   /* Auth check — only the admin email can access */
   const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
@@ -52,9 +55,13 @@ const AdminPanel = () => {
     const { data } = await supabase.from("chadhavas").select("*").order("created_at", { ascending: false });
     if (data) setChadhavas(data as Chadhava[]);
   };
+  const fetchTemples = async () => {
+    const { data } = await supabase.from("temples").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+    if (data) setTemples(data as Temple[]);
+  };
 
   useEffect(() => {
-    if (!loading) { fetchPujas(); fetchChadhavas(); }
+    if (!loading) { fetchPujas(); fetchChadhavas(); fetchTemples(); }
   }, [loading]);
 
   const logout = async () => {
@@ -135,6 +142,9 @@ const AdminPanel = () => {
           )}
           {section === "chadhavas" && (
             <ChadhavaManager chadhavas={chadhavas} onRefresh={fetchChadhavas} />
+          )}
+          {section === "temples" && (
+            <TempleManager temples={temples} onRefresh={fetchTemples} />
           )}
           {section === "orders" && (
             <OrderManager />

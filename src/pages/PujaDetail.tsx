@@ -380,19 +380,12 @@ const PujaDetail = () => {
       {puja.prices && puja.prices.length > 0 && (
         <div className="fixed bottom-0 inset-x-0 z-40 md:hidden border-t border-gold/30 bg-ivory/95 backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.1)]"
              style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-brown/50">{t("pd_packages")}</p>
-              <p className="font-bold text-maroon text-lg leading-tight">
-                ₹{Math.min(...puja.prices.map(p => p.price)).toLocaleString("en-IN")}
-                <span className="text-xs font-semibold text-brown/40 ml-1">{lang === "hi" ? "से" : "onwards"}</span>
-              </p>
-            </div>
+          <div className="px-4 py-3">
             <button
               onClick={() => setShowModal(true)}
-              className="shrink-0 flex items-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-gold px-5 py-3 text-sm font-bold text-white shadow-lg transition-all active:scale-95"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-gold px-5 py-3.5 text-base font-bold text-white shadow-lg transition-all active:scale-[0.98]"
             >
-              {t("pd_scroll_packages")} <ChevronRight size={16} />
+              {t("pd_scroll_packages")} <ChevronRight size={18} />
             </button>
           </div>
         </div>

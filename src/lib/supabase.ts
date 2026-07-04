@@ -85,6 +85,31 @@ export interface ChadhavaOffering {
   updated_at: string;
 }
 
+export interface Temple {
+  id: string;
+  name: string;
+  name_hi: string | null;
+  city: string | null;
+  state: string | null;
+  state_hi: string | null;
+  deity: string | null;
+  deity_hi: string | null;
+  timings: string | null;
+  image_url: string | null;
+  rating: number | null;
+  reviews: number | null;
+  established: string | null;
+  best_time: string | null;
+  description: string | null;
+  description_hi: string | null;
+  highlights: string[];
+  highlights_hi: string[];
+  sort_order: number;
+  status: 'active' | 'draft';
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PujaOffering {
   id: string;
   puja_id: string;

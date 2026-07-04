@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { Eye, X, RefreshCw, Download, Search, Calendar } from "lucide-react";
+import { Eye, X, RefreshCw, Download, Calendar, ChevronDown } from "lucide-react";
 
 interface Order {
   id: string;
@@ -25,6 +25,46 @@ const statusColors: Record<string, string> = {
   failed:   "bg-red-100 text-red-600",
   refunded: "bg-gray-100 text-gray-600",
 };
+
+/* Maps the raw item.category stored on each order line to a filter bucket + dropdown group label. */
+type ItemType = "puja" | "chadhava" | "addon";
+const CATEGORY_META: Record<string, { type: ItemType; label: string }> = {
+  puja:     { type: "puja",     label: "🪔 Pujas" },
+  chadhava: { type: "chadhava", label: "🌺 Chadhavas" },
+  offering: { type: "addon",    label: "🎁 Add-ons" },
+  addon:    { type: "addon",    label: "🎁 Add-ons" },
+};
+const itemTypeOf = (item: any): ItemType | "other" =>
+  CATEGORY_META[item?.category as string]?.type ?? "other";
+
+/* Reusable WhatsApp glyph. */
+const WhatsAppIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" className={className}><path d="M16.003 2C8.28 2 2 8.28 2 16.003c0 2.478.65 4.908 1.885 7.054L2 30l7.144-1.87A14.034 14.034 0 0 0 16.003 30C23.72 30 30 23.72 30 16.003 30 8.28 23.72 2 16.003 2zm0 25.6a11.62 11.62 0 0 1-5.923-1.62l-.425-.252-4.24 1.11 1.132-4.134-.277-.446A11.563 11.563 0 0 1 4.4 16.003c0-6.4 5.203-11.6 11.603-11.6s11.598 5.2 11.598 11.6-5.198 11.597-11.598 11.597zm6.36-8.68c-.348-.174-2.063-1.018-2.383-1.133-.32-.116-.552-.174-.786.174-.233.348-.902 1.133-1.107 1.366-.203.232-.407.26-.755.086-.348-.174-1.47-.543-2.8-1.727-1.034-.922-1.73-2.06-1.934-2.407-.203-.348-.022-.535.152-.707.157-.155.348-.406.523-.61.174-.202.232-.347.348-.578.116-.232.058-.435-.03-.61-.086-.173-.785-1.892-1.075-2.59-.284-.682-.573-.59-.785-.6l-.67-.012c-.232 0-.61.087-.928.435-.32.347-1.22 1.192-1.22 2.91s1.25 3.378 1.422 3.61c.174.232 2.46 3.757 5.96 5.27.834.36 1.483.575 1.99.736.836.267 1.598.23 2.2.14.672-.1 2.063-.843 2.353-1.658.29-.812.29-1.51.203-1.658-.087-.145-.32-.23-.67-.406z"/></svg>
+);
+
+/* Sanitize an Indian phone to wa.me digits (prefixes 91 for bare 10-digit numbers). */
+const waNumber = (phone: string) => {
+  const d = (phone || "").replace(/\D/g, "").replace(/^0+/, "");
+  return d.length === 10 ? `91${d}` : d;
+};
+
+/* Pre-filled order-confirmation message sent to the customer on WhatsApp. */
+const buildConfirmationMessage = (o: Order) => {
+  const items  = (o.items || []).map((i: any) => `• ${i.name}${i.quantity > 1 ? ` ×${i.quantity}` : ""}`).join("\n");
+  const amount = `₹${(o.amount / 100).toLocaleString("en-IN")}`;
+  return (
+    `🙏 Namaste ${o.customer_name}!\n\n` +
+    `Your booking with *Narayan Kripa* is confirmed ✅\n\n` +
+    (items ? `🪔 *Your Seva:*\n${items}\n\n` : "") +
+    `💰 *Amount:* ${amount}\n` +
+    `🧾 *Order Ref:* ${o.id.slice(0, 8).toUpperCase()}\n\n` +
+    `Our team will perform your seva with full devotion and keep you updated. 🌺\n\n` +
+    `Har Har Mahadev 🙏\n— Team Narayan Kripa`
+  );
+};
+
+const waConfirmLink = (o: Order) =>
+  `https://wa.me/${waNumber(o.customer_phone)}?text=${encodeURIComponent(buildConfirmationMessage(o))}`;
 
 type DatePreset = "all" | "today" | "yesterday" | "last7" | "last30" | "thisMonth" | "lastMonth" | "custom";
 
@@ -80,7 +120,7 @@ const OrderManager = (_props: Props) => {
   const [loading,      setLoading]      = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [nameFilter,   setNameFilter]   = useState("all");
-  const [nameSearch,   setNameSearch]   = useState("");
+  const [typeFilter,   setTypeFilter]   = useState<"all" | ItemType>("all");
   const [detail,       setDetail]       = useState<Order | null>(null);
   const [datePreset,   setDatePreset]   = useState<DatePreset>("all");
   const [customFrom,   setCustomFrom]   = useState("");
@@ -109,30 +149,50 @@ const OrderManager = (_props: Props) => {
     return getPresetRange(datePreset);
   }, [datePreset, customFrom, customTo]);
 
-  /* ── Unique item names ── */
-  const allItemNames = useMemo(() => {
-    const names = new Set<string>();
-    orders.forEach((o) => (o.items || []).forEach((item: any) => { if (item?.name) names.add(item.name); }));
-    return Array.from(names).sort();
+  /* ── Unique item names bucketed by type ── */
+  const itemGroups = useMemo(() => {
+    const buckets: Record<"puja" | "chadhava" | "addon" | "other", Set<string>> = {
+      puja: new Set(), chadhava: new Set(), addon: new Set(), other: new Set(),
+    };
+    orders.forEach((o) => (o.items || []).forEach((item: any) => {
+      if (item?.name) buckets[itemTypeOf(item)].add(item.name);
+    }));
+    const sorted = (s: Set<string>) => Array.from(s).sort((a, b) => a.localeCompare(b));
+    return { puja: sorted(buckets.puja), chadhava: sorted(buckets.chadhava), addon: sorted(buckets.addon), other: sorted(buckets.other) };
   }, [orders]);
 
-  const filteredNames = useMemo(() =>
-    allItemNames.filter((n) => n.toLowerCase().includes(nameSearch.toLowerCase())),
-    [allItemNames, nameSearch]
-  );
+  /* ── <optgroup>s shown in the item dropdown, narrowed to the active type ── */
+  const dropdownGroups = useMemo(() => {
+    const groups: { key: string; label: string; names: string[] }[] = [];
+    if ((typeFilter === "all" || typeFilter === "puja")     && itemGroups.puja.length)
+      groups.push({ key: "puja",     label: "🪔 Pujas",     names: itemGroups.puja });
+    if ((typeFilter === "all" || typeFilter === "chadhava") && itemGroups.chadhava.length)
+      groups.push({ key: "chadhava", label: "🌺 Chadhavas", names: itemGroups.chadhava });
+    if (typeFilter === "all" && itemGroups.addon.length)
+      groups.push({ key: "addon",    label: "🎁 Add-ons",   names: itemGroups.addon });
+    if (typeFilter === "all" && itemGroups.other.length)
+      groups.push({ key: "other",    label: "Other",        names: itemGroups.other });
+    return groups;
+  }, [itemGroups, typeFilter]);
+
+  const typeCounts = useMemo(() => ({
+    puja:     orders.filter((o) => (o.items || []).some((i: any) => itemTypeOf(i) === "puja")).length,
+    chadhava: orders.filter((o) => (o.items || []).some((i: any) => itemTypeOf(i) === "chadhava")).length,
+  }), [orders]);
 
   /* ── Apply all filters ── */
   const filtered = useMemo(() => {
     return orders.filter((o) => {
       const statusMatch = statusFilter === "all" || o.status === statusFilter;
+      const typeMatch   = typeFilter   === "all" || (o.items || []).some((item: any) => itemTypeOf(item) === typeFilter);
       const nameMatch   = nameFilter   === "all" || (o.items || []).some((item: any) => item?.name === nameFilter);
       const orderDate   = new Date(o.created_at);
       const dateMatch   =
         (!dateRange.from || orderDate >= dateRange.from) &&
         (!dateRange.to   || orderDate <= dateRange.to);
-      return statusMatch && nameMatch && dateMatch;
+      return statusMatch && typeMatch && nameMatch && dateMatch;
     });
-  }, [orders, statusFilter, nameFilter, dateRange]);
+  }, [orders, statusFilter, typeFilter, nameFilter, dateRange]);
 
   /* ── Stats (from filtered) ── */
   const stats = {
@@ -166,12 +226,18 @@ const OrderManager = (_props: Props) => {
 
   const clearAll = () => {
     setDatePreset("all"); setStatusFilter("all");
-    setNameFilter("all"); setNameSearch("");
+    setTypeFilter("all"); setNameFilter("all");
     setCustomFrom(""); setCustomTo("");
   };
 
+  /* Switching type clears a now-irrelevant specific item selection. */
+  const changeType = (t: "all" | ItemType) => {
+    setTypeFilter(t);
+    if (t !== "all" && nameFilter !== "all" && !(itemGroups[t] || []).includes(nameFilter)) setNameFilter("all");
+  };
+
   const activePresetLabel = presets.find((p) => p.key === datePreset)?.label ?? "All Time";
-  const hasAnyFilter = datePreset !== "all" || statusFilter !== "all" || nameFilter !== "all";
+  const hasAnyFilter = datePreset !== "all" || statusFilter !== "all" || typeFilter !== "all" || nameFilter !== "all";
 
   return (
     <div className="space-y-5">
@@ -288,33 +354,50 @@ const OrderManager = (_props: Props) => {
           </div>
         </div>
 
-        {/* ── Item name filter ── */}
-        <div className="flex flex-wrap gap-2 items-start">
-          <span className="text-[11px] text-brown/50 font-semibold w-16 shrink-0 mt-2">Item:</span>
-          <div className="flex-1 min-w-[200px]">
-            <div className="relative">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-brown/40 pointer-events-none" />
-              <input type="text" value={nameSearch} onChange={(e) => setNameSearch(e.target.value)}
-                placeholder="Search puja / chadhava name…"
-                className="w-full rounded-xl border border-gold/40 bg-cream pl-8 pr-3 py-2 text-xs outline-none focus:border-saffron"
-              />
-            </div>
-            <div className="flex flex-wrap gap-1.5 mt-2 max-h-28 overflow-y-auto">
-              <button onClick={() => { setNameFilter("all"); setNameSearch(""); }}
+        {/* ── Type filter (Puja / Chadhava) ── */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-[11px] text-brown/50 font-semibold w-16 shrink-0">Type:</span>
+          <div className="flex flex-wrap gap-1.5">
+            {([
+              { key: "all",      label: "All Types",     count: null },
+              { key: "puja",     label: "🪔 Pujas",      count: typeCounts.puja },
+              { key: "chadhava", label: "🌺 Chadhavas",  count: typeCounts.chadhava },
+            ] as const).map((t) => (
+              <button key={t.key} onClick={() => changeType(t.key)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
-                  nameFilter === "all" ? "bg-saffron text-white shadow-sm" : "bg-cream border border-gold/40 text-maroon hover:bg-gold/20"
-                }`}>All Items</button>
-              {filteredNames.map((name) => (
-                <button key={name} onClick={() => { setNameFilter(name); setNameSearch(""); }}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-all max-w-[200px] truncate ${
-                    nameFilter === name ? "bg-maroon text-white shadow-sm" : "bg-cream border border-gold/40 text-maroon hover:bg-gold/20"
-                  }`} title={name}>{name}</button>
-              ))}
-              {filteredNames.length === 0 && nameSearch && (
-                <p className="text-xs text-brown/40 italic py-1">No items match "{nameSearch}"</p>
-              )}
-            </div>
+                  typeFilter === t.key ? "bg-saffron text-white shadow-sm" : "bg-cream border border-gold/40 text-maroon hover:bg-gold/20"
+                }`}>
+                {t.label}{t.count !== null && <span className="ml-1 opacity-70">({t.count})</span>}
+              </button>
+            ))}
           </div>
+        </div>
+
+        {/* ── Item dropdown (grouped by type) ── */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-[11px] text-brown/50 font-semibold w-16 shrink-0">Item:</span>
+          <div className="relative flex-1 min-w-[220px] max-w-sm">
+            <select
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+              className="w-full appearance-none rounded-xl border border-gold/40 bg-cream pl-3 pr-9 py-2 text-xs font-semibold text-maroon outline-none focus:border-saffron cursor-pointer">
+              <option value="all">
+                All Items{typeFilter === "puja" ? " (Pujas)" : typeFilter === "chadhava" ? " (Chadhavas)" : ""}
+              </option>
+              {dropdownGroups.map((g) => (
+                <optgroup key={g.key} label={g.label}>
+                  {g.names.map((name) => <option key={name} value={name}>{name}</option>)}
+                </optgroup>
+              ))}
+            </select>
+            <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brown/40" />
+          </div>
+          {nameFilter !== "all" && (
+            <button onClick={() => setNameFilter("all")}
+              className="text-[11px] text-red-400 hover:text-red-600 font-semibold underline">
+              Clear item
+            </button>
+          )}
         </div>
       </div>
 
@@ -323,6 +406,7 @@ const OrderManager = (_props: Props) => {
         <p className="text-sm font-semibold text-brown/70">
           Showing <span className="text-maroon font-bold">{filtered.length}</span> of {orders.length} orders
           {datePreset !== "all" && <span className="ml-1 text-saffron">• {activePresetLabel}</span>}
+          {typeFilter !== "all" && <span className="ml-1 text-saffron">• {typeFilter === "puja" ? "Pujas" : "Chadhavas"}</span>}
           {nameFilter !== "all" && <span className="ml-1 text-saffron">• {nameFilter}</span>}
         </p>
         <div className="flex items-center gap-2">
@@ -370,6 +454,16 @@ const OrderManager = (_props: Props) => {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-bold text-saffron text-lg">₹{(o.amount / 100).toLocaleString("en-IN")}</span>
+                  <a
+                    href={waConfirmLink(o)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Send order confirmation on WhatsApp"
+                    className="flex items-center gap-1.5 rounded-xl bg-green-500 hover:bg-green-600 px-3 py-2 text-xs font-bold text-white transition-colors shrink-0"
+                  >
+                    <WhatsAppIcon className="h-3.5 w-3.5 fill-white shrink-0" />
+                    Confirm
+                  </a>
                   <button onClick={() => setDetail(o)} className="grid h-8 w-8 place-items-center rounded-lg bg-gold/15 text-maroon hover:bg-gold/30 transition-colors">
                     <Eye size={14} />
                   </button>
@@ -400,6 +494,15 @@ const OrderManager = (_props: Props) => {
                 {detail.customer_email && <p className="text-brown/60">{detail.customer_email}</p>}
                 <p className="text-brown/60">{detail.customer_phone}</p>
                 {detail.customer_address && <p className="text-brown/60 mt-1">{detail.customer_address}</p>}
+                <a
+                  href={waConfirmLink(detail)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-green-500 hover:bg-green-600 px-4 py-2.5 text-sm font-bold text-white transition-colors"
+                >
+                  <WhatsAppIcon className="h-4 w-4 fill-white shrink-0" />
+                  Send Confirmation on WhatsApp
+                </a>
               </div>
               <div className="border-t border-gold/20 pt-3">
                 <p className="text-[11px] text-brown/50 uppercase mb-2">Items Ordered</p>

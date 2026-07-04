@@ -108,6 +108,7 @@
   "ch_choose_offering": "Choose Your Offering",
   "ch_choose_sub": "Select the sacred offerings you wish to present at this temple",
   "ch_no_offerings": "No offerings available at this time",
+  "ch_select_hint": "Tap offerings above to add them",
   "ch_add": "Add",
   "ch_added": "Added",
   "ch_items_selected": "items selected",

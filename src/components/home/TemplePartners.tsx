@@ -5,12 +5,6 @@ import SectionHeading from "@/components/SectionHeading";
 import { supabase, type Chadhava as CType } from "@/lib/supabase";
 import { useLanguage } from "@/context/LanguageContext";
 
-const temples = [
-  "Kashi Vishwanath", "Tirupati Balaji", "Siddhivinayak", "ISKCON Vrindavan",
-  "Mathura Krishna", "Shirdi Sai Baba", "Vaishno Devi", "Jagannath Puri",
-  "Mahakaleshwar Ujjain", "Kedarnath", "Badrinath", "Somnath",
-];
-
 const Pill = ({ name }: { name: string }) => (
   <span className="mx-2 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-gold bg-ivory px-5 py-2.5 text-sm font-medium text-maroon shadow-soft">
     🛕 {name}
@@ -33,11 +27,23 @@ const TemplePartners = () => {
   const { t, lang } = useLanguage();
   const [chadhavas, setChadhavas] = useState<CType[]>([]);
   const [minPrices, setMinPrices] = useState<Record<string, number>>({});
+  const [templeList, setTempleList] = useState<{ name: string; name_hi: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const doubled = [...temples, ...temples];
-  const reversed = [...temples].reverse();
+  /* Marquee names come from the live Temples directory (active temples only) */
+  const templeNames = templeList.map((tp) => (lang === "hi" && tp.name_hi ? tp.name_hi : tp.name));
+  const doubled = [...templeNames, ...templeNames];
+  const reversed = [...templeNames].reverse();
   const doubledRev = [...reversed, ...reversed];
+
+  useEffect(() => {
+    supabase
+      .from("temples")
+      .select("name, name_hi")
+      .eq("status", "active")
+      .order("sort_order", { ascending: true })
+      .then(({ data }) => { if (data) setTempleList(data as { name: string; name_hi: string | null }[]); });
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -77,21 +83,22 @@ const TemplePartners = () => {
 
       <div className="container">
         <SectionHeading
-          eyebrow={t("tp_eyebrow")}
           title={t("tp_title")}
           subtitle={t("tp_sub")}
         />
       </div>
 
-      {/* Marquee scrolling temple names */}
-      <div className="space-y-3 overflow-hidden py-3 [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
-        <div className="flex w-max animate-marquee will-change-transform">
-          {doubled.map((tpl, i) => <Pill key={`a${i}`} name={tpl} />)}
+      {/* Marquee scrolling temple names — sourced from the live Temples directory */}
+      {templeNames.length > 0 && (
+        <div className="space-y-3 overflow-hidden py-3 [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
+          <div className="flex w-max animate-marquee will-change-transform">
+            {doubled.map((tpl, i) => <Pill key={`a${i}`} name={tpl} />)}
+          </div>
+          <div className="flex w-max animate-marquee will-change-transform [animation-direction:reverse] [animation-duration:32s]">
+            {doubledRev.map((tpl, i) => <Pill key={`b${i}`} name={tpl} />)}
+          </div>
         </div>
-        <div className="flex w-max animate-marquee will-change-transform [animation-direction:reverse] [animation-duration:32s]">
-          {doubledRev.map((tpl, i) => <Pill key={`b${i}`} name={tpl} />)}
-        </div>
-      </div>
+      )}
 
       {/* Chadhava cards — identical to Chadhava page */}
       <div className="container mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

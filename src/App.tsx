@@ -1,11 +1,11 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useSearchParams } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import { LanguageProvider } from "@/context/LanguageContext";
+import { LanguageProvider, useLanguage } from "@/context/LanguageContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MobileCartBar from "@/components/MobileCartBar";
@@ -48,6 +48,24 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+/* Keeps ?lang= in the address bar across route changes, since React Router
+   <Link>s navigate to a bare path and drop existing query params. This makes the
+   current URL always shareable in the language the visitor is viewing. */
+const LanguageUrlSync = () => {
+  const { lang } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("lang") !== lang) {
+      const next = new URLSearchParams(searchParams);
+      next.set("lang", lang);
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, lang, setSearchParams]);
+
+  return null;
+};
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -113,6 +131,7 @@ const App = () => (
       <AuthProvider>
       <CartProvider>
         <BrowserRouter>
+          <LanguageUrlSync />
           <ScrollToTop />
           <Routes>
             {/* ── Admin routes (standalone — no Navbar/Footer) ── */}

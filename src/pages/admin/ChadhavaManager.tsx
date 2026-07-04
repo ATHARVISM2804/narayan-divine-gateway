@@ -248,14 +248,14 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
       {editing && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setEditing(null)} />
-          <div className="relative w-full max-w-2xl overflow-y-auto bg-ivory shadow-2xl animate-fadeIn">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gold/30 bg-ivory/95 px-6 py-4 backdrop-blur">
+          <div className="relative flex h-full w-full max-w-2xl flex-col bg-ivory shadow-2xl animate-fadeIn">
+            <div className="shrink-0 flex items-center justify-between border-b border-gold/30 bg-ivory/95 px-4 sm:px-6 py-4 backdrop-blur">
               <h3 className="font-display text-lg text-maroon">{editing.id ? "Edit Chadhava" : "New Chadhava"}</h3>
               <button onClick={() => setEditing(null)} className="text-brown/50 hover:text-maroon transition-colors"><X size={20} /></button>
             </div>
 
             {/* Section tabs */}
-            <div className="sticky top-[65px] z-10 flex border-b border-gold/30 bg-ivory/95 backdrop-blur px-6 gap-1 overflow-x-auto">
+            <div className="shrink-0 flex border-b border-gold/30 bg-ivory/95 backdrop-blur px-4 sm:px-6 gap-1 overflow-x-auto">
               {[
                 { id: "basic", label: "Basic Info" },
                 { id: "gallery", label: "Gallery" },
@@ -270,7 +270,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
               ))}
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
               {/* ── Basic Info ── */}
               {section === "basic" && (
                 <>
@@ -413,7 +413,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                       {editingOff && (
                         <div className="mt-4 rounded-xl border-2 border-saffron/30 bg-saffron/5 p-4 space-y-3">
                           <p className="text-sm font-bold text-maroon">{editingOff.id ? "Edit Offering" : "New Offering"}</p>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                               <label className="text-[11px] font-semibold text-maroon">Name (EN) *</label>
                               <input value={editingOff.name || ""} onChange={e => setEditingOff({ ...editingOff, name: e.target.value })} className={inputCls} placeholder="Phool Mala" />
@@ -423,7 +423,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                               <input value={editingOff.name_hi || ""} onChange={e => setEditingOff({ ...editingOff, name_hi: e.target.value })} className={inputCls} placeholder="फूल माला" />
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                               <label className="text-[11px] font-semibold text-maroon">Price (₹) *</label>
                               <input type="number" value={editingOff.price || ""} onChange={e => setEditingOff({ ...editingOff, price: Number(e.target.value) || 0 })} className={inputCls} />
@@ -489,14 +489,16 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                 </>
               )}
 
-              {/* Save / Cancel */}
-              <div className="flex gap-3 pt-3 border-t border-gold/20">
-                <button onClick={save} disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-saffron py-3 text-sm font-bold text-white shadow-md hover:bg-maroon transition-all disabled:opacity-60">
-                  {saving ? <><Loader2 size={16} className="animate-spin" />Saving…</> : editing.id ? "Update Chadhava" : "Create Chadhava"}
-                </button>
-                <button onClick={() => setEditing(null)} className="rounded-xl border border-gold/50 px-6 py-3 text-sm font-medium text-maroon hover:bg-gold/10 transition-colors">Cancel</button>
-              </div>
+            </div>
+
+            {/* Sticky action bar — always reachable on mobile */}
+            <div className="shrink-0 flex gap-3 border-t border-gold/20 bg-ivory px-4 sm:px-6 py-3"
+                 style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)" }}>
+              <button onClick={save} disabled={saving}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-saffron py-3 text-sm font-bold text-white shadow-md hover:bg-maroon transition-all disabled:opacity-60">
+                {saving ? <><Loader2 size={16} className="animate-spin" />Saving…</> : editing.id ? "Update Chadhava" : "Create Chadhava"}
+              </button>
+              <button onClick={() => setEditing(null)} className="rounded-xl border border-gold/50 px-6 py-3 text-sm font-medium text-maroon hover:bg-gold/10 transition-colors">Cancel</button>
             </div>
           </div>
         </div>

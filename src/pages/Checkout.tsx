@@ -89,9 +89,9 @@ const Checkout = () => {
     try {
       const lead = JSON.parse(localStorage.getItem("nk_lead") || "{}");
       localStorage.removeItem("nk_lead");
-      return { name: lead.name || "", phone: lead.phone || "", address: "" };
+      return { name: lead.name || "", phone: lead.phone || "" };
     } catch {
-      return { name: "", phone: "", address: "" };
+      return { name: "", phone: "" };
     }
   });
   const [memberNames, setMemberNames] = useState<string[]>([]);
@@ -103,6 +103,23 @@ const Checkout = () => {
   const [selectedOfferings, setSelectedOfferings] = useState<Record<string, boolean>>({});
 
   const BLESSING_BOX_PRICE = 200;
+
+  /* ── Structured delivery address (only for the Blessing Box) ── */
+  const [addr, setAddr] = useState({ pincode: "", flat: "", area: "", landmark: "", city: "", state: "" });
+  const [pinLookup, setPinLookup] = useState<"idle" | "loading" | "ok" | "fail">("idle");
+  const setAddrField = (field: keyof typeof addr) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setAddr((prev) => ({ ...prev, [field]: e.target.value }));
+  const isValidPincode = /^[1-9][0-9]{5}$/.test(addr.pincode);
+  const composeAddress = () =>
+    [
+      addr.flat.trim(),
+      addr.area.trim(),
+      addr.landmark.trim() ? `Near ${addr.landmark.trim()}` : "",
+      addr.city.trim(),
+      addr.state.trim(),
+    ].filter(Boolean).join(", ") + (addr.pincode ? ` - ${addr.pincode}` : "");
+  const fieldCls = "mt-1 w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20";
+  const fieldLabelCls = "text-[11px] font-semibold text-brown/60 uppercase tracking-wide";
 
   // Detect member count from puja items in cart
   const pujaItem = items.find(i => i.category === "puja");
@@ -151,11 +168,39 @@ const Checkout = () => {
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm(prev => ({ ...prev, [field]: e.target.value }));
 
+  /* Auto-fill City & State from the pincode via the India Post API (best-effort; fields stay editable) */
+  useEffect(() => {
+    if (!isValidPincode) { setPinLookup("idle"); return; }
+    let cancelled = false;
+    setPinLookup("loading");
+    fetch(`https://api.postalpincode.in/pincode/${addr.pincode}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const po = data?.[0];
+        if (po?.Status === "Success" && po.PostOffice?.length) {
+          const { District, State } = po.PostOffice[0];
+          setAddr((prev) => ({ ...prev, city: District || prev.city, state: State || prev.state }));
+          setPinLookup("ok");
+        } else {
+          setPinLookup("fail");
+        }
+      })
+      .catch(() => { if (!cancelled) setPinLookup("fail"); });
+    return () => { cancelled = true; };
+  }, [addr.pincode, isValidPincode]);
+
   const validateDetails = () => {
     if (!form.name.trim()) { toast.error(t("co_err_name")); return false; }
     if (!form.phone.trim() || form.phone.length < 10) { toast.error(t("co_err_phone")); return false; }
     if (memberCount > 0 && !syncedMemberNames[0].trim()) { toast.error("Please enter at least the first member's name"); return false; }
-    if (wantBox && !form.address.trim()) { toast.error("Please enter delivery address for the Blessing Box"); return false; }
+    if (wantBox) {
+      if (!isValidPincode) { toast.error("Please enter a valid 6-digit pincode for delivery"); return false; }
+      if (!addr.flat.trim())  { toast.error("Please enter your Flat / House / Building"); return false; }
+      if (!addr.area.trim())  { toast.error("Please enter your Area / Street / Locality"); return false; }
+      if (!addr.city.trim())  { toast.error("Please enter your delivery city"); return false; }
+      if (!addr.state.trim()) { toast.error("Please enter your delivery state"); return false; }
+    }
     return true;
   };
 
@@ -174,7 +219,7 @@ const Checkout = () => {
     try {
       await loadRazorpayScript();
 
-      const orderItems = items.map((i) => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, category: i.category }));
+      const orderItems = items.map((i) => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, category: i.category as string }));
       if (wantBox && pujaItem) {
         orderItems.push({ id: "blessing-box", name: "Narayan Kripa Blessing Box", price: BLESSING_BOX_PRICE, quantity: 1, category: "addon" });
       }
@@ -185,7 +230,7 @@ const Checkout = () => {
       const { data: fnData, error: fnError } = await supabase.functions.invoke("create-order", {
         body: {
           items: orderItems,
-          customer: { name: form.name, phone: form.phone, address: wantBox ? form.address : null },
+          customer: { name: form.name, phone: form.phone, address: wantBox ? composeAddress() : null },
           puja_details: memberCount > 0 ? { member_names: syncedMemberNames.filter(n => n.trim()), gotra: gotraUnknown ? "Kashyap" : gotra } : undefined,
         },
       });
@@ -673,19 +718,60 @@ const Checkout = () => {
                     {/* ── Delivery Address (only when Blessing Box = Yes) ── */}
                     {wantBox && (
                       <div className="mt-5 rounded-xl border border-gold/30 bg-saffron/5 p-4">
-                        <label className="mb-1.5 flex items-center gap-2 text-sm font-bold text-maroon">
+                        <label className="flex items-center gap-2 text-sm font-bold text-maroon">
                           <MapPin size={14} className="text-saffron" /> Delivery Address *
                         </label>
-                        <p className="text-xs text-brown/50 mb-3">
-                          Your Blessing Box will be delivered to this address via courier.
+                        <p className="text-xs text-brown/50 mt-1 mb-3">
+                          Your Blessing Box will be couriered here — please fill each field for accurate delivery.
                         </p>
-                        <textarea
-                          value={form.address}
-                          onChange={set("address")}
-                          rows={3}
-                          placeholder="Enter your full delivery address with pincode"
-                          className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20 resize-none"
-                        />
+
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Pincode */}
+                          <div className="col-span-2 sm:col-span-1">
+                            <label className={fieldLabelCls}>Pincode *</label>
+                            <input
+                              value={addr.pincode}
+                              onChange={(e) => setAddr((prev) => ({ ...prev, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
+                              inputMode="numeric"
+                              maxLength={6}
+                              placeholder="6-digit PIN"
+                              className={fieldCls}
+                            />
+                            {pinLookup === "loading" && <p className="mt-1 text-[11px] text-brown/50">🔍 Looking up your area…</p>}
+                            {pinLookup === "ok"      && <p className="mt-1 text-[11px] text-green-600">✓ Area detected — check city & state below</p>}
+                            {pinLookup === "fail" && addr.pincode.length === 6 && <p className="mt-1 text-[11px] text-red-500">Couldn't verify this PIN — please fill city & state manually.</p>}
+                          </div>
+
+                          {/* Flat / House / Building */}
+                          <div className="col-span-2 sm:col-span-1">
+                            <label className={fieldLabelCls}>Flat / House / Building *</label>
+                            <input value={addr.flat} onChange={setAddrField("flat")} placeholder="e.g. 12A, Shanti Apartments" className={fieldCls} />
+                          </div>
+
+                          {/* Area / Street / Locality */}
+                          <div className="col-span-2">
+                            <label className={fieldLabelCls}>Area / Street / Locality *</label>
+                            <input value={addr.area} onChange={setAddrField("area")} placeholder="e.g. MG Road, Andheri West" className={fieldCls} />
+                          </div>
+
+                          {/* Landmark */}
+                          <div className="col-span-2">
+                            <label className={fieldLabelCls}>Landmark (optional)</label>
+                            <input value={addr.landmark} onChange={setAddrField("landmark")} placeholder="e.g. Near Hanuman Mandir" className={fieldCls} />
+                          </div>
+
+                          {/* City */}
+                          <div className="col-span-2 sm:col-span-1">
+                            <label className={fieldLabelCls}>City / Town *</label>
+                            <input value={addr.city} onChange={setAddrField("city")} placeholder="City" className={fieldCls} />
+                          </div>
+
+                          {/* State */}
+                          <div className="col-span-2 sm:col-span-1">
+                            <label className={fieldLabelCls}>State *</label>
+                            <input value={addr.state} onChange={setAddrField("state")} placeholder="State" className={fieldCls} />
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
