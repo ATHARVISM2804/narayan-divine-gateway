@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, ChevronRight, Calendar } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
+import FitImage from "@/components/FitImage";
 import { supabase, type Chadhava as CType } from "@/lib/supabase";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -120,15 +121,9 @@ const TemplePartners = () => {
               className="group overflow-hidden rounded-2xl border border-gold/50 bg-ivory transition-all duration-500 hover:-translate-y-1.5 hover:border-saffron hover:shadow-sacred flex flex-col h-full shadow-soft"
             >
               {/* Image */}
-              <div className="relative h-44 overflow-hidden bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent border-b border-gold/30">
+              <div className="relative w-full aspect-[1483/1061] overflow-hidden bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent border-b border-gold/30">
                 {c.image_url ? (
-                  <img
-                    src={c.image_url}
-                    alt={c.item}
-                    loading="lazy"
-                    decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
+                  <FitImage src={c.image_url} alt={c.item} className="transition-transform duration-700 group-hover:scale-105" />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center text-5xl">🪔</div>
                 )}

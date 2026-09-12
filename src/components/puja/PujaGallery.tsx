@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import FitImage from "@/components/FitImage";
 
 interface Props {
   images: string[];
@@ -13,7 +14,7 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
 
   if (allImages.length === 0) {
     return (
-      <div className="w-full aspect-video rounded-2xl bg-gradient-to-br from-sacred/30 to-gold/20 grid place-items-center border-2 border-gold/30">
+      <div className="w-full aspect-[1483/1061] rounded-2xl bg-gradient-to-br from-sacred/30 to-gold/20 grid place-items-center border-2 border-gold/30">
         <span className="text-7xl drop-shadow-lg">🪔</span>
       </div>
     );
@@ -21,9 +22,11 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
 
   return (
     <div className="space-y-3">
-      {/* Main image */}
-      <div className="relative rounded-2xl overflow-hidden border-2 border-gold/30 shadow-2xl bg-gradient-to-br from-saffron/10 to-maroon/10 aspect-video">
-        <img src={allImages[active]} alt={name} fetchPriority="high" decoding="async" className="w-full h-full object-cover transition-opacity duration-300" />
+      {/* Main image — box matches the 1483x1061 poster size the marketing team
+          designs at; object-contain guarantees the full poster is always visible,
+          even when an upload is a slightly different shape. */}
+      <div className="relative rounded-2xl overflow-hidden border-2 border-gold/30 shadow-2xl bg-gradient-to-br from-saffron/10 to-maroon/10 aspect-[1483/1061]">
+        <FitImage src={allImages[active]} alt={name} loading="eager" fetchPriority="high" className="transition-opacity duration-300" />
         {allImages.length > 1 && (
           <>
             <button onClick={() => setActive((active - 1 + allImages.length) % allImages.length)}

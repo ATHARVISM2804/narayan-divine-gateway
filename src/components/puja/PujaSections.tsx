@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Puja } from "@/lib/supabase";
+import FitImage from "@/components/FitImage";
 
 const PujaSections = ({ puja }: { puja: Puja }) => {
   const { t, lang } = useLanguage();
@@ -103,8 +104,8 @@ const PujaSections = ({ puja }: { puja: Puja }) => {
               <div className={`grid grid-cols-1 ${puja.temple_image ? "lg:grid-cols-5" : ""}`}>
                 {/* Image — takes 3 of 5 cols */}
                 {puja.temple_image && (
-                  <div className="lg:col-span-3 h-56 md:h-72 lg:h-full min-h-[280px] overflow-hidden">
-                    <img src={puja.temple_image} alt={templeName || "Temple"} className="w-full h-full object-cover" />
+                  <div className="relative lg:col-span-3 h-56 md:h-72 lg:h-full min-h-[280px] overflow-hidden">
+                    <FitImage src={puja.temple_image} alt={templeName || "Temple"} />
                   </div>
                 )}
                 {/* Text — takes 2 of 5 cols */}

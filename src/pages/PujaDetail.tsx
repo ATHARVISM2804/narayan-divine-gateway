@@ -8,6 +8,7 @@ import { Calendar, ShoppingCart, Check, Loader2, ChevronRight } from "lucide-rea
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
 import PujaGallery from "@/components/puja/PujaGallery";
+import FitImage from "@/components/FitImage";
 import PujaSectionNav from "@/components/puja/PujaSectionNav";
 import PujaSections from "@/components/puja/PujaSections";
 import PujaPackageModal from "@/components/puja/PujaPackageModal";
@@ -301,8 +302,8 @@ const PujaDetail = () => {
                   className={`relative group rounded-2xl overflow-hidden border-2 text-left transition-all duration-300 shadow-soft hover:-translate-y-1 hover:shadow-lg ${
                     isSelected ? "border-saffron shadow-lg -translate-y-1" : justAdded ? "border-green-500" : "border-gold/30 hover:border-saffron/60"
                   }`}>
-                  <div className="relative h-36 md:h-44 overflow-hidden bg-gradient-to-br from-saffron/20 via-gold/15 to-maroon/10">
-                    <img src={getTierImage(tier.label)} alt={tier.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-saffron/20 via-gold/15 to-maroon/10">
+                    <FitImage src={getTierImage(tier.label)} alt={tier.label} className="transition-transform duration-500 group-hover:scale-105" />
                     {isSelected && <div className="absolute inset-0 bg-saffron/20" />}
                     {isSelected && <div className="absolute top-2 right-2 h-7 w-7 rounded-full bg-saffron flex items-center justify-center shadow-md"><Check size={14} className="text-white" strokeWidth={3} /></div>}
                   </div>

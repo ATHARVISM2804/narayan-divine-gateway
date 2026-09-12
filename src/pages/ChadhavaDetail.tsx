@@ -7,6 +7,7 @@ import { trackViewContent } from "@/lib/metaPixel";
 import { Loader2, ShoppingCart, Check, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, MapPin, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import PujaGallery from "@/components/puja/PujaGallery";
+import FitImage from "@/components/FitImage";
 import { useLanguage } from "@/context/LanguageContext";
 
 const parseChadhavaDate = (dateStr: string, countdownDatetime?: string | null): Date => {
@@ -285,10 +286,10 @@ const ChadhavaDetail = () => {
                     }`}>
 
                     {/* Image — same style as package cards */}
-                    <div className="relative h-28 sm:h-36 overflow-hidden bg-gradient-to-br from-saffron/20 via-gold/15 to-maroon/10 cursor-pointer"
+                    <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-saffron/20 via-gold/15 to-maroon/10 cursor-pointer"
                       onClick={() => toggleOffering(o.id)}>
                       {o.image_url ? (
-                        <img src={o.image_url} alt={o.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <FitImage src={o.image_url} alt={o.name} className="transition-transform duration-500 group-hover:scale-105" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-4xl">🌺</div>
                       )}

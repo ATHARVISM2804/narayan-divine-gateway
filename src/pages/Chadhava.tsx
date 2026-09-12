@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase, type Chadhava as CType } from "@/lib/supabase";
 import PageHero from "@/components/PageHero";
+import FitImage from "@/components/FitImage";
 import SectionHeading from "@/components/SectionHeading";
 import heroChadhava from "@/assets/hero-chadhava-page.png";
 import { useLanguage } from "@/context/LanguageContext";
@@ -79,9 +80,9 @@ const Chadhava = () => {
                 <Link to={`/chadhava/${c.id}`} key={c.id}
                   className="group overflow-hidden rounded-2xl border border-gold/50 bg-ivory transition-all duration-500 hover:-translate-y-1.5 hover:border-saffron hover:shadow-sacred flex flex-col h-full shadow-soft">
                   {/* Image */}
-                  <div className="relative w-full overflow-hidden bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent border-b border-gold/30" style={{aspectRatio: '800/352'}}>
+                  <div className="relative w-full overflow-hidden bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent border-b border-gold/30" style={{aspectRatio: '1483/1061'}}>
                     {c.image_url ? (
-                      <img src={c.image_url} alt={c.item} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                      <FitImage src={c.image_url} alt={c.item} className="transition-transform duration-700 group-hover:scale-105" />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center text-5xl">🪔</div>
                     )}

@@ -3,6 +3,7 @@ import { Search, MapPin, Clock, X, ChevronRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
+import FitImage from "@/components/FitImage";
 import heroTemples from "@/assets/hero-temples-page.png";
 import fallbackTemple from "@/assets/hero-temple.jpg";
 import imgShiva from "@/assets/puja-shiva.jpg";
@@ -125,8 +126,8 @@ const Temples = () => {
                   className="group cursor-pointer overflow-hidden rounded-2xl border border-gold/40 bg-ivory shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-sacred hover:border-gold/70"
                 >
                   {/* Image */}
-                  <div className="relative h-52 overflow-hidden">
-                    <img src={templeImg(tp)} alt={dName(tp)} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <FitImage src={templeImg(tp)} alt={dName(tp)} className="transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/80 via-maroon-deep/20 to-transparent" />
                     {/* Gold strip */}
                     <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-saffron via-gold to-saffron" />
@@ -205,8 +206,8 @@ const Temples = () => {
           <div className="relative w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-ivory shadow-2xl animate-fadeIn">
 
             {/* Hero image */}
-            <div className="relative h-56 sm:h-64 overflow-hidden rounded-t-3xl sm:rounded-t-3xl">
-              <img src={templeImg(selected)} alt={selected.name} className="w-full h-full object-cover" />
+            <div className="relative aspect-video overflow-hidden rounded-t-3xl sm:rounded-t-3xl">
+              <FitImage src={templeImg(selected)} alt={selected.name} loading="eager" />
               <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/90 via-maroon-deep/40 to-transparent" />
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-saffron via-gold to-saffron" />
 
