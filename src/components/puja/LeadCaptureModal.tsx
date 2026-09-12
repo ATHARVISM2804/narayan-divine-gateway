@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, ChevronRight, Phone, User, Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { trackLead } from "@/lib/metaPixel";
 
 interface Props {
   pujaName: string;
@@ -44,6 +45,8 @@ const LeadCaptureModal = ({ pujaName, packageLabel, price, onConfirm, onClose }:
 
     // Store in localStorage so checkout form can be pre-filled
     localStorage.setItem("nk_lead", JSON.stringify({ name: name.trim(), phone: phone.trim() }));
+
+    trackLead({ name: `${pujaName} (${packageLabel})`, value: price });
 
     setLoading(false);
     onConfirm(name.trim(), phone.trim());

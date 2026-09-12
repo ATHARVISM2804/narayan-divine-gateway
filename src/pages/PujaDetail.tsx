@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
 import { supabase, type Puja } from "@/lib/supabase";
+import { trackViewContent } from "@/lib/metaPixel";
 import { Calendar, ShoppingCart, Check, Loader2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
@@ -82,6 +83,19 @@ const PujaDetail = () => {
         setLoading(false);
       });
   }, [id, nav]);
+
+  // ViewContent — once per puja. The ref guard keeps React StrictMode's
+  // double-invoked effects from sending the event twice in dev.
+  const viewTracked = useRef<string | null>(null);
+  useEffect(() => {
+    if (!puja || viewTracked.current === puja.id) return;
+    viewTracked.current = puja.id;
+    const cheapest = (puja.prices || []).reduce<number | undefined>(
+      (min, tier) => (min === undefined || tier.price < min ? tier.price : min),
+      undefined
+    );
+    trackViewContent({ id: puja.id, name: puja.name, value: cheapest, category: "puja" });
+  }, [puja]);
 
   useEffect(() => {
     if (!puja?.date) return;

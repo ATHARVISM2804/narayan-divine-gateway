@@ -48,16 +48,23 @@
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)}(window,document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
-       fbq('init', '1709500163398312'); 
-       fbq('track', 'PageView');
+      // Dataset: "Narayan Kripa" (the one selected on the ad account).
+      // To ALSO feed the "NK web's data" dataset, uncomment the second init —
+      // fbq('track', ...) automatically broadcasts to every dataset inited here.
+      fbq('init', '3979726935662067');
+      // fbq('init', '1800515227776569');
+      fbq('track', 'PageView');
     </script>
-    <noscript>
-      <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1709500163398312&ev=PageView&noscript=1"/>
-    </noscript>
     <!-- End Facebook Pixel Code -->
   </head>
 
   <body>
+    <!-- Facebook Pixel (noscript fallback) — must live in <body>: an <img> inside
+         <noscript> in <head> is invalid HTML and aborts head parsing. -->
+    <noscript>
+      <img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=3979726935662067&ev=PageView&noscript=1"/>
+    </noscript>
+
     <div id="root"></div>
     <!-- Razorpay script removed from here — loaded dynamically only on Checkout page -->
     <script type="module" src="/src/main.tsx"></script>

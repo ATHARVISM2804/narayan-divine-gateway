@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { trackAddToCart } from "@/lib/metaPixel";
 
 export interface CartItem {
   id: string;
@@ -54,6 +55,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [items]);
 
   const addItem = useCallback((newItem: Omit<CartItem, "quantity">, initialQuantity = 1) => {
+    // Fired outside the setItems updater on purpose: React StrictMode invokes
+    // updaters twice in dev, which would double-count the event.
+    trackAddToCart({
+      id: newItem.id,
+      name: newItem.name,
+      value: newItem.price,
+      quantity: initialQuantity,
+      category: newItem.category,
+    });
     setItems((prev) => {
       const existing = prev.find((i) => i.id === newItem.id);
       if (existing) {

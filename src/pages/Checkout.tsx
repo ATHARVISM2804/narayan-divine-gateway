@@ -4,6 +4,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase, type PujaOffering } from "@/lib/supabase";
+import { trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
 import { ShoppingBag, Shield, ArrowLeft, Loader2, MapPin, Users, Info, Gift, ChevronRight, Check, Calendar, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -227,6 +228,11 @@ const Checkout = () => {
         orderItems.push({ id: `offering-${o.id}`, name: o.name, price: o.price, quantity: 1, category: "offering" });
       });
 
+      trackInitiateCheckout({
+        items: orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
+        value: totalPrice,
+      });
+
       const { data: fnData, error: fnError } = await supabase.functions.invoke("create-order", {
         body: {
           items: orderItems,
@@ -267,6 +273,16 @@ const Checkout = () => {
               },
             });
             if (verifyError || !verifyData?.success) throw new Error("Payment verification failed");
+
+            // Server has verified the signature — this is a real, paid order.
+            // Fired here rather than on /order-success so a page refresh there
+            // can never double-count the revenue.
+            trackPurchase({
+              items: orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
+              value: totalPrice,
+              orderId: fnData.db_order_id,
+            });
+
             clearCart();
             nav(`/order-success?id=${fnData.db_order_id}&payment=${response.razorpay_payment_id}`);
           } catch {

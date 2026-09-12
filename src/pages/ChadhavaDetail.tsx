@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
 import { supabase, type Chadhava, type ChadhavaOffering } from "@/lib/supabase";
+import { trackViewContent } from "@/lib/metaPixel";
 import { Loader2, ShoppingCart, Check, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, MapPin, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import PujaGallery from "@/components/puja/PujaGallery";
@@ -66,6 +67,20 @@ const ChadhavaDetail = () => {
       setLoading(false);
     });
   }, [id, nav]);
+
+  // ViewContent — once per chadhava. Ref guard prevents a double send under
+  // React StrictMode's double-invoked effects in dev.
+  const viewTracked = useRef<string | null>(null);
+  useEffect(() => {
+    if (!chadhava || viewTracked.current === chadhava.id) return;
+    viewTracked.current = chadhava.id;
+    trackViewContent({
+      id: chadhava.id,
+      name: `${chadhava.item} — ${chadhava.temple}`,
+      value: chadhava.price,
+      category: "chadhava",
+    });
+  }, [chadhava]);
 
   useEffect(() => {
     if (!chadhava?.date) return;
