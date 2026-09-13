@@ -3,6 +3,7 @@
 // Deploy: supabase functions deploy verify-payment --no-verify-jwt
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runInBackground, sendPurchaseForOrder } from "../_shared/metaCapi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,7 +64,7 @@ Deno.serve(async (req) => {
     // Check order exists and is still pending (idempotent)
     const { data: order } = await supabase
       .from("orders")
-      .select("id, status")
+      .select("id, status, razorpay_order_id")
       .eq("id", db_order_id)
       .single();
 
@@ -74,8 +75,21 @@ Deno.serve(async (req) => {
       );
     }
 
+    // SECURITY: the signature only proves that payment belongs to razorpay_order_id.
+    // Without this check, a genuine payment for a cheap order could mark any other
+    // order as paid.
+    if (order.razorpay_order_id !== razorpay_order_id) {
+      console.error("PAYMENT ORDER MISMATCH", { razorpay_order_id, db_order_id });
+      return new Response(
+        JSON.stringify({ error: "Payment verification failed — payment does not match this order" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (order.status === "paid") {
-      // Already processed (idempotent)
+      // Already processed (idempotent). Still offer the Meta Purchase — the claim inside
+      // sends it only if nothing has reported it yet (e.g. an earlier send failed).
+      await runInBackground(() => sendPurchaseForOrder(supabase, order.id));
       return new Response(
         JSON.stringify({ success: true, message: "Payment already verified" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -98,6 +112,9 @@ Deno.serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // ── Meta Conversions API: server-side Purchase (reported exactly once) ──
+    await runInBackground(() => sendPurchaseForOrder(supabase, order.id));
 
     return new Response(
       JSON.stringify({ success: true, message: "Payment verified successfully" }),

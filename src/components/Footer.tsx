@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Youtube, Instagram, Phone, MessageCircle, Facebook, MapPin, Mail, Sparkles } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import Logo from "@/components/Logo";
+import { trackContact } from "@/lib/metaPixel";
 
 const Footer = React.memo(() => {
   const { t } = useLanguage();
@@ -152,6 +153,7 @@ const Footer = React.memo(() => {
                   aria-label={label}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={label === "WhatsApp" ? () => trackContact("footer_whatsapp") : undefined}
                   className="grid h-11 w-11 place-items-center rounded-full border border-gold/20 bg-gold/[0.06] text-cream/70 transition-all duration-300 hover:bg-gold hover:text-maroon-deep hover:scale-110 hover:border-gold hover:shadow-[0_0_12px_rgba(201,168,76,0.3)]"
                 >
                   <Icon size={15} />

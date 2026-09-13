@@ -4,7 +4,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase, type PujaOffering } from "@/lib/supabase";
-import { trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
+import { getMetaTrackingContext, trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
 import { ShoppingBag, Shield, ArrowLeft, Loader2, MapPin, Users, Info, Gift, ChevronRight, Check, Calendar, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -228,16 +228,21 @@ const Checkout = () => {
         orderItems.push({ id: `offering-${o.id}`, name: o.name, price: o.price, quantity: 1, category: "offering" });
       });
 
-      trackInitiateCheckout({
-        items: orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
-        value: totalPrice,
-      });
-
       const { data: fnData, error: fnError } = await supabase.functions.invoke("create-order", {
         body: {
           items: orderItems,
-          customer: { name: form.name, phone: form.phone, address: wantBox ? composeAddress() : null },
+          customer: {
+            name: form.name,
+            phone: form.phone,
+            email: user?.email || undefined,
+            address: wantBox ? composeAddress() : null,
+            city: wantBox ? addr.city.trim() : undefined,
+            state: wantBox ? addr.state.trim() : undefined,
+            pincode: wantBox ? addr.pincode : undefined,
+          },
           puja_details: memberCount > 0 ? { member_names: syncedMemberNames.filter(n => n.trim()), gotra: gotraUnknown ? "Kashyap" : gotra } : undefined,
+          // Browser identifiers so the server-side Meta events match this visitor
+          tracking: getMetaTrackingContext(),
         },
       });
 
@@ -252,6 +257,14 @@ const Checkout = () => {
         console.error("create-order failed:", { fnError, fnData });
         throw new Error(errorMsg);
       }
+
+      // Fired once the order exists so the browser event can share its event id with
+      // the server-side InitiateCheckout sent by create-order — Meta counts the pair once.
+      trackInitiateCheckout({
+        items: orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
+        value: totalPrice,
+        eventId: `checkout.${fnData.db_order_id}`,
+      });
 
       const options = {
         key: fnData.key_id,
@@ -281,6 +294,8 @@ const Checkout = () => {
               items: orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
               value: totalPrice,
               orderId: fnData.db_order_id,
+              // verify-payment sends the server-side Purchase with this same id
+              eventId: `purchase.${fnData.db_order_id}`,
             });
 
             clearCart();

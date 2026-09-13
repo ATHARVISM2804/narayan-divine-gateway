@@ -3,6 +3,14 @@
 // Deploy: supabase functions deploy create-order --no-verify-jwt
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  buildUserData,
+  clientContextFromRequest,
+  orderCustomData,
+  runInBackground,
+  sendMetaEvents,
+  toStoredTracking,
+} from "../_shared/metaCapi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,7 +42,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { items, customer, puja_details } = await req.json();
+    const { items, customer, puja_details, tracking } = await req.json();
 
     if (!customer?.name || !customer?.phone) return err("Name and phone are required");
     if (!items?.length) return err("Cart is empty");
@@ -45,7 +53,7 @@ Deno.serve(async (req) => {
     );
 
     let totalPaise = 0;
-    const validatedItems = [];
+    const validatedItems: { id: string; price: number; quantity?: number; [key: string]: unknown }[] = [];
 
     for (const item of items) {
 
@@ -175,6 +183,29 @@ Deno.serve(async (req) => {
       .from("orders")
       .update({ razorpay_order_id: razorpayOrder.id })
       .eq("id", order.id);
+
+    // ── Meta Conversions API ──
+    // Kept as a separate update so checkout keeps working even before
+    // docs/sql/meta-capi.sql has added the column.
+    const client = clientContextFromRequest(req, tracking);
+    const { error: trackingErr } = await supabase
+      .from("orders")
+      .update({ meta_tracking: toStoredTracking(client, customer) })
+      .eq("id", order.id);
+    if (trackingErr) console.error("[meta-capi] could not store meta_tracking:", trackingErr.message);
+
+    // Same event_id as the browser InitiateCheckout, so Meta counts the pair once.
+    await runInBackground(async () =>
+      sendMetaEvents([
+        {
+          event_name: "InitiateCheckout",
+          event_id: `checkout.${order.id}`,
+          event_source_url: client.sourceUrl,
+          user_data: await buildUserData(customer, client),
+          custom_data: orderCustomData(validatedItems, totalPaise),
+        },
+      ])
+    );
 
     return new Response(
       JSON.stringify({

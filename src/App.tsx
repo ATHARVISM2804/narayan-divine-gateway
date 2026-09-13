@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useSearchParams } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { trackPageView } from "@/lib/metaPixel";
+import { captureFbclid, trackPageView } from "@/lib/metaPixel";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { LanguageProvider, useLanguage } from "@/context/LanguageContext";
@@ -77,6 +77,8 @@ const ScrollToTop = () => {
     // Track Meta Pixel pageview on route change (skip first render as it's tracked in index.html)
     if (isFirstRender.current) {
       isFirstRender.current = false;
+      // Landing URL: keep any Meta ad click id before SPA navigation drops it.
+      captureFbclid();
     } else {
       trackPageView();
     }

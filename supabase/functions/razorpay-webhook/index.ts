@@ -3,6 +3,7 @@
 // Deploy: supabase functions deploy razorpay-webhook --no-verify-jwt
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runInBackground, sendPurchaseForOrder } from "../_shared/metaCapi.ts";
 
 async function hmacSHA256(key: string, message: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -72,6 +73,13 @@ Deno.serve(async (req) => {
           .eq("id", order.id);
 
         console.log(`Webhook: Order ${order.id} marked as paid`);
+      }
+
+      // Meta Conversions API: covers payments where the customer closed the tab
+      // before the browser could call verify-payment. The claim inside means an
+      // order already reported by verify-payment is not reported again.
+      if (order) {
+        await runInBackground(() => sendPurchaseForOrder(supabase, order.id));
       }
     }
 

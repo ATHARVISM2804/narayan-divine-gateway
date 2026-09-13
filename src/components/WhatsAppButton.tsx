@@ -1,5 +1,6 @@
 import { useCart } from "@/context/CartContext";
 import { useLocation } from "react-router-dom";
+import { trackContact } from "@/lib/metaPixel";
 
 const WA_NUMBER = "919286345941"; // +91 prefix
 const CART_BAR_HIDDEN_PATHS = ["/checkout", "/order-success", "/cart"];
@@ -23,6 +24,7 @@ const WhatsAppButton = () => {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with us on WhatsApp"
+        onClick={() => trackContact("whatsapp_button")}
         className="relative flex h-16 w-16 items-center justify-center rounded-full shadow-2xl transition-transform hover:scale-110 active:scale-95"
         style={{ background: "linear-gradient(135deg, #25d366 0%, #128c7e 100%)" }}
       >

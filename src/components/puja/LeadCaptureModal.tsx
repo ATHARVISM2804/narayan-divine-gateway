@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, ChevronRight, Phone, User, Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { trackLead } from "@/lib/metaPixel";
+import { getMetaTrackingContext, newMetaEventId, trackLead } from "@/lib/metaPixel";
 
 interface Props {
   pujaName: string;
@@ -29,16 +29,23 @@ const LeadCaptureModal = ({ pujaName, packageLabel, price, onConfirm, onClose }:
     setError("");
     setLoading(true);
 
-    // Save lead to Supabase (fire-and-forget — don't block UX if it fails)
+    const eventId = newMetaEventId("lead");
+    const lead = {
+      name:          name.trim(),
+      phone:         phone.trim(),
+      puja_name:     pujaName,
+      package_label: packageLabel,
+      price,
+      source:        "puja_page",
+    };
+
+    // Save lead through the server so Meta also receives a server-side Lead.
+    // Falls back to a direct insert if the function is unavailable (e.g. not deployed yet).
     try {
-      await supabase.from("leads").insert({
-        name:          name.trim(),
-        phone:         phone.trim(),
-        puja_name:     pujaName,
-        package_label: packageLabel,
-        price,
-        source:        "puja_page",
+      const { error: fnError } = await supabase.functions.invoke("submit-lead", {
+        body: { ...lead, event_id: eventId, tracking: getMetaTrackingContext() },
       });
+      if (fnError) await supabase.from("leads").insert(lead);
     } catch (_) {
       // Silently ignore — lead save failure should never block checkout
     }
@@ -46,7 +53,7 @@ const LeadCaptureModal = ({ pujaName, packageLabel, price, onConfirm, onClose }:
     // Store in localStorage so checkout form can be pre-filled
     localStorage.setItem("nk_lead", JSON.stringify({ name: name.trim(), phone: phone.trim() }));
 
-    trackLead({ name: `${pujaName} (${packageLabel})`, value: price });
+    trackLead({ name: `${pujaName} (${packageLabel})`, value: price, eventId });
 
     setLoading(false);
     onConfirm(name.trim(), phone.trim());
