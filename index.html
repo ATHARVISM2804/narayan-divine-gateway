@@ -48,6 +48,10 @@
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)}(window,document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
+      // The pixel normally sends a PageView on EVERY history change, including the
+      // ?lang= / ?step= rewrites this app makes, which double-counted page views.
+      // App.tsx (ScrollToTop) sends exactly one PageView per real route change instead.
+      fbq.disablePushState = true;
       // Dataset: "Narayan Kripa" (the one selected on the ad account).
       // To ALSO feed the "NK web's data" dataset, uncomment the second init —
       // fbq('track', ...) automatically broadcasts to every dataset inited here.

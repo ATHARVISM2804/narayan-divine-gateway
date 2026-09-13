@@ -18,11 +18,17 @@ type FbqOptions = { eventID: string };
 
 type FbqArgs =
   | ["track", string, Record<string, unknown>?, FbqOptions?]
-  | ["trackCustom", string, Record<string, unknown>?, FbqOptions?];
+  | ["trackCustom", string, Record<string, unknown>?, FbqOptions?]
+  | ["trackSingle", string, string, Record<string, unknown>?, FbqOptions?];
+
+type Fbq = ((...args: unknown[]) => void) & {
+  getState?: () => { pixels?: { id: string }[] };
+  queue?: unknown[][];
+};
 
 declare global {
   interface Window {
-    fbq?: (...args: unknown[]) => void;
+    fbq?: Fbq;
   }
 }
 
@@ -108,8 +114,30 @@ export const newMetaEventId = (prefix: string) => {
 
 /* ── Standard events ─────────────────────────────────────────────── */
 
-/** Fired on first load by index.html, then on every SPA route change. */
-export const trackPageView = () => fire("track", "PageView");
+/** Dataset IDs initialised in index.html (from the loaded pixel, or the stub's queue before it loads). */
+const initialisedPixelIds = (): string[] => {
+  try {
+    const fbq = window.fbq;
+    const loaded = fbq?.getState?.()?.pixels?.map((p) => p.id) ?? [];
+    if (loaded.length) return loaded;
+    return (fbq?.queue ?? []).filter((c) => c[0] === "init" && typeof c[1] === "string").map((c) => c[1] as string);
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Fired on first load by index.html, then once per SPA route change (App.tsx).
+ *
+ * index.html sets `fbq.disablePushState = true`: otherwise the pixel fires its own
+ * PageView on every history change, including this app's ?lang= / ?step= rewrites,
+ * which double-counted page views. `fbq('track', 'PageView')` can't replace it —
+ * the pixel silently drops a second tracked PageView on the same document — so
+ * this uses `trackSingle` for each initialised dataset.
+ */
+export const trackPageView = () => {
+  for (const pixelId of initialisedPixelIds()) fire("trackSingle", pixelId, "PageView");
+};
 
 /** A puja / chadhava detail page was opened. Powers retargeting audiences. */
 export const trackViewContent = (p: {
