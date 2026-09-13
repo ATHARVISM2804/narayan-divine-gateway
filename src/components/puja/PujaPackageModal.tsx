@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import type { Puja } from "@/lib/supabase";
 import LeadCaptureModal from "./LeadCaptureModal";
-import FitImage from "@/components/FitImage";
 
 import pkgSingle  from "@/assets/pkg-single.png";
 import pkgCouple  from "@/assets/pkg-couple.png";
@@ -175,8 +174,12 @@ const PujaPackageModal = ({ puja, onClose }: Props) => {
                     </div>
 
                     {/* Image — smaller on mobile */}
-                    <div className="relative h-20 sm:h-32 w-full overflow-hidden">
-                      <FitImage src={getTierImage(tier.label)} alt={tier.label} loading="eager" />
+                    <div className="h-20 sm:h-32 w-full overflow-hidden">
+                      <img
+                        src={getTierImage(tier.label)}
+                        alt={tier.label}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
 
                     {/* Label + price — compact on mobile */}
