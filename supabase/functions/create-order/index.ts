@@ -164,8 +164,10 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         amount: totalPaise,
         currency: "INR",
+        // receipt + notes.db_order_id let the webhook / reconciliation find this order
+        // even if saving razorpay_order_id below were ever to fail.
         receipt: order.id,
-        notes: { customer_name: customer.name, customer_phone: customer.phone },
+        notes: { db_order_id: order.id, customer_name: customer.name, customer_phone: customer.phone },
       }),
     });
 
@@ -179,10 +181,20 @@ Deno.serve(async (req) => {
     }
 
     // ── Save Razorpay order ID to database ──
-    await supabase
+    // Must succeed before the customer can pay: without it the payment could never be
+    // matched back to this order.
+    const { error: linkErr } = await supabase
       .from("orders")
       .update({ razorpay_order_id: razorpayOrder.id })
       .eq("id", order.id);
+
+    if (linkErr) {
+      console.error("[create-order] could not save razorpay_order_id", order.id, razorpayOrder.id, linkErr.message);
+      return new Response(
+        JSON.stringify({ error: "Could not start payment. Please try again." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // ── Meta Conversions API ──
     // Kept as a separate update so checkout keeps working even before

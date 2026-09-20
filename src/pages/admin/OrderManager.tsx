@@ -1,11 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { Eye, X, RefreshCw, Download, Calendar, ChevronDown } from "lucide-react";
+import { checkOrderPayment } from "@/lib/orderStatus";
+import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 
 interface Order {
   id: string;
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
+  paid_at?: string | null;
   customer_name: string;
   customer_email: string | null;
   customer_phone: string;
@@ -137,6 +140,41 @@ const OrderManager = (_props: Props) => {
   };
 
   useEffect(() => { fetchOrders(); }, []);
+
+  /* ── Razorpay is the source of truth: ask it about every unpaid order ── */
+  const [syncing, setSyncing] = useState(false);
+  const [checkingId, setCheckingId] = useState<string | null>(null);
+
+  const syncWithRazorpay = async () => {
+    setSyncing(true);
+    try {
+      // The admin session token is sent automatically; the function checks it against ADMIN_EMAIL.
+      const { data, error } = await supabase.functions.invoke("reconcile-orders", { body: { all: true } });
+      if (error || !data) throw new Error("sync failed");
+      const n = (data.marked_paid || []).length;
+      toast.success(`Checked ${data.checked} unpaid order(s) with Razorpay — ${n} marked as paid`);
+      if (data.failures?.length) toast.warning(`${data.failures.length} order(s) could not be checked`);
+      await fetchOrders();
+    } catch {
+      toast.error("Could not sync with Razorpay");
+    }
+    setSyncing(false);
+  };
+
+  const checkOne = async (o: Order) => {
+    setCheckingId(o.id);
+    const status = await checkOrderPayment(o.id);
+    setCheckingId(null);
+    if (!status) { toast.error("Could not check this order"); return; }
+    if (status.status === "paid") {
+      toast.success(`Payment found — ${o.customer_name} is PAID`);
+      const patch = { status: "paid", razorpay_payment_id: status.razorpay_payment_id, paid_at: status.paid_at };
+      setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, ...patch } : x)));
+      setDetail((d) => (d && d.id === o.id ? { ...d, ...patch } : d));
+    } else {
+      toast.info("Razorpay has no captured payment for this order");
+    }
+  };
 
   /* ── Resolved date range ── */
   const dateRange = useMemo(() => {
@@ -410,6 +448,11 @@ const OrderManager = (_props: Props) => {
           {nameFilter !== "all" && <span className="ml-1 text-saffron">• {nameFilter}</span>}
         </p>
         <div className="flex items-center gap-2">
+          <button onClick={syncWithRazorpay} disabled={syncing}
+            title="Ask Razorpay about every unpaid order and mark the paid ones"
+            className="flex items-center gap-1.5 rounded-xl border border-saffron/40 bg-saffron/10 px-4 py-2 text-xs font-bold text-maroon hover:bg-saffron/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+            <ShieldCheck size={13} className={syncing ? "animate-pulse" : ""} /> {syncing ? "Syncing…" : "Sync with Razorpay"}
+          </button>
           <button onClick={exportCSV} disabled={filtered.length === 0}
             className="flex items-center gap-1.5 rounded-xl border border-green-300 bg-green-50 px-4 py-2 text-xs font-bold text-green-700 hover:bg-green-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
             <Download size={13} /> Export CSV ({filtered.length})
@@ -450,10 +493,23 @@ const OrderManager = (_props: Props) => {
                   {pujaNames && <p className="text-xs font-semibold text-saffron mt-1 truncate max-w-sm">🪔 {pujaNames}</p>}
                   <p className="text-xs text-brown/40 mt-0.5">
                     {new Date(o.created_at).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" })}
+                    {o.status === "paid" && o.paid_at && (
+                      <span className="ml-2 text-green-600">• paid {new Date(o.paid_at).toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" })}</span>
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-bold text-saffron text-lg">₹{(o.amount / 100).toLocaleString("en-IN")}</span>
+                  {o.status !== "paid" && o.razorpay_order_id && (
+                    <button
+                      onClick={() => checkOne(o)}
+                      disabled={checkingId === o.id}
+                      title="Check with Razorpay whether this order was paid"
+                      className="flex items-center gap-1.5 rounded-xl border border-gold/40 bg-cream px-3 py-2 text-xs font-bold text-maroon hover:bg-gold/20 transition-colors shrink-0 disabled:opacity-50"
+                    >
+                      <RefreshCw size={12} className={checkingId === o.id ? "animate-spin" : ""} /> Check
+                    </button>
+                  )}
                   <a
                     href={waConfirmLink(o)}
                     target="_blank"
@@ -539,6 +595,16 @@ const OrderManager = (_props: Props) => {
                   <p className="text-[11px] text-brown/50 uppercase mb-1">Razorpay</p>
                   {detail.razorpay_order_id && <p className="font-mono text-xs text-brown/60">Order: {detail.razorpay_order_id}</p>}
                   {detail.razorpay_payment_id && <p className="font-mono text-xs text-brown/60">Payment: {detail.razorpay_payment_id}</p>}
+                  {detail.paid_at && <p className="text-xs text-green-700 mt-1">Paid at: {new Date(detail.paid_at).toLocaleString("en-IN")}</p>}
+                  {detail.status !== "paid" && detail.razorpay_order_id && (
+                    <button
+                      onClick={() => checkOne(detail)}
+                      disabled={checkingId === detail.id}
+                      className="mt-2 flex items-center gap-1.5 rounded-lg border border-gold/40 bg-cream px-3 py-1.5 text-xs font-bold text-maroon hover:bg-gold/20 transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw size={12} className={checkingId === detail.id ? "animate-spin" : ""} /> Check payment with Razorpay
+                    </button>
+                  )}
                 </div>
               )}
               <div className="border-t border-gold/20 pt-3">

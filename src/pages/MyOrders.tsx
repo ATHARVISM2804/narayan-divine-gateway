@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase } from "@/lib/supabase";
-import { Package, LogOut, ShoppingBag, Eye, X, Phone, Search } from "lucide-react";
+import { checkOrderPayment } from "@/lib/orderStatus";
+import { Package, LogOut, ShoppingBag, Eye, X, Phone, Search, RefreshCw } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface Order {
@@ -35,6 +36,23 @@ const MyOrders = () => {
   const [lookupPhone, setLookupPhone] = useState("");
   const [lookupDone, setLookupDone] = useState(false);
   const [lookupError, setLookupError] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [checkedStillPending, setCheckedStillPending] = useState(false);
+
+  /* Ask the server to confirm a pending order with Razorpay (covers payments the browser missed). */
+  const handleCheckPayment = async (order: Order) => {
+    setChecking(true);
+    setCheckedStillPending(false);
+    const status = await checkOrderPayment(order.id);
+    setChecking(false);
+    if (status?.status === "paid") {
+      const updated = { ...order, status: "paid", razorpay_payment_id: status.razorpay_payment_id };
+      setOrders((prev) => prev.map((o) => (o.id === order.id ? updated : o)));
+      setDetail(updated);
+    } else {
+      setCheckedStillPending(true);
+    }
+  };
 
   // For logged-in users: auto-fetch orders
   useEffect(() => {
@@ -260,7 +278,7 @@ const MyOrders = () => {
           <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-2xl bg-ivory shadow-2xl p-6 animate-fadeIn">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-display text-lg text-maroon">{t("mo_details")}</h3>
-              <button onClick={() => setDetail(null)} className="text-brown/50 hover:text-maroon"><X size={20} /></button>
+              <button onClick={() => { setDetail(null); setCheckedStillPending(false); }} className="text-brown/50 hover:text-maroon"><X size={20} /></button>
             </div>
 
             <div className="space-y-4 text-sm">
@@ -307,7 +325,17 @@ const MyOrders = () => {
                 {detail.status === "pending" && (
                   <div className="rounded-xl bg-yellow-50 border border-yellow-200 p-3">
                     <p className="text-sm text-yellow-700 font-medium">⏳ Payment pending</p>
-                    <p className="text-xs text-yellow-600 mt-1">Please contact support if you've already paid</p>
+                    <p className="text-xs text-yellow-600 mt-1">
+                      {checkedStillPending ? t("mo_still_pending") : "Please contact support if you've already paid"}
+                    </p>
+                    <button
+                      onClick={() => handleCheckPayment(detail)}
+                      disabled={checking}
+                      className="mt-3 inline-flex items-center gap-2 rounded-full bg-saffron px-4 py-2 text-xs font-bold text-white hover:bg-maroon transition-colors disabled:opacity-60"
+                    >
+                      <RefreshCw size={12} className={checking ? "animate-spin" : ""} />
+                      {checking ? t("mo_checking") : t("mo_check_payment")}
+                    </button>
                   </div>
                 )}
               </div>

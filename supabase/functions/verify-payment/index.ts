@@ -4,6 +4,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { runInBackground, sendPurchaseForOrder } from "../_shared/metaCapi.ts";
+import { markOrderPaid } from "../_shared/razorpay.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -96,25 +97,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Update order to paid
-    const { error: updateErr } = await supabase
-      .from("orders")
-      .update({
-        status: "paid",
-        razorpay_payment_id,
-        razorpay_signature,
-      })
-      .eq("id", db_order_id);
-
-    if (updateErr) {
+    // Update order to paid. markOrderPaid is atomic (status <> 'paid' guard) and
+    // reports the Meta Purchase once, whichever path (browser / webhook / reconcile) wins.
+    try {
+      await markOrderPaid(supabase, {
+        orderId: order.id,
+        paymentId: razorpay_payment_id,
+        signature: razorpay_signature,
+        paidAt: new Date().toISOString(),
+        source: "verify-payment",
+      });
+    } catch {
       return new Response(
         JSON.stringify({ error: "Failed to update order" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    // ── Meta Conversions API: server-side Purchase (reported exactly once) ──
-    await runInBackground(() => sendPurchaseForOrder(supabase, order.id));
 
     return new Response(
       JSON.stringify({ success: true, message: "Payment verified successfully" }),

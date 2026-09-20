@@ -264,6 +264,20 @@ export function runInBackground(task: () => Promise<unknown>): Promise<void> {
   return safe;
 }
 
+const META_MAX_EVENT_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Unix seconds for a Purchase: the moment the payment was captured (paid_at) so late
+ * reconciliation reports the true time; null when Meta would reject it (> 7 days old).
+ */
+export function purchaseEventTime(paidAt?: string | null, now = Date.now()): number | null {
+  const paidMs = paidAt ? Date.parse(paidAt) : NaN;
+  if (!Number.isFinite(paidMs)) return Math.floor(now / 1000);
+  if (now - paidMs > META_MAX_EVENT_AGE_MS) return null;
+  // Never in the future (clock skew) — Meta rejects future event_time.
+  return Math.floor(Math.min(paidMs, now) / 1000);
+}
+
 /**
  * Reports the server-side Purchase for a paid order exactly once.
  *
@@ -279,7 +293,7 @@ export async function sendPurchaseForOrder(supabase: any, orderId: string): Prom
     .eq("id", orderId)
     .eq("status", "paid")
     .is("meta_purchase_sent_at", null)
-    .select("id, amount, currency, items, customer_name, customer_phone, customer_email, meta_tracking")
+    .select("id, amount, currency, items, customer_name, customer_phone, customer_email, meta_tracking, paid_at")
     .maybeSingle();
 
   if (error) {
@@ -288,11 +302,20 @@ export async function sendPurchaseForOrder(supabase: any, orderId: string): Prom
   }
   if (!order) return; // already reported, or not paid
 
+  // Meta only accepts events up to 7 days old. Orders recovered by reconciliation
+  // later than that keep the claim (so we don't retry forever) but are not sent.
+  const eventTime = purchaseEventTime(order.paid_at);
+  if (eventTime === null) {
+    console.warn("[meta-capi] Purchase too old for Meta, skipped", order.id, order.paid_at);
+    return;
+  }
+
   const tracking: StoredMetaTracking = order.meta_tracking ?? {};
   const sent = await sendMetaEvents([
     {
       event_name: "Purchase",
       event_id: `purchase.${order.id}`,
+      event_time: eventTime,
       event_source_url: tracking.source_url,
       user_data: await buildUserData(
         {

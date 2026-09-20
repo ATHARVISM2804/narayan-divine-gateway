@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase, type PujaOffering } from "@/lib/supabase";
 import { getMetaTrackingContext, trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
+import { checkOrderPayment } from "@/lib/orderStatus";
 import { ShoppingBag, Shield, ArrowLeft, Loader2, MapPin, Users, Info, Gift, ChevronRight, Check, Calendar, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -276,37 +277,65 @@ const Checkout = () => {
         prefill: { name: form.name, contact: form.phone },
         theme: { color: "#D4891A" },
         handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          const dbOrderId: string = fnData.db_order_id;
+          const onConfirmed = (paymentId: string) => {
+            // Server has confirmed this is a real, paid order. The Purchase is fired here
+            // rather than on /order-success so a page refresh there can never double-count.
+            trackPurchase({
+              items: orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
+              value: totalPrice,
+              orderId: dbOrderId,
+              // the server-side Purchase uses this same id, so Meta counts the pair once
+              eventId: `purchase.${dbOrderId}`,
+            });
+            clearCart();
+            nav(`/order-success?id=${dbOrderId}&payment=${paymentId}`);
+          };
+
           try {
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-payment", {
               body: {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                db_order_id: fnData.db_order_id,
+                db_order_id: dbOrderId,
               },
             });
             if (verifyError || !verifyData?.success) throw new Error("Payment verification failed");
-
-            // Server has verified the signature — this is a real, paid order.
-            // Fired here rather than on /order-success so a page refresh there
-            // can never double-count the revenue.
-            trackPurchase({
-              items: orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
-              value: totalPrice,
-              orderId: fnData.db_order_id,
-              // verify-payment sends the server-side Purchase with this same id
-              eventId: `purchase.${fnData.db_order_id}`,
-            });
-
-            clearCart();
-            nav(`/order-success?id=${fnData.db_order_id}&payment=${response.razorpay_payment_id}`);
+            onConfirmed(response.razorpay_payment_id);
           } catch {
-            toast.error(t("co_err_verify"));
-            setLoading(false);
+            // The money may already be with Razorpay even though our call failed (flaky
+            // mobile network, killed tab). Ask the server to check with Razorpay directly;
+            // never send the customer back to pay a second time.
+            const status = await checkOrderPayment(dbOrderId);
+            if (status?.status === "paid") {
+              onConfirmed(status.razorpay_payment_id || response.razorpay_payment_id);
+              return;
+            }
+            // Still unconfirmed: the success page keeps polling; the cart stays intact
+            // until the payment is confirmed.
+            nav(`/order-success?id=${dbOrderId}&status=checking`);
           }
         },
         modal: {
-          ondismiss: () => { setLoading(false); toast.info(t("co_payment_cancelled")); },
+          ondismiss: async () => {
+            // On mobile UPI the customer can complete the payment in their UPI app and
+            // then close the popup — that is not a cancellation. Check before saying so.
+            const status = await checkOrderPayment(fnData.db_order_id);
+            if (status?.status === "paid") {
+              trackPurchase({
+                items: orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
+                value: totalPrice,
+                orderId: fnData.db_order_id,
+                eventId: `purchase.${fnData.db_order_id}`,
+              });
+              clearCart();
+              nav(`/order-success?id=${fnData.db_order_id}&payment=${status.razorpay_payment_id || ""}`);
+              return;
+            }
+            setLoading(false);
+            toast.info(t("co_payment_cancelled"));
+          },
         },
       };
 
