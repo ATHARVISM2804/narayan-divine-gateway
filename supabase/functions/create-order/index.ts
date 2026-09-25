@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
 
         const { data: puja } = await supabase
           .from("pujas")
-          .select("name, prices")
+          .select("name, prices, date, location")
           .eq("id", pujaId)
           .eq("status", "active")
           .single();
@@ -77,7 +77,19 @@ Deno.serve(async (req) => {
         if (!tier) return err(`Invalid tier "${tierLabel}" for puja: ${puja.name}`);
 
         totalPaise += tier.price * 100 * (item.quantity || 1);
-        validatedItems.push({ ...item, price: tier.price, verified: true });
+        // Snapshot WHICH puja was booked. Several pujas can share a name (same puja on
+        // different dates), and a puja may be edited or deleted later — the order must
+        // keep its own record of the date and place the customer paid for.
+        validatedItems.push({
+          ...item,
+          price: tier.price,
+          verified: true,
+          puja_id: pujaId.toLowerCase(),
+          puja_name: puja.name,
+          puja_date: puja.date ?? null,
+          puja_location: puja.location ?? null,
+          tier: tierLabel,
+        });
 
       // ── Chadhava offering ──
       } else if (item.category === "chadhava") {
@@ -87,7 +99,7 @@ Deno.serve(async (req) => {
 
         const { data: offering } = await supabase
           .from("chadhava_offerings")
-          .select("name, price")
+          .select("name, price, chadhava_id, chadhavas(temple, date)")
           .eq("id", offeringId)
           .eq("status", "active")
           .single();
@@ -95,7 +107,18 @@ Deno.serve(async (req) => {
         if (!offering) return err(`Chadhava offering not found or inactive: ${item.name}`);
 
         totalPaise += offering.price * 100 * (item.quantity || 1);
-        validatedItems.push({ ...item, price: offering.price, verified: true });
+        const chadhava = (Array.isArray(offering.chadhavas) ? offering.chadhavas[0] : offering.chadhavas) as
+          | { temple?: string | null; date?: string | null }
+          | null
+          | undefined;
+        validatedItems.push({
+          ...item,
+          price: offering.price,
+          verified: true,
+          chadhava_id: offering.chadhava_id ?? null,
+          chadhava_temple: chadhava?.temple ?? null,
+          chadhava_date: chadhava?.date ?? null,
+        });
 
       // ── Puja add-on offering ──
       } else if (item.category === "offering") {
@@ -105,7 +128,7 @@ Deno.serve(async (req) => {
 
         const { data: offering } = await supabase
           .from("puja_offerings")
-          .select("name, price")
+          .select("name, price, puja_id")
           .eq("id", offeringId)
           .eq("status", "active")
           .single();
@@ -113,7 +136,7 @@ Deno.serve(async (req) => {
         if (!offering) return err(`Puja offering not found or inactive: ${item.name}`);
 
         totalPaise += offering.price * 100 * (item.quantity || 1);
-        validatedItems.push({ ...item, price: offering.price, verified: true });
+        validatedItems.push({ ...item, price: offering.price, verified: true, puja_id: offering.puja_id ?? null });
 
       // ── Blessing box (fixed price, no DB record) ──
       } else if (item.category === "addon" && item.id === "blessing-box") {

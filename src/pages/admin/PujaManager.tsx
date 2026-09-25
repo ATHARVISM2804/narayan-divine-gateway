@@ -188,6 +188,18 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
     const { name, location, date, prices } = editing;
     if (!name?.trim() || !location?.trim() || !date?.trim()) { toast.error("Fill required fields"); return; }
     if (!prices?.length || prices.some((t) => !t.label.trim() || t.price <= 0)) { toast.error("Each tier needs label & price > 0"); return; }
+    // Same name on two pujas is allowed (same puja on different dates), but the date is then the
+    // only thing that tells customers and the orders list apart — make that a conscious choice.
+    const sameName = pujas.filter((p) => p.id !== editing.id && p.name.trim().toLowerCase() === name.trim().toLowerCase());
+    if (sameName.length > 0) {
+      const others = sameName.map((p) => `• ${p.date} (${p.status})`).join("\n");
+      const ok = window.confirm(
+        `Another puja already has this exact name:\n${others}\n\n` +
+        `Customers and the Orders page will tell them apart only by the date (${date.trim()}). ` +
+        `Make sure the date is clearly different, or add it to the name.\n\nSave anyway?`
+      );
+      if (!ok) return;
+    }
     setSaving(true);
     const payload = {
       name: name.trim(), deity: editing.deity?.trim() || name.trim(), location: location.trim(), date: date.trim(),

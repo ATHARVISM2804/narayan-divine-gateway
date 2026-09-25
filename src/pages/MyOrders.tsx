@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase } from "@/lib/supabase";
 import { checkOrderPayment } from "@/lib/orderStatus";
+import { orderItemWhen } from "@/lib/orderItems";
 import { Package, LogOut, ShoppingBag, Eye, X, Phone, Search, RefreshCw } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -257,6 +258,9 @@ const MyOrders = () => {
                   <p className="text-sm text-brown/70 mt-1 truncate">
                     {(o.items || []).map((item: any) => item.name).join(", ")}
                   </p>
+                  {(o.items || []).map((item: any) => orderItemWhen(item)).filter(Boolean).map((when, idx) => (
+                    <p key={idx} className="text-xs text-maroon/70 mt-0.5 truncate">📅 {when}</p>
+                  ))}
                 </div>
                 {/* Price + View */}
                 <div className="flex items-center gap-3 shrink-0">
@@ -307,12 +311,18 @@ const MyOrders = () => {
 
               <div className="border-t border-gold/20 pt-3">
                 <p className="text-[11px] text-brown/50 uppercase mb-2">{t("mo_items")}</p>
-                {(detail.items || []).map((item: any, i: number) => (
-                  <div key={i} className="flex justify-between py-1.5 border-b border-gold/10 last:border-0">
-                    <span className="text-maroon">{item.name} <span className="text-brown/40">×{item.quantity}</span></span>
-                    <span className="font-semibold text-saffron">₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
-                  </div>
-                ))}
+                {(detail.items || []).map((item: any, i: number) => {
+                  const when = orderItemWhen(item);
+                  return (
+                    <div key={i} className="py-1.5 border-b border-gold/10 last:border-0">
+                      <div className="flex justify-between">
+                        <span className="text-maroon">{item.name} <span className="text-brown/40">×{item.quantity}</span></span>
+                        <span className="font-semibold text-saffron">₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
+                      </div>
+                      {when && <p className="text-xs text-maroon/70 mt-0.5">📅 {when}</p>}
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="border-t border-gold/20 pt-3 text-center">

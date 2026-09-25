@@ -1,8 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { checkOrderPayment } from "@/lib/orderStatus";
-import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck } from "lucide-react";
+import {
+  formatOrderItemLine, orderItemFilterLabel, orderItemKey, orderItemPujaId, orderItemTier, orderItemWhen, type OrderItem,
+} from "@/lib/orderItems";
+import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
+
+/* Active pujas, used to move a booking to the same puja on another date. */
+interface PujaOption { id: string; name: string; date: string; location: string; prices: { label: string; price: number }[]; status: string }
 
 interface Order {
   id: string;
@@ -53,7 +59,8 @@ const waNumber = (phone: string) => {
 
 /* Pre-filled order-confirmation message sent to the customer on WhatsApp. */
 const buildConfirmationMessage = (o: Order) => {
-  const items  = (o.items || []).map((i: any) => `• ${i.name}${i.quantity > 1 ? ` ×${i.quantity}` : ""}`).join("\n");
+  // Each line carries the puja date & place so the customer can spot a wrong-date booking.
+  const items  = (o.items || []).map((i: any) => `• ${formatOrderItemLine(i)}${i.quantity > 1 ? ` ×${i.quantity}` : ""}`).join("\n");
   const amount = `₹${(o.amount / 100).toLocaleString("en-IN")}`;
   return (
     `🙏 Namaste ${o.customer_name}!\n\n` +
@@ -187,21 +194,39 @@ const OrderManager = (_props: Props) => {
     return getPresetRange(datePreset);
   }, [datePreset, customFrom, customTo]);
 
-  /* ── Unique item names bucketed by type ── */
+  /* ── Active pujas (for "Change date") ── */
+  const [pujaOptions, setPujaOptions] = useState<PujaOption[]>([]);
+  useEffect(() => {
+    supabase.from("pujas").select("id, name, date, location, prices, status").eq("status", "active")
+      .then(({ data }) => { if (data) setPujaOptions(data as PujaOption[]); });
+  }, []);
+
+  /* ── Unique items bucketed by type. Keyed by puja/chadhava id (not name), so the same
+        puja on two dates shows as two entries; the label carries the date. ── */
+  type ItemOption = { key: string; label: string };
   const itemGroups = useMemo(() => {
-    const buckets: Record<"puja" | "chadhava" | "addon" | "other", Set<string>> = {
-      puja: new Set(), chadhava: new Set(), addon: new Set(), other: new Set(),
+    const buckets: Record<"puja" | "chadhava" | "addon" | "other", Map<string, string>> = {
+      puja: new Map(), chadhava: new Map(), addon: new Map(), other: new Map(),
     };
     orders.forEach((o) => (o.items || []).forEach((item: any) => {
-      if (item?.name) buckets[itemTypeOf(item)].add(item.name);
+      if (!item?.name) return;
+      const bucket = buckets[itemTypeOf(item)];
+      const key = orderItemKey(item);
+      // Prefer a label with a date if any line for this puja has the snapshot.
+      const label = orderItemFilterLabel(item);
+      if (!bucket.has(key) || (label.includes(" — ") && !bucket.get(key)!.includes(" — "))) bucket.set(key, label);
     }));
-    const sorted = (s: Set<string>) => Array.from(s).sort((a, b) => a.localeCompare(b));
+    const sorted = (m: Map<string, string>): ItemOption[] =>
+      Array.from(m, ([key, label]) => ({ key, label })).sort((a, b) => a.label.localeCompare(b.label));
     return { puja: sorted(buckets.puja), chadhava: sorted(buckets.chadhava), addon: sorted(buckets.addon), other: sorted(buckets.other) };
   }, [orders]);
 
+  const itemLabelOf = (key: string) =>
+    [...itemGroups.puja, ...itemGroups.chadhava, ...itemGroups.addon, ...itemGroups.other].find((o) => o.key === key)?.label ?? key;
+
   /* ── <optgroup>s shown in the item dropdown, narrowed to the active type ── */
   const dropdownGroups = useMemo(() => {
-    const groups: { key: string; label: string; names: string[] }[] = [];
+    const groups: { key: string; label: string; names: ItemOption[] }[] = [];
     if ((typeFilter === "all" || typeFilter === "puja")     && itemGroups.puja.length)
       groups.push({ key: "puja",     label: "🪔 Pujas",     names: itemGroups.puja });
     if ((typeFilter === "all" || typeFilter === "chadhava") && itemGroups.chadhava.length)
@@ -223,7 +248,7 @@ const OrderManager = (_props: Props) => {
     return orders.filter((o) => {
       const statusMatch = statusFilter === "all" || o.status === statusFilter;
       const typeMatch   = typeFilter   === "all" || (o.items || []).some((item: any) => itemTypeOf(item) === typeFilter);
-      const nameMatch   = nameFilter   === "all" || (o.items || []).some((item: any) => item?.name === nameFilter);
+      const nameMatch   = nameFilter   === "all" || (o.items || []).some((item: any) => orderItemKey(item) === nameFilter);
       const orderDate   = new Date(o.created_at);
       const dateMatch   =
         (!dateRange.from || orderDate >= dateRange.from) &&
@@ -244,7 +269,7 @@ const OrderManager = (_props: Props) => {
   const exportCSV = () => {
     const headers = ["Order ID","Date","Customer Name","Email","Phone","Address","Items","Amount (₹)","Status","Razorpay Order ID","Razorpay Payment ID"];
     const rows = filtered.map((o) => {
-      const itemsStr = (o.items || []).map((i: any) => `${i.name} x${i.quantity} @₹${i.price}`).join(" | ");
+      const itemsStr = (o.items || []).map((i: any) => `${formatOrderItemLine(i)} x${i.quantity} @₹${i.price}`).join(" | ");
       return [
         o.id, new Date(o.created_at).toLocaleString("en-IN"),
         o.customer_name, o.customer_email || "", o.customer_phone,
@@ -271,7 +296,52 @@ const OrderManager = (_props: Props) => {
   /* Switching type clears a now-irrelevant specific item selection. */
   const changeType = (t: "all" | ItemType) => {
     setTypeFilter(t);
-    if (t !== "all" && nameFilter !== "all" && !(itemGroups[t] || []).includes(nameFilter)) setNameFilter("all");
+    if (t !== "all" && nameFilter !== "all" && !(itemGroups[t] || []).some((opt) => opt.key === nameFilter)) setNameFilter("all");
+  };
+
+  /* ── Move a puja line to the same puja on another date (e.g. 26 Sept ↔ 10 Oct) ── */
+  const [movingKey, setMovingKey] = useState<string | null>(null);
+
+  const baseNameOf = (item: OrderItem) => {
+    if (item.puja_name) return item.puja_name;
+    const tier = orderItemTier(item);
+    return tier && item.name.endsWith(` (${tier})`) ? item.name.slice(0, -(tier.length + 3)) : item.name;
+  };
+
+  const alternativesFor = (item: OrderItem): PujaOption[] => {
+    const pujaId = orderItemPujaId(item);
+    const base = baseNameOf(item).trim().toLowerCase();
+    return pujaOptions.filter((p) => p.id !== pujaId && p.name.trim().toLowerCase() === base);
+  };
+
+  const movePujaLine = async (order: Order, index: number, target: PujaOption) => {
+    const item = order.items[index] as OrderItem;
+    const tier = orderItemTier(item) || "";
+    if (!target.prices?.some((t) => t.label === tier)) {
+      toast.error(`"${target.date}" has no "${tier}" package — cannot move this booking`);
+      return;
+    }
+    const from = orderItemWhen(item) || "date not recorded";
+    if (!window.confirm(`Move ${order.customer_name}'s booking\n\nfrom: ${from}\nto:   ${target.date} • ${target.location}\n\nThe amount paid stays the same.`)) return;
+
+    const updatedItem: OrderItem = {
+      ...item,
+      id: `puja-${target.id}-${tier}`,
+      name: `${target.name} (${tier})`,
+      puja_id: target.id,
+      puja_name: target.name,
+      puja_date: target.date,
+      puja_location: target.location,
+      tier,
+    };
+    const items = order.items.map((it: any, i: number) => (i === index ? updatedItem : it));
+    setMovingKey(`${order.id}:${index}`);
+    const { error } = await supabase.from("orders").update({ items }).eq("id", order.id);
+    setMovingKey(null);
+    if (error) { toast.error("Could not update the order"); return; }
+    toast.success(`Moved to ${target.date}`);
+    setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, items } : o)));
+    setDetail((d) => (d && d.id === order.id ? { ...d, items } : d));
   };
 
   const activePresetLabel = presets.find((p) => p.key === datePreset)?.label ?? "All Time";
@@ -424,7 +494,7 @@ const OrderManager = (_props: Props) => {
               </option>
               {dropdownGroups.map((g) => (
                 <optgroup key={g.key} label={g.label}>
-                  {g.names.map((name) => <option key={name} value={name}>{name}</option>)}
+                  {g.names.map((opt) => <option key={opt.key} value={opt.key}>{opt.label}</option>)}
                 </optgroup>
               ))}
             </select>
@@ -445,7 +515,7 @@ const OrderManager = (_props: Props) => {
           Showing <span className="text-maroon font-bold">{filtered.length}</span> of {orders.length} orders
           {datePreset !== "all" && <span className="ml-1 text-saffron">• {activePresetLabel}</span>}
           {typeFilter !== "all" && <span className="ml-1 text-saffron">• {typeFilter === "puja" ? "Pujas" : "Chadhavas"}</span>}
-          {nameFilter !== "all" && <span className="ml-1 text-saffron">• {nameFilter}</span>}
+          {nameFilter !== "all" && <span className="ml-1 text-saffron">• {itemLabelOf(nameFilter)}</span>}
         </p>
         <div className="flex items-center gap-2">
           <button onClick={syncWithRazorpay} disabled={syncing}
@@ -478,7 +548,7 @@ const OrderManager = (_props: Props) => {
       ) : (
         <div className="space-y-3">
           {filtered.map((o) => {
-            const pujaNames = (o.items || []).map((i: any) => i.name).join(", ");
+            const sevaLines = (o.items || []).filter((i: any) => itemTypeOf(i) !== "addon") as OrderItem[];
             return (
               <div key={o.id}
                 className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-gold/30 bg-ivory p-4 shadow-soft hover:border-saffron/40 transition-colors">
@@ -490,7 +560,17 @@ const OrderManager = (_props: Props) => {
                     </span>
                   </div>
                   <p className="text-xs text-brown/60 mt-0.5">{o.customer_email ? `${o.customer_email} • ` : ""}{o.customer_phone}</p>
-                  {pujaNames && <p className="text-xs font-semibold text-saffron mt-1 truncate max-w-sm">🪔 {pujaNames}</p>}
+                  {sevaLines.map((i, idx) => {
+                    const when = orderItemWhen(i);
+                    return (
+                      <div key={idx} className="mt-1 max-w-sm">
+                        <p className="text-xs font-semibold text-saffron truncate">{i.category === "chadhava" ? "🌺" : "🪔"} {i.name}</p>
+                        {when
+                          ? <p className="text-[11px] text-maroon/80 truncate">📅 {when}</p>
+                          : (i.category === "puja" || i.category === "chadhava") && <p className="text-[11px] text-amber-600">📅 date not recorded</p>}
+                      </div>
+                    );
+                  })}
                   <p className="text-xs text-brown/40 mt-0.5">
                     {new Date(o.created_at).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" })}
                     {o.status === "paid" && o.paid_at && (
@@ -562,12 +642,39 @@ const OrderManager = (_props: Props) => {
               </div>
               <div className="border-t border-gold/20 pt-3">
                 <p className="text-[11px] text-brown/50 uppercase mb-2">Items Ordered</p>
-                {(detail.items || []).map((item: any, i: number) => (
-                  <div key={i} className="flex justify-between py-1.5 border-b border-gold/10 last:border-0">
-                    <span className="text-maroon">{item.name} <span className="text-brown/40">×{item.quantity}</span></span>
-                    <span className="font-semibold text-saffron">₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
-                  </div>
-                ))}
+                {(detail.items || []).map((item: OrderItem, i: number) => {
+                  const when = orderItemWhen(item);
+                  const alternatives = item.category === "puja" ? alternativesFor(item) : [];
+                  const moving = movingKey === `${detail.id}:${i}`;
+                  return (
+                    <div key={i} className="py-1.5 border-b border-gold/10 last:border-0">
+                      <div className="flex justify-between">
+                        <span className="text-maroon">{item.name} <span className="text-brown/40">×{item.quantity}</span></span>
+                        <span className="font-semibold text-saffron">₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
+                      </div>
+                      {when
+                        ? <p className="text-xs text-maroon/80 mt-0.5">📅 {when}</p>
+                        : (item.category === "puja" || item.category === "chadhava") && <p className="text-xs text-amber-600 mt-0.5">📅 date not recorded (puja edited or deleted)</p>}
+                      {alternatives.length > 0 && (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <CalendarClock size={12} className="text-saffron shrink-0" />
+                          <select
+                            value=""
+                            disabled={moving}
+                            onChange={(e) => {
+                              const target = alternatives.find((p) => p.id === e.target.value);
+                              if (target) movePujaLine(detail, i, target);
+                            }}
+                            className="rounded-lg border border-gold/40 bg-cream px-2 py-1 text-[11px] font-semibold text-maroon outline-none focus:border-saffron disabled:opacity-50"
+                          >
+                            <option value="">{moving ? "Moving…" : "Change date to…"}</option>
+                            {alternatives.map((p) => <option key={p.id} value={p.id}>{p.date} • {p.location}</option>)}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               {detail.puja_details && (
                 <div className="border-t border-gold/20 pt-3">
