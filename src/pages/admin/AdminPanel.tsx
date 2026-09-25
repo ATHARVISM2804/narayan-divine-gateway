@@ -123,7 +123,9 @@ const AdminPanel = () => {
       )}
 
       {/* ── Main content ── */}
-      <div className="flex flex-1 flex-col lg:ml-60">
+      {/* min-w-0: let this column shrink to the screen; without it one long single-line
+          puja name in an order card widened the whole admin page on phones. */}
+      <div className="flex min-w-0 flex-1 flex-col lg:ml-60">
         {/* Header */}
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-gold/30 bg-ivory/95 px-4 py-3 backdrop-blur lg:px-6">
           <div className="flex items-center gap-3">

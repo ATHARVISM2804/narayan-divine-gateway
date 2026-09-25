@@ -68,6 +68,22 @@ export const orderItemFilterLabel = (item: OrderItem): string => {
   return date ? `${base} — ${date}` : base;
 };
 
+/**
+ * One consistent package name for filters and counts. Stored labels vary ("Couple " with a
+ * trailing space, "4 Family" vs "4 Members"); this maps them the same way Checkout decides
+ * how many member names to ask for. Unknown labels are kept (trimmed) so new packages still show.
+ */
+export const canonicalTier = (label?: string | null): string => {
+  const raw = (label ?? "").replace(/\s+/g, " ").trim();
+  const l = raw.toLowerCase();
+  if (!l) return "";
+  if (l.includes("6") || l.includes("joint")) return "6 Members";
+  if (l.includes("4") || l.includes("family")) return "4 Members";
+  if (l.includes("couple") || /\b2\b/.test(l)) return "Couple";
+  if (l.includes("single") || l.includes("individual") || /\b1\b/.test(l)) return "Single";
+  return raw;
+};
+
 /** One-line description for messages and CSV: "NAME (Single) — 26 September 2026 • Badrinath". */
 export const formatOrderItemLine = (item: OrderItem): string => {
   const when = orderItemWhen(item);

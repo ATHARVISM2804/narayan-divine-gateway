@@ -2,8 +2,12 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { checkOrderPayment } from "@/lib/orderStatus";
 import {
-  formatOrderItemLine, orderItemFilterLabel, orderItemKey, orderItemPujaId, orderItemTier, orderItemWhen, type OrderItem,
+  formatOrderItemLine, orderItemPujaId, orderItemTier, orderItemWhen, type OrderItem,
 } from "@/lib/orderItems";
+import {
+  ALL, EMPTY_SEVA_FILTER, buildSevaCatalog, buildSubFilters, orderMatchesSeva, type SevaFilterValue,
+} from "@/lib/orderFilters";
+import SevaFilter from "./SevaFilter";
 import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -129,7 +133,7 @@ const OrderManager = (_props: Props) => {
   const [orders,       setOrders]       = useState<Order[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [nameFilter,   setNameFilter]   = useState("all");
+  const [seva,         setSeva]         = useState<SevaFilterValue>(EMPTY_SEVA_FILTER);
   const [typeFilter,   setTypeFilter]   = useState<"all" | ItemType>("all");
   const [detail,       setDetail]       = useState<Order | null>(null);
   const [datePreset,   setDatePreset]   = useState<DatePreset>("all");
@@ -201,61 +205,43 @@ const OrderManager = (_props: Props) => {
       .then(({ data }) => { if (data) setPujaOptions(data as PujaOption[]); });
   }, []);
 
-  /* ── Unique items bucketed by type. Keyed by puja/chadhava id (not name), so the same
-        puja on two dates shows as two entries; the label carries the date. ── */
-  type ItemOption = { key: string; label: string };
-  const itemGroups = useMemo(() => {
-    const buckets: Record<"puja" | "chadhava" | "addon" | "other", Map<string, string>> = {
-      puja: new Map(), chadhava: new Map(), addon: new Map(), other: new Map(),
-    };
-    orders.forEach((o) => (o.items || []).forEach((item: any) => {
-      if (!item?.name) return;
-      const bucket = buckets[itemTypeOf(item)];
-      const key = orderItemKey(item);
-      // Prefer a label with a date if any line for this puja has the snapshot.
-      const label = orderItemFilterLabel(item);
-      if (!bucket.has(key) || (label.includes(" — ") && !bucket.get(key)!.includes(" — "))) bucket.set(key, label);
-    }));
-    const sorted = (m: Map<string, string>): ItemOption[] =>
-      Array.from(m, ([key, label]) => ({ key, label })).sort((a, b) => a.label.localeCompare(b.label));
-    return { puja: sorted(buckets.puja), chadhava: sorted(buckets.chadhava), addon: sorted(buckets.addon), other: sorted(buckets.other) };
-  }, [orders]);
-
-  const itemLabelOf = (key: string) =>
-    [...itemGroups.puja, ...itemGroups.chadhava, ...itemGroups.addon, ...itemGroups.other].find((o) => o.key === key)?.label ?? key;
-
-  /* ── <optgroup>s shown in the item dropdown, narrowed to the active type ── */
-  const dropdownGroups = useMemo(() => {
-    const groups: { key: string; label: string; names: ItemOption[] }[] = [];
-    if ((typeFilter === "all" || typeFilter === "puja")     && itemGroups.puja.length)
-      groups.push({ key: "puja",     label: "🪔 Pujas",     names: itemGroups.puja });
-    if ((typeFilter === "all" || typeFilter === "chadhava") && itemGroups.chadhava.length)
-      groups.push({ key: "chadhava", label: "🌺 Chadhavas", names: itemGroups.chadhava });
-    if (typeFilter === "all" && itemGroups.addon.length)
-      groups.push({ key: "addon",    label: "🎁 Add-ons",   names: itemGroups.addon });
-    if (typeFilter === "all" && itemGroups.other.length)
-      groups.push({ key: "other",    label: "Other",        names: itemGroups.other });
-    return groups;
-  }, [itemGroups, typeFilter]);
+  /* ── Seva filter, level 1: one entry per puja name (built from all orders so the list is stable) ── */
+  const sevaCatalog = useMemo(() => buildSevaCatalog(orders), [orders]);
+  const allSevaEntries = useMemo(() => [...sevaCatalog.puja, ...sevaCatalog.chadhava, ...sevaCatalog.addon], [sevaCatalog]);
+  const selectedSeva = allSevaEntries.find((e) => e.key === seva.sevaKey) ?? null;
 
   const typeCounts = useMemo(() => ({
     puja:     orders.filter((o) => (o.items || []).some((i: any) => itemTypeOf(i) === "puja")).length,
     chadhava: orders.filter((o) => (o.items || []).some((i: any) => itemTypeOf(i) === "chadhava")).length,
   }), [orders]);
 
-  /* ── Apply all filters ── */
-  const filtered = useMemo(() => {
+  /* ── Status, type and order-date filters (everything except the seva drill-down) ── */
+  const baseFiltered = useMemo(() => {
     return orders.filter((o) => {
       const statusMatch = statusFilter === "all" || o.status === statusFilter;
       const typeMatch   = typeFilter   === "all" || (o.items || []).some((item: any) => itemTypeOf(item) === typeFilter);
-      const nameMatch   = nameFilter   === "all" || (o.items || []).some((item: any) => orderItemKey(item) === nameFilter);
       const orderDate   = new Date(o.created_at);
       const dateMatch   =
         (!dateRange.from || orderDate >= dateRange.from) &&
         (!dateRange.to   || orderDate <= dateRange.to);
-      return statusMatch && typeMatch && nameMatch && dateMatch;
+      return statusMatch && typeMatch && dateMatch;
     });
-  }, [orders, statusFilter, typeFilter, nameFilter, dateRange]);
+  }, [orders, statusFilter, typeFilter, dateRange]);
+
+  /* ── Seva filter, level 2: Date and Package chips, counted within the other filters ── */
+  const sevaSubFilters = useMemo(() => buildSubFilters(baseFiltered, seva), [baseFiltered, seva]);
+
+  /* ── Apply all filters ── */
+  const filtered = useMemo(() => baseFiltered.filter((o) => orderMatchesSeva(o, seva)), [baseFiltered, seva]);
+
+  const sevaSummary = (() => {
+    if (!selectedSeva) return null;
+    const parts = [selectedSeva.label];
+    const date = sevaSubFilters.dates.find((d) => d.key === seva.dateKey);
+    if (date) parts.push(date.label);
+    if (seva.packageKey !== ALL) parts.push(seva.packageKey);
+    return parts.join(" • ");
+  })();
 
   /* ── Stats (from filtered) ── */
   const stats = {
@@ -289,14 +275,14 @@ const OrderManager = (_props: Props) => {
 
   const clearAll = () => {
     setDatePreset("all"); setStatusFilter("all");
-    setTypeFilter("all"); setNameFilter("all");
+    setTypeFilter("all"); setSeva(EMPTY_SEVA_FILTER);
     setCustomFrom(""); setCustomTo("");
   };
 
-  /* Switching type clears a now-irrelevant specific item selection. */
+  /* Switching type clears a seva selection that doesn't belong to it. */
   const changeType = (t: "all" | ItemType) => {
     setTypeFilter(t);
-    if (t !== "all" && nameFilter !== "all" && !(itemGroups[t] || []).some((opt) => opt.key === nameFilter)) setNameFilter("all");
+    if (t !== "all" && selectedSeva && selectedSeva.type !== t) setSeva(EMPTY_SEVA_FILTER);
   };
 
   /* ── Move a puja line to the same puja on another date (e.g. 26 Sept ↔ 10 Oct) ── */
@@ -345,7 +331,7 @@ const OrderManager = (_props: Props) => {
   };
 
   const activePresetLabel = presets.find((p) => p.key === datePreset)?.label ?? "All Time";
-  const hasAnyFilter = datePreset !== "all" || statusFilter !== "all" || typeFilter !== "all" || nameFilter !== "all";
+  const hasAnyFilter = datePreset !== "all" || statusFilter !== "all" || typeFilter !== "all" || seva.sevaKey !== ALL;
 
   return (
     <div className="space-y-5">
@@ -481,32 +467,14 @@ const OrderManager = (_props: Props) => {
           </div>
         </div>
 
-        {/* ── Item dropdown (grouped by type) ── */}
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-[11px] text-brown/50 font-semibold w-16 shrink-0">Item:</span>
-          <div className="relative flex-1 min-w-[220px] max-w-sm">
-            <select
-              value={nameFilter}
-              onChange={(e) => setNameFilter(e.target.value)}
-              className="w-full appearance-none rounded-xl border border-gold/40 bg-cream pl-3 pr-9 py-2 text-xs font-semibold text-maroon outline-none focus:border-saffron cursor-pointer">
-              <option value="all">
-                All Items{typeFilter === "puja" ? " (Pujas)" : typeFilter === "chadhava" ? " (Chadhavas)" : ""}
-              </option>
-              {dropdownGroups.map((g) => (
-                <optgroup key={g.key} label={g.label}>
-                  {g.names.map((opt) => <option key={opt.key} value={opt.key}>{opt.label}</option>)}
-                </optgroup>
-              ))}
-            </select>
-            <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brown/40" />
-          </div>
-          {nameFilter !== "all" && (
-            <button onClick={() => setNameFilter("all")}
-              className="text-[11px] text-red-400 hover:text-red-600 font-semibold underline">
-              Clear item
-            </button>
-          )}
-        </div>
+        {/* ── Seva: puja first, then its Date and Package ── */}
+        <SevaFilter
+          catalog={sevaCatalog}
+          subFilters={sevaSubFilters}
+          value={seva}
+          typeFilter={typeFilter === "all" || typeFilter === "puja" || typeFilter === "chadhava" ? typeFilter : "all"}
+          onChange={setSeva}
+        />
       </div>
 
       {/* ── Toolbar ── */}
@@ -515,7 +483,7 @@ const OrderManager = (_props: Props) => {
           Showing <span className="text-maroon font-bold">{filtered.length}</span> of {orders.length} orders
           {datePreset !== "all" && <span className="ml-1 text-saffron">• {activePresetLabel}</span>}
           {typeFilter !== "all" && <span className="ml-1 text-saffron">• {typeFilter === "puja" ? "Pujas" : "Chadhavas"}</span>}
-          {nameFilter !== "all" && <span className="ml-1 text-saffron">• {itemLabelOf(nameFilter)}</span>}
+          {sevaSummary && <span className="ml-1 text-saffron">• {sevaSummary}</span>}
         </p>
         <div className="flex items-center gap-2">
           <button onClick={syncWithRazorpay} disabled={syncing}
