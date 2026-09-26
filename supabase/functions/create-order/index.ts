@@ -29,6 +29,17 @@ const OFFERING_ID_RE = /^offering-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 const BLESSING_BOX_PRICE = 200; // matches frontend constant
 
+/** Sankalp details: trimmed gotra and member names, empty names dropped, lengths capped. */
+function cleanPujaDetails(raw: unknown): { gotra: string; member_names: string[] } | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as { gotra?: unknown; member_names?: unknown };
+  const tidy = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "");
+  const member_names = Array.isArray(r.member_names)
+    ? r.member_names.map((n) => tidy(n, 100)).filter(Boolean).slice(0, 12)
+    : [];
+  return { gotra: tidy(r.gotra, 100), member_names };
+}
+
 function err(msg: string, status = 400) {
   return new Response(
     JSON.stringify({ error: msg }),
@@ -162,7 +173,7 @@ Deno.serve(async (req) => {
         amount: totalPaise,
         items: validatedItems,
         status: "pending",
-        puja_details: puja_details || null,
+        puja_details: cleanPujaDetails(puja_details),
       })
       .select("id")
       .single();

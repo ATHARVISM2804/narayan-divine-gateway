@@ -288,6 +288,24 @@ const OrderManager = (_props: Props) => {
   /* ── Move a puja line to the same puja on another date (e.g. 26 Sept ↔ 10 Oct) ── */
   const [movingKey, setMovingKey] = useState<string | null>(null);
 
+  /* ── Record or correct the gotra after asking the customer ── */
+  const [gotraDraft, setGotraDraft] = useState<string | null>(null); // null = not editing
+  const [savingGotra, setSavingGotra] = useState(false);
+
+  const saveGotra = async (order: Order) => {
+    const gotra = (gotraDraft ?? "").replace(/\s+/g, " ").trim();
+    if (!gotra) { toast.error("Enter the gotra"); return; }
+    const puja_details = { ...(order.puja_details || {}), gotra };
+    setSavingGotra(true);
+    const { error } = await supabase.from("orders").update({ puja_details }).eq("id", order.id);
+    setSavingGotra(false);
+    if (error) { toast.error("Could not save the gotra"); return; }
+    toast.success("Gotra saved");
+    setGotraDraft(null);
+    setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, puja_details } : o)));
+    setDetail((d) => (d && d.id === order.id ? { ...d, puja_details } : d));
+  };
+
   const baseNameOf = (item: OrderItem) => {
     if (item.puja_name) return item.puja_name;
     const tier = orderItemTier(item);
@@ -539,6 +557,9 @@ const OrderManager = (_props: Props) => {
                       </div>
                     );
                   })}
+                  {o.status === "paid" && o.puja_details && !o.puja_details.gotra?.trim() && (
+                    <p className="text-[11px] text-amber-600 mt-0.5">🕉️ Gotra not provided — open the order to add it</p>
+                  )}
                   <p className="text-xs text-brown/40 mt-0.5">
                     {new Date(o.created_at).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" })}
                     {o.status === "paid" && o.paid_at && (
@@ -568,7 +589,7 @@ const OrderManager = (_props: Props) => {
                     <WhatsAppIcon className="h-3.5 w-3.5 fill-white shrink-0" />
                     Confirm
                   </a>
-                  <button onClick={() => setDetail(o)} className="grid h-8 w-8 place-items-center rounded-lg bg-gold/15 text-maroon hover:bg-gold/30 transition-colors">
+                  <button onClick={() => { setDetail(o); setGotraDraft(null); }} className="grid h-8 w-8 place-items-center rounded-lg bg-gold/15 text-maroon hover:bg-gold/30 transition-colors">
                     <Eye size={14} />
                   </button>
                 </div>
@@ -581,11 +602,11 @@ const OrderManager = (_props: Props) => {
       {/* ── Order detail modal ── */}
       {detail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDetail(null)} />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setDetail(null); setGotraDraft(null); }} />
           <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-2xl bg-ivory shadow-2xl p-6 animate-fadeIn">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-display text-lg text-maroon">Order Details</h3>
-              <button onClick={() => setDetail(null)} className="text-brown/50 hover:text-maroon"><X size={20} /></button>
+              <button onClick={() => { setDetail(null); setGotraDraft(null); }} className="text-brown/50 hover:text-maroon"><X size={20} /></button>
             </div>
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
@@ -647,12 +668,37 @@ const OrderManager = (_props: Props) => {
               {detail.puja_details && (
                 <div className="border-t border-gold/20 pt-3">
                   <p className="text-[11px] text-brown/50 uppercase mb-2">🕉️ Sankalp Details</p>
-                  {detail.puja_details.gotra && (
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[11px] font-bold text-brown/50 uppercase w-20 shrink-0">Gotra</span>
-                      <span className="font-semibold text-maroon">{detail.puja_details.gotra}</span>
-                    </div>
-                  )}
+                  {/* Gotra is always shown: an empty one must be visible so it can be asked for. */}
+                  <div className="flex items-start gap-2 mb-1.5">
+                    <span className="text-[11px] font-bold text-brown/50 uppercase w-20 shrink-0 mt-0.5">Gotra</span>
+                    {gotraDraft !== null ? (
+                      <div className="flex flex-1 flex-wrap items-center gap-1.5">
+                        <input
+                          autoFocus
+                          value={gotraDraft}
+                          onChange={(e) => setGotraDraft(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") saveGotra(detail); if (e.key === "Escape") setGotraDraft(null); }}
+                          placeholder="e.g. Kashyap"
+                          className="min-w-0 flex-1 rounded-lg border border-gold/40 bg-cream px-2 py-1 text-xs font-semibold text-maroon outline-none focus:border-saffron"
+                        />
+                        <button onClick={() => saveGotra(detail)} disabled={savingGotra}
+                          className="rounded-lg bg-saffron px-2.5 py-1 text-xs font-bold text-white hover:bg-maroon disabled:opacity-50">
+                          {savingGotra ? "Saving…" : "Save"}
+                        </button>
+                        <button onClick={() => setGotraDraft(null)} className="text-xs text-brown/50 hover:text-maroon">Cancel</button>
+                      </div>
+                    ) : detail.puja_details.gotra?.trim() ? (
+                      <span className="flex items-center gap-2">
+                        <span className="font-semibold text-maroon">{detail.puja_details.gotra}</span>
+                        <button onClick={() => setGotraDraft(detail.puja_details?.gotra || "")} className="text-[11px] text-brown/40 underline hover:text-maroon">edit</button>
+                      </span>
+                    ) : (
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-700">Not provided by customer</span>
+                        <button onClick={() => setGotraDraft("")} className="text-[11px] font-semibold text-saffron underline hover:text-maroon">Add gotra</button>
+                      </span>
+                    )}
+                  </div>
                   {detail.puja_details.member_names && detail.puja_details.member_names.length > 0 && (
                     <div className="flex items-start gap-2">
                       <span className="text-[11px] font-bold text-brown/50 uppercase w-20 shrink-0 mt-0.5">Members</span>

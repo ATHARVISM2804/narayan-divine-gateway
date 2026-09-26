@@ -196,6 +196,8 @@ const Checkout = () => {
     if (!form.name.trim()) { toast.error(t("co_err_name")); return false; }
     if (!form.phone.trim() || form.phone.length < 10) { toast.error(t("co_err_phone")); return false; }
     if (memberCount > 0 && !syncedMemberNames[0].trim()) { toast.error(t("co_err_member")); return false; }
+    // Panditji recites the gotra in the sankalp — ask for it, or the "I don't know" tick (Kashyap).
+    if (memberCount > 0 && !gotraUnknown && !gotra.trim()) { toast.error(t("co_err_gotra")); return false; }
     if (wantBox) {
       if (!isValidPincode) { toast.error(t("co_err_pincode")); return false; }
       if (!addr.flat.trim())  { toast.error(t("co_err_flat")); return false; }
@@ -241,7 +243,7 @@ const Checkout = () => {
             state: wantBox ? addr.state.trim() : undefined,
             pincode: wantBox ? addr.pincode : undefined,
           },
-          puja_details: memberCount > 0 ? { member_names: syncedMemberNames.filter(n => n.trim()), gotra: gotraUnknown ? "Kashyap" : gotra } : undefined,
+          puja_details: memberCount > 0 ? { member_names: syncedMemberNames.map(n => n.trim()).filter(Boolean), gotra: gotraUnknown ? "Kashyap" : gotra.trim() } : undefined,
           // Browser identifiers so the server-side Meta events match this visitor
           tracking: getMetaTrackingContext(),
         },
