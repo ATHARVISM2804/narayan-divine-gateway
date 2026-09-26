@@ -8,6 +8,8 @@ import {
   ALL, EMPTY_SEVA_FILTER, buildSevaCatalog, buildSubFilters, orderMatchesSeva, type SevaFilterValue,
 } from "@/lib/orderFilters";
 import SevaFilter from "./SevaFilter";
+import OrderPaymentPanel, { type PaymentPanelOrder } from "./OrderPaymentPanel";
+import { findPaidDuplicates } from "@/lib/orderDuplicates";
 import { downloadCsv, formatDateTimeIST, slugify, toCsv } from "@/lib/csv";
 import { ORDER_CSV_HEADERS, orderToCsvRow } from "@/lib/orderExport";
 import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck, CalendarClock } from "lucide-react";
@@ -21,6 +23,8 @@ interface Order {
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
   paid_at?: string | null;
+  payment_method?: string | null;
+  manual_payment?: Record<string, unknown> | null;
   customer_name: string;
   customer_email: string | null;
   customer_phone: string;
@@ -39,6 +43,7 @@ const statusColors: Record<string, string> = {
   pending:  "bg-yellow-100 text-yellow-700",
   failed:   "bg-red-100 text-red-600",
   refunded: "bg-gray-100 text-gray-600",
+  cancelled: "bg-gray-100 text-gray-500 line-through",
 };
 
 /* Maps the raw item.category stored on each order line to a filter bucket + dropdown group label. */
@@ -284,6 +289,15 @@ const OrderManager = (_props: Props) => {
   /* ── Move a puja line to the same puja on another date (e.g. 26 Sept ↔ 10 Oct) ── */
   const [movingKey, setMovingKey] = useState<string | null>(null);
 
+  /* ── Unpaid orders that repeat a booking the same customer already paid for ── */
+  const paidDuplicates = useMemo(() => findPaidDuplicates(orders), [orders]);
+
+  /* ── Apply a change made through the Payment panel ── */
+  const applyOrderUpdate = (id: string, patch: Partial<PaymentPanelOrder>) => {
+    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, ...patch } as Order : o)));
+    setDetail((d) => (d && d.id === id ? { ...d, ...patch } as Order : d));
+  };
+
   /* ── Record or correct the gotra after asking the customer ── */
   const [gotraDraft, setGotraDraft] = useState<string | null>(null); // null = not editing
   const [savingGotra, setSavingGotra] = useState(false);
@@ -451,7 +465,7 @@ const OrderManager = (_props: Props) => {
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-[11px] text-brown/50 font-semibold w-16 shrink-0">Status:</span>
           <div className="flex flex-wrap gap-1.5">
-            {["all", "paid", "pending", "failed", "refunded"].map((f) => (
+            {["all", "paid", "pending", "failed", "cancelled", "refunded"].map((f) => (
               <button key={f} onClick={() => setStatusFilter(f)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition-all capitalize ${
                   statusFilter === f ? "bg-saffron text-white shadow-sm" : "bg-cream border border-gold/40 text-maroon hover:bg-gold/20"
@@ -553,6 +567,12 @@ const OrderManager = (_props: Props) => {
                       </div>
                     );
                   })}
+                  {o.status !== "paid" && paidDuplicates.has(o.id) && (
+                    <p className="text-[11px] font-semibold text-amber-700 mt-0.5">⚠️ Duplicate — already paid in order {paidDuplicates.get(o.id)!.id.slice(0, 8).toUpperCase()}</p>
+                  )}
+                  {o.status === "paid" && o.payment_method && o.payment_method !== "razorpay" && (
+                    <p className="text-[11px] font-semibold text-green-700 mt-0.5">💵 Paid offline ({o.payment_method === "bank_transfer" ? "bank transfer" : o.payment_method.toUpperCase() === "UPI" ? "UPI" : o.payment_method}) — marked by admin</p>
+                  )}
                   {o.status === "paid" && o.puja_details && !o.puja_details.gotra?.trim() && (
                     <p className="text-[11px] text-amber-600 mt-0.5">🕉️ Gotra not provided — open the order to add it</p>
                   )}
@@ -707,6 +727,12 @@ const OrderManager = (_props: Props) => {
                   )}
                 </div>
               )}
+              <OrderPaymentPanel
+                key={detail.id + detail.status}
+                order={detail}
+                duplicateOf={detail.status !== "paid" ? paidDuplicates.get(detail.id) ?? null : null}
+                onUpdated={(patch) => applyOrderUpdate(detail.id, patch)}
+              />
               {(detail.razorpay_order_id || detail.razorpay_payment_id) && (
                 <div className="border-t border-gold/20 pt-3">
                   <p className="text-[11px] text-brown/50 uppercase mb-1">Razorpay</p>

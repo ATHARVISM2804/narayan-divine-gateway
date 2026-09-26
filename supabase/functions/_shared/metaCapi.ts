@@ -195,6 +195,8 @@ export interface MetaServerEvent {
   event_id: string;
   event_time?: number;
   event_source_url?: string;
+  /** "website" (default) for online checkout; "phone_call" for payments the team takes on a call. */
+  action_source?: "website" | "phone_call" | "other";
   user_data: Record<string, string>;
   custom_data?: Record<string, unknown>;
 }
@@ -211,11 +213,11 @@ export async function sendMetaEvents(events: MetaServerEvent[]): Promise<boolean
 
   const now = Math.floor(Date.now() / 1000);
   const body: Record<string, unknown> = {
-    data: events.map(({ event_time, event_source_url, ...rest }) => ({
+    data: events.map(({ event_time, event_source_url, action_source, ...rest }) => ({
       ...rest,
       event_time: event_time ?? now,
       event_source_url: event_source_url || DEFAULT_SOURCE_URL,
-      action_source: "website",
+      action_source: action_source ?? "website",
     })),
   };
   const testEventCode = env("META_TEST_EVENT_CODE");
@@ -293,7 +295,7 @@ export async function sendPurchaseForOrder(supabase: any, orderId: string): Prom
     .eq("id", orderId)
     .eq("status", "paid")
     .is("meta_purchase_sent_at", null)
-    .select("id, amount, currency, items, customer_name, customer_phone, customer_email, meta_tracking, paid_at")
+    .select("id, amount, currency, items, customer_name, customer_phone, customer_email, meta_tracking, paid_at, payment_method")
     .maybeSingle();
 
   if (error) {
@@ -317,6 +319,8 @@ export async function sendPurchaseForOrder(supabase: any, orderId: string): Prom
       event_id: `purchase.${order.id}`,
       event_time: eventTime,
       event_source_url: tracking.source_url,
+      // Paid by UPI / cash / bank transfer after a call: an offline conversion, not a website one.
+      action_source: order.payment_method && order.payment_method !== "razorpay" ? "phone_call" : "website",
       user_data: await buildUserData(
         {
           name: order.customer_name,

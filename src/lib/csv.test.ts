@@ -143,6 +143,19 @@ describe("orderToCsvRow", () => {
     expect(chadhava["Delivery Address"]).toBe("");
   });
 
+  it("shows how the order was paid, with manual payment details or the cancel reason", () => {
+    expect(row(base)["Payment Method"]).toBe("Razorpay");
+    const manual = row({
+      ...base, payment_method: "upi", razorpay_payment_id: null, amount: 110000,
+      manual_payment: { reference: "426912345678", amount_received: 110000, original_amount: 155100, note: "converted on call", marked_by: "admin@x.in" },
+    });
+    expect(manual["Payment Method"]).toBe("UPI (manual)");
+    expect(manual["Payment / Status Details"]).toBe("Ref 426912345678 · Order total ₹1,551 · converted on call · marked by admin@x.in");
+    const cancelled = row({ ...base, status: "cancelled", manual_payment: { cancel_reason: "Duplicate — paid in 7B5B8A57" } });
+    expect(cancelled["Payment Method"]).toBe("");
+    expect(cancelled["Payment / Status Details"]).toBe("Cancelled: Duplicate — paid in 7B5B8A57");
+  });
+
   it("does not show a paid time for unpaid orders", () => {
     expect(row({ ...base, status: "pending", paid_at: null })["Paid At (IST)"]).toBe("");
   });

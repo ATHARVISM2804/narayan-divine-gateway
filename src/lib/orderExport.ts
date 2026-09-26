@@ -20,6 +20,8 @@ export interface ExportableOrder {
   puja_details?: { gotra?: string | null; member_names?: string[] | null } | null;
   razorpay_order_id?: string | null;
   razorpay_payment_id?: string | null;
+  payment_method?: string | null;
+  manual_payment?: Record<string, unknown> | null;
 }
 
 export const ORDER_CSV_HEADERS = [
@@ -27,6 +29,7 @@ export const ORDER_CSV_HEADERS = [
   "Booked At (IST)",
   "Paid At (IST)",
   "Status",
+  "Payment Method",
   "Customer Name",
   "Phone",
   "Email",
@@ -44,6 +47,7 @@ export const ORDER_CSV_HEADERS = [
   "Amount (₹)",
   "Razorpay Order ID",
   "Razorpay Payment ID",
+  "Payment / Status Details",
   "Order ID",
 ];
 
@@ -56,6 +60,30 @@ const isSeva = (i: OrderItem) => i.category === "puja" || i.category === "chadha
 const sevaName = (i: OrderItem) => (i.category === "puja" ? pujaBaseName(i) : (i.name || "").trim());
 const sevaDate = (i: OrderItem) => (i.category === "puja" ? i.puja_date : i.chadhava_date) ?? "";
 const sevaPlace = (i: OrderItem) => (i.category === "puja" ? i.puja_location : i.chadhava_temple) ?? "";
+
+const METHOD_LABELS: Record<string, string> = {
+  razorpay: "Razorpay", upi: "UPI (manual)", cash: "Cash (manual)", bank_transfer: "Bank transfer (manual)", other: "Other (manual)",
+};
+
+/** Reference / note of a manual payment, or why an order was cancelled. */
+function paymentDetails(o: ExportableOrder): string {
+  const mp = (o.manual_payment ?? {}) as Record<string, unknown>;
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : "");
+  if (o.status === "cancelled") {
+    return ["Cancelled", str(mp.cancel_reason)].filter(Boolean).join(": ");
+  }
+  if (o.status === "paid" && o.payment_method && o.payment_method !== "razorpay") {
+    const parts = [
+      str(mp.reference) && `Ref ${str(mp.reference)}`,
+      typeof mp.original_amount === "number" && typeof mp.amount_received === "number" && mp.original_amount !== mp.amount_received
+        ? `Order total ₹${(mp.original_amount / 100).toLocaleString("en-IN")}` : "",
+      str(mp.note),
+      str(mp.marked_by) && `marked by ${str(mp.marked_by)}`,
+    ];
+    return parts.filter(Boolean).join(" · ");
+  }
+  return "";
+}
 
 const lineText = (i: OrderItem) => `${i.name} ×${i.quantity || 1} @₹${Number(i.price).toLocaleString("en-IN")}`;
 
@@ -75,6 +103,7 @@ export function orderToCsvRow(o: ExportableOrder): CsvValue[] {
     formatDateTimeIST(o.created_at),
     o.status === "paid" ? formatDateTimeIST(o.paid_at) : "",
     o.status,
+    o.status === "paid" ? METHOD_LABELS[o.payment_method || "razorpay"] ?? o.payment_method ?? "" : "",
     o.customer_name,
     formatPhoneForCsv(o.customer_phone),
     o.customer_email ?? "",
@@ -92,6 +121,7 @@ export function orderToCsvRow(o: ExportableOrder): CsvValue[] {
     Number((o.amount / 100).toFixed(2)),
     o.razorpay_order_id ?? "",
     o.razorpay_payment_id ?? "",
+    paymentDetails(o),
     o.id,
   ];
 }

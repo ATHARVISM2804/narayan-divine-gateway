@@ -13,6 +13,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { reconcileOrder, type ReconcilableOrder, type ReconcileResult } from "../_shared/razorpay.ts";
+import { adminEmailFromRequest } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,12 +38,7 @@ async function isAdminRequest(req: Request, supabase: any): Promise<boolean> {
   const provided = req.headers.get("x-reconcile-secret");
   if (cronSecret && provided && provided === cronSecret) return true;
 
-  const adminEmail = Deno.env.get("ADMIN_EMAIL")?.trim().toLowerCase();
-  const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  if (!adminEmail || !token) return false;
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user?.email) return false;
-  return data.user.email.toLowerCase() === adminEmail;
+  return (await adminEmailFromRequest(req, supabase)) !== null;
 }
 
 Deno.serve(async (req) => {

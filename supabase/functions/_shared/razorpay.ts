@@ -95,6 +95,7 @@ export interface MarkPaidInput {
 export async function markOrderPaid(supabase: any, input: MarkPaidInput): Promise<boolean> {
   const patch: Record<string, unknown> = {
     status: "paid",
+    payment_method: "razorpay",
     razorpay_payment_id: input.paymentId,
     paid_at: input.paidAt,
   };
