@@ -8,6 +8,8 @@ import {
   ALL, EMPTY_SEVA_FILTER, buildSevaCatalog, buildSubFilters, orderMatchesSeva, type SevaFilterValue,
 } from "@/lib/orderFilters";
 import SevaFilter from "./SevaFilter";
+import { downloadCsv, formatDateTimeIST, slugify, toCsv } from "@/lib/csv";
+import { ORDER_CSV_HEADERS, orderToCsvRow } from "@/lib/orderExport";
 import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -251,26 +253,20 @@ const OrderManager = (_props: Props) => {
     revenue: filtered.filter((o) => o.status === "paid").reduce((s, o) => s + o.amount, 0),
   };
 
-  /* ── CSV Export ── */
+  /* ── CSV Export: exactly the filtered orders, incl. members, gotra and the booked date ── */
   const exportCSV = () => {
-    const headers = ["Order ID","Date","Customer Name","Email","Phone","Address","Items","Amount (₹)","Status","Razorpay Order ID","Razorpay Payment ID"];
-    const rows = filtered.map((o) => {
-      const itemsStr = (o.items || []).map((i: any) => `${formatOrderItemLine(i)} x${i.quantity} @₹${i.price}`).join(" | ");
-      return [
-        o.id, new Date(o.created_at).toLocaleString("en-IN"),
-        o.customer_name, o.customer_email || "", o.customer_phone,
-        o.customer_address || "", itemsStr, (o.amount / 100).toFixed(2),
-        o.status, o.razorpay_order_id || "", o.razorpay_payment_id || "",
-      ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
-    });
-    const csv  = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url;
-    a.download = `narayan-kripa-orders-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const csv = toCsv(ORDER_CSV_HEADERS, filtered.map(orderToCsvRow));
+    // File name says what was exported, e.g. "…-orders-paid-pitra-shanti-…-26-sep-2026-couple-2026-09-27.csv"
+    const presetLabel = datePreset === "custom"
+      ? [customFrom, customTo].filter(Boolean).join(" to ")
+      : presets.find((p) => p.key === datePreset)?.label ?? "";
+    const scope = slugify([
+      statusFilter !== "all" ? statusFilter : "",
+      datePreset !== "all" ? presetLabel : "",
+      sevaSummary ?? "",
+    ].filter(Boolean).join(" "), 80);
+    const today = formatDateTimeIST(new Date().toISOString()).slice(0, 10);
+    downloadCsv(`narayan-kripa-orders${scope ? `-${scope}` : ""}-${today}.csv`, csv);
   };
 
   const clearAll = () => {

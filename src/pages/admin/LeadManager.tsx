@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
+import { downloadCsv, formatDateTimeIST, toCsv } from "@/lib/csv";
+import { LEAD_CSV_HEADERS, leadToCsvRow } from "@/lib/leadExport";
 import { RefreshCw, Download, Search, Calendar, X } from "lucide-react";
 
 interface Lead {
@@ -127,25 +129,9 @@ const LeadManager = () => {
   }, [filtered]);
 
   const exportCSV = () => {
-    const headers = ["Name", "WhatsApp", "Puja", "Package", "Price (₹)", "Source", "Date"];
-    const rows = filtered.map((l) => [
-      l.name,
-      l.phone,
-      l.puja_name || "",
-      l.package_label || "",
-      l.price ? (l.price / 100).toFixed(0) : "",
-      l.source || "",
-      new Date(l.created_at).toLocaleString("en-IN"),
-    ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","));
-
-    const csv  = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url;
-    a.download = `narayan-kripa-leads-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const csv = toCsv(LEAD_CSV_HEADERS, filtered.map(leadToCsvRow));
+    const today = formatDateTimeIST(new Date().toISOString()).slice(0, 10);
+    downloadCsv(`narayan-kripa-leads-${today}.csv`, csv);
   };
 
   const handlePreset = (preset: DatePreset) => {
