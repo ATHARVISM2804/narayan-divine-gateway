@@ -1,8 +1,8 @@
 import { useCart } from "@/context/CartContext";
 import { useLocation } from "react-router-dom";
 import { trackContact } from "@/lib/metaPixel";
+import { whatsappLink } from "@/lib/whatsapp";
 
-const WA_NUMBER = "919286345941"; // +91 prefix
 const CART_BAR_HIDDEN_PATHS = ["/checkout", "/order-success", "/cart"];
 
 const WhatsAppButton = () => {
@@ -13,10 +13,11 @@ const WhatsAppButton = () => {
     totalItems > 0 &&
     !CART_BAR_HIDDEN_PATHS.some((p) => pathname.startsWith(p));
 
-  const url = `https://wa.me/${WA_NUMBER}`;
+  const url = whatsappLink();
 
   return (
-    <div className={`fixed right-4 z-50 flex flex-col items-end gap-2 sm:bottom-8 sm:right-6 ${cartBarVisible ? "bottom-36" : "bottom-20"}`}>
+    // Checkout's sticky pay bar can grow a "Book on WhatsApp" row, so sit above it there.
+    <div className={`fixed right-4 z-50 flex flex-col items-end gap-2 sm:bottom-8 sm:right-6 ${pathname.startsWith("/checkout") ? "bottom-40" : cartBarVisible ? "bottom-36" : "bottom-20"}`}>
 
       {/* WhatsApp FAB */}
       <a

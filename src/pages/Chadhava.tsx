@@ -1,52 +1,41 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase, type Chadhava as CType } from "@/lib/supabase";
 import PageHero from "@/components/PageHero";
 import FitImage from "@/components/FitImage";
 import SectionHeading from "@/components/SectionHeading";
-import heroChadhava from "@/assets/hero-chadhava-page.png";
+import heroChadhava from "@/assets/hero-chadhava-page.webp";
 import { useLanguage } from "@/context/LanguageContext";
 import { ChevronRight, MapPin, Calendar } from "lucide-react";
 import { parseDate } from "@/lib/parseDate";
+import { useCatalog } from "@/lib/catalog";
+import { CHADHAVA_CARD_COLUMNS, chadhavaListFromSnapshot, minOfferingPrices, type ChadhavaList } from "@/lib/catalogQueries";
+import { DegradedBanner, LoadError } from "@/components/LoadError";
 
 
 const Chadhava = () => {
   usePageTitle("Offer Chadhava — Narayan Kripa");
   const { t, lang } = useLanguage();
-  const [chadhavas, setChadhavas] = useState<CType[]>([]);
-  const [minPrices, setMinPrices] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      const { data: chData } = await supabase
-        .from("chadhavas")
-        .select("*")
-        .eq("status", "active");
-      if (chData) {
-        const sorted = (chData as CType[]).sort(
-          (a, b) => parseDate(a.date, a.countdown_datetime) - parseDate(b.date, b.countdown_datetime)
-        );
-        setChadhavas(sorted);
-        const { data: offData } = await supabase
-          .from("chadhava_offerings")
-          .select("chadhava_id, price")
-          .eq("status", "active");
-        if (offData) {
-          const mins: Record<string, number> = {};
-          offData.forEach((o: { chadhava_id: string; price: number }) => {
-            if (!mins[o.chadhava_id] || o.price < mins[o.chadhava_id]) {
-              mins[o.chadhava_id] = o.price;
-            }
-          });
-          setMinPrices(mins);
-        }
-      }
-      setLoading(false);
-    };
-    load();
-  }, []);
+  const { data, loading, degraded, failed, retry } = useCatalog<ChadhavaList>(
+    "chadhavas:active",
+    async (signal) => {
+      const [ch, off] = await Promise.all([
+        supabase.from("chadhavas").select(CHADHAVA_CARD_COLUMNS).eq("status", "active").retry(false).abortSignal(signal).returns<CType[]>(),
+        supabase.from("chadhava_offerings").select("chadhava_id, price").eq("status", "active").retry(false).abortSignal(signal)
+          .returns<{ chadhava_id: string; price: number }[]>(),
+      ]);
+      // Starting prices are a nice-to-have; only the chadhavas themselves decide success.
+      if (ch.error) return { data: null, error: ch.error };
+      return { data: { chadhavas: ch.data ?? [], minPrices: minOfferingPrices(off.data ?? []) }, error: null };
+    },
+    chadhavaListFromSnapshot,
+  );
+  const chadhavas = useMemo(
+    () => [...(data?.chadhavas ?? [])].sort((a, b) => parseDate(a.date, a.countdown_datetime) - parseDate(b.date, b.countdown_datetime)),
+    [data],
+  );
+  const minPrices = data?.minPrices ?? {};
 
   const Skeleton = () => (
     <div className="rounded-2xl border border-gold/30 bg-ivory overflow-hidden animate-pulse">
@@ -67,8 +56,11 @@ const Chadhava = () => {
         <div className="container">
           <SectionHeading title={t("chadhava_section_title")} subtitle={t("chadhava_section_sub")} />
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {degraded && <DegradedBanner />}
             {loading ? (
               <><Skeleton /><Skeleton /><Skeleton /><Skeleton /><Skeleton /><Skeleton /></>
+            ) : failed ? (
+              <LoadError onRetry={retry} />
             ) : chadhavas.length === 0 ? (
               <p className="col-span-full py-12 text-center text-brown/60">{t("chadhava_empty")}</p>
             ) : chadhavas.map((c) => {

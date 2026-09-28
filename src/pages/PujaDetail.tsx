@@ -13,10 +13,14 @@ import PujaSections from "@/components/puja/PujaSections";
 import PujaPackageModal from "@/components/puja/PujaPackageModal";
 import LeadCaptureModal from "@/components/puja/LeadCaptureModal";
 
-import pkgSingle from "@/assets/pkg-single.png";
-import pkgCouple from "@/assets/pkg-couple.png";
-import pkgFamily4 from "@/assets/pkg-family4.png";
-import pkgFamily6 from "@/assets/pkg-family6.png";
+import pkgSingle from "@/assets/pkg-single.webp";
+import pkgCouple from "@/assets/pkg-couple.webp";
+import pkgFamily4 from "@/assets/pkg-family4.webp";
+import pkgFamily6 from "@/assets/pkg-family6.webp";
+import StorageImage from "@/components/StorageImage";
+import { DegradedBanner, LoadError } from "@/components/LoadError";
+import { useCatalog } from "@/lib/catalog";
+import { pujaFromSnapshot } from "@/lib/catalogQueries";
 
 const getTierImage = (label: string): string => {
   const l = label.toLowerCase();
@@ -63,8 +67,11 @@ const PujaDetail = () => {
   const { addItem } = useCart();
   const { t, lang } = useLanguage();
 
-  const [puja, setPuja] = useState<Puja | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: puja, loading, degraded, failed, notFound, retry } = useCatalog<Puja>(
+    id ? `puja:${id}` : null,
+    (signal) => supabase.from("pujas").select("*").eq("id", id!).eq("status", "active").retry(false).abortSignal(signal).maybeSingle<Puja>(),
+    id ? pujaFromSnapshot(id) : undefined,
+  );
   const [showModal, setShowModal] = useState(false);
   const [selectedTier, setSelectedTier] = useState<{ label: string; price: number } | null>(null);
   const [addedId,      setAddedId]      = useState<string | null>(null);
@@ -74,15 +81,11 @@ const PujaDetail = () => {
 
   usePageTitle(puja ? `${puja.name} — Narayan Kripa` : "Loading…");
 
+  // Leave only when the puja really doesn't exist (or was unpublished) — a failed
+  // request shows an error with Retry instead of bouncing the visitor to the list.
   useEffect(() => {
-    if (!id) return;
-    supabase.from("pujas").select("*").eq("id", id).eq("status", "active").single()
-      .then(({ data, error }) => {
-        if (error || !data) { nav("/puja", { replace: true }); return; }
-        setPuja(data as Puja);
-        setLoading(false);
-      });
-  }, [id, nav]);
+    if (notFound) nav("/puja", { replace: true });
+  }, [notFound, nav]);
 
   // ViewContent — once per puja. The ref guard keeps React StrictMode's
   // double-invoked effects from sending the event twice in dev.
@@ -146,6 +149,12 @@ const PujaDetail = () => {
     </main>
   );
 
+  if (failed) return (
+    <main className="min-h-[60vh] bg-background flex items-center justify-center px-4 py-12">
+      <LoadError onRetry={retry} className="max-w-lg w-full" />
+    </main>
+  );
+
   if (!puja) return null;
 
   const displayName = (lang === "hi" && puja.name_hi) ? puja.name_hi : puja.name;
@@ -167,11 +176,12 @@ const PujaDetail = () => {
 
   return (
     <main className="bg-background min-h-screen">
+      {degraded && <div className="container pt-3"><DegradedBanner /></div>}
 
       {/* ── Hero ── */}
       <div className="relative overflow-hidden bg-gradient-to-br from-maroon via-maroon-deep to-maroon">
         {puja.image_url && (
-          <img src={puja.image_url} alt="" fetchPriority="high" decoding="async" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm" />
+          <StorageImage src={puja.image_url} width={640} fixed alt="" fetchPriority="high" decoding="async" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm" />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-maroon/60 via-maroon-deep/80 to-maroon" />
 

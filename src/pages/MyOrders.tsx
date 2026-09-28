@@ -7,6 +7,7 @@ import { checkOrderPayment } from "@/lib/orderStatus";
 import { orderItemWhen } from "@/lib/orderItems";
 import { Package, LogOut, ShoppingBag, Eye, X, Phone, Search, RefreshCw } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { LoadError } from "@/components/LoadError";
 
 interface Order {
   id: string;
@@ -38,6 +39,8 @@ const MyOrders = () => {
   const [lookupPhone, setLookupPhone] = useState("");
   const [lookupDone, setLookupDone] = useState(false);
   const [lookupError, setLookupError] = useState("");
+  const [ordersFailed, setOrdersFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [checking, setChecking] = useState(false);
   const [checkedStillPending, setCheckedStillPending] = useState(false);
 
@@ -83,6 +86,13 @@ const MyOrders = () => {
 
       const results = await Promise.all(queries);
       const allOrders = results.flatMap((r) => r.data || []);
+      // A failed request must not read as "you have no orders".
+      if (allOrders.length === 0 && results.some((r) => r.error)) {
+        setOrdersFailed(true);
+        setLoading(false);
+        return;
+      }
+      setOrdersFailed(false);
       // Deduplicate by id
       const unique = Array.from(new Map(allOrders.map((o) => [o.id, o])).values()) as Order[];
       unique.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -92,7 +102,7 @@ const MyOrders = () => {
     };
 
     fetchOrders();
-  }, [user]);
+  }, [user, reloadKey]);
 
   // Phone lookup for guests
   const handlePhoneLookup = async (e: React.FormEvent) => {
@@ -227,6 +237,8 @@ const MyOrders = () => {
           <div className="space-y-4">
             {[1, 2, 3].map((i) => <div key={i} className="h-24 rounded-2xl bg-gold/10 animate-pulse" />)}
           </div>
+        ) : user && ordersFailed ? (
+          <LoadError onRetry={() => setReloadKey((k) => k + 1)} />
         ) : lookupDone && orders.length === 0 ? (
           <div className="rounded-2xl border border-gold/30 bg-ivory p-16 text-center">
             <div className="mx-auto mb-4 grid h-20 w-20 place-items-center rounded-full bg-gold/10">

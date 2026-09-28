@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
-import heroAstrology from "@/assets/hero-astrology-page.png";
+import heroAstrology from "@/assets/hero-astrology-page.webp";
 import { useLanguage } from "@/context/LanguageContext";
 
 const Astrology = () => {

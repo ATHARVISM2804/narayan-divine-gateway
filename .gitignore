@@ -65,3 +65,6 @@ coverage
 
 # Google Search Console verification (sensitive)
 public/google*.html
+
+# Written at build time by scripts/snapshot-catalog.mjs
+public/catalog-snapshot.json

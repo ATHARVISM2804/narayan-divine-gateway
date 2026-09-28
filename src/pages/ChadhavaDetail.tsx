@@ -9,6 +9,10 @@ import { toast } from "sonner";
 import PujaGallery from "@/components/puja/PujaGallery";
 import FitImage from "@/components/FitImage";
 import { useLanguage } from "@/context/LanguageContext";
+import StorageImage from "@/components/StorageImage";
+import { DegradedBanner, LoadError } from "@/components/LoadError";
+import { useCatalog } from "@/lib/catalog";
+import { chadhavaFromSnapshot, type ChadhavaWithOfferings } from "@/lib/catalogQueries";
 
 const parseChadhavaDate = (dateStr: string, countdownDatetime?: string | null): Date => {
   // If an exact ISO datetime is provided (e.g. "2026-07-12T16:00:00+05:30"), use it directly
@@ -46,28 +50,35 @@ const ChadhavaDetail = () => {
   const { addItem } = useCart();
   const { t, lang } = useLanguage();
 
-  const [chadhava, setChadhava] = useState<Chadhava | null>(null);
-  const [offerings, setOfferings] = useState<ChadhavaOffering[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0, expired: false });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const { data, loading, degraded, failed, notFound, retry } = useCatalog<ChadhavaWithOfferings>(
+    id ? `chadhava:${id}` : null,
+    async (signal) => {
+      const [ch, off] = await Promise.all([
+        supabase.from("chadhavas").select("*").eq("id", id!).eq("status", "active").retry(false).abortSignal(signal).maybeSingle<Chadhava>(),
+        supabase.from("chadhava_offerings").select("*").eq("chadhava_id", id!).eq("status", "active").order("sort_order")
+          .retry(false).abortSignal(signal).returns<ChadhavaOffering[]>(),
+      ]);
+      // Offerings are what the visitor buys here, so either query failing counts as a failure.
+      const error = ch.error ?? off.error;
+      if (error) return { data: null, error };
+      return { data: ch.data ? { chadhava: ch.data, offerings: off.data ?? [] } : null, error: null };
+    },
+    id ? chadhavaFromSnapshot(id) : undefined,
+  );
+  const chadhava = data?.chadhava ?? null;
+  const offerings = data?.offerings ?? [];
+
   usePageTitle(chadhava ? `${chadhava.item} — Narayan Kripa` : "Loading…");
 
+  // Leave only when the chadhava really doesn't exist — a failed request shows Retry instead.
   useEffect(() => {
-    if (!id) return;
-    Promise.all([
-      supabase.from("chadhavas").select("*").eq("id", id).eq("status", "active").single(),
-      supabase.from("chadhava_offerings").select("*").eq("chadhava_id", id).eq("status", "active").order("sort_order"),
-    ]).then(([chRes, offRes]) => {
-      if (chRes.error || !chRes.data) { nav("/chadhava", { replace: true }); return; }
-      setChadhava(chRes.data as Chadhava);
-      if (offRes.data) setOfferings(offRes.data as ChadhavaOffering[]);
-      setLoading(false);
-    });
-  }, [id, nav]);
+    if (notFound) nav("/chadhava", { replace: true });
+  }, [notFound, nav]);
 
   // ViewContent — once per chadhava. Ref guard prevents a double send under
   // React StrictMode's double-invoked effects in dev.
@@ -143,6 +154,12 @@ const ChadhavaDetail = () => {
     </main>
   );
 
+  if (failed) return (
+    <main className="min-h-[60vh] bg-background flex items-center justify-center px-4 py-12">
+      <LoadError onRetry={retry} className="max-w-lg w-full" />
+    </main>
+  );
+
   if (!chadhava) return null;
 
   const displayItem = (lang === "hi" && chadhava.item_hi) ? chadhava.item_hi : chadhava.item;
@@ -155,13 +172,14 @@ const ChadhavaDetail = () => {
 
   return (
     <main className="bg-background min-h-screen pb-28 md:pb-10">
+      {degraded && <div className="container pt-3"><DegradedBanner /></div>}
 
       {/* ══════════════════════════════════════════════
           HERO — Same dark maroon style as PujaDetail
           ══════════════════════════════════════════════ */}
       <div className="relative overflow-hidden bg-gradient-to-br from-maroon via-maroon-deep to-maroon">
         {chadhava.image_url && (
-          <img src={chadhava.image_url} alt="" fetchPriority="high" decoding="async" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm" />
+          <StorageImage src={chadhava.image_url} width={640} fixed alt="" fetchPriority="high" decoding="async" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm" />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-maroon/60 via-maroon-deep/80 to-maroon" />
 
@@ -289,7 +307,7 @@ const ChadhavaDetail = () => {
                     <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-saffron/20 via-gold/15 to-maroon/10 cursor-pointer"
                       onClick={() => toggleOffering(o.id)}>
                       {o.image_url ? (
-                        <FitImage src={o.image_url} alt={o.name} className="transition-transform duration-500 group-hover:scale-105" />
+                        <FitImage src={o.image_url} alt={o.name} width={200} className="transition-transform duration-500 group-hover:scale-105" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-4xl">🌺</div>
                       )}

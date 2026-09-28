@@ -1,36 +1,30 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase, type Puja as PujaType } from "@/lib/supabase";
 import PageHero from "@/components/PageHero";
 import FitImage from "@/components/FitImage";
-import heroPuja from "@/assets/hero-puja-page.png";
+import heroPuja from "@/assets/hero-puja-page.webp";
 import { useLanguage } from "@/context/LanguageContext";
 import { parseDate } from "@/lib/parseDate";
+import { useCatalog } from "@/lib/catalog";
+import { PUJA_CARD_COLUMNS, activePujasFromSnapshot } from "@/lib/catalogQueries";
+import { DegradedBanner, LoadError } from "@/components/LoadError";
 
 const Puja = () => {
   usePageTitle("Sacred Pujas — Narayan Kripa");
   const { t, lang } = useLanguage();
 
-  const [pujas, setPujas] = useState<PujaType[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase
-      .from("pujas")
-      .select("*")
-      .eq("status", "active")
-      .then(({ data }) => {
-        if (data) {
-          const sorted = (data as PujaType[]).sort(
-            (a, b) => parseDate(a.date, a.countdown_datetime) - parseDate(b.date, b.countdown_datetime)
-          );
-          setPujas(sorted);
-        }
-        setLoading(false);
-      });
-  }, []);
+  const { data, loading, degraded, failed, retry } = useCatalog<PujaType[]>(
+    "pujas:active",
+    (signal) => supabase.from("pujas").select(PUJA_CARD_COLUMNS).eq("status", "active").retry(false).abortSignal(signal).returns<PujaType[]>(),
+    activePujasFromSnapshot,
+  );
+  const pujas = useMemo(
+    () => [...(data ?? [])].sort((a, b) => parseDate(a.date, a.countdown_datetime) - parseDate(b.date, b.countdown_datetime)),
+    [data],
+  );
 
   const Skeleton = () => (
     <div className="rounded-2xl border border-gold/30 bg-ivory overflow-hidden animate-pulse">
@@ -51,8 +45,11 @@ const Puja = () => {
       <section className="bg-background py-12">
         <div className="container">
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {degraded && <DegradedBanner />}
             {loading ? (
               <><Skeleton /><Skeleton /><Skeleton /></>
+            ) : failed ? (
+              <LoadError onRetry={retry} />
             ) : pujas.length === 0 ? (
               <p className="col-span-full py-12 text-center text-brown/60">{t("puja_empty")}</p>
             ) : pujas.map((p) => {

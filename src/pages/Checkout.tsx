@@ -4,12 +4,14 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase, type PujaOffering } from "@/lib/supabase";
-import { getMetaTrackingContext, trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
+import { getMetaTrackingContext, trackContact, trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
 import { checkOrderPayment } from "@/lib/orderStatus";
 import { ShoppingBag, Shield, ArrowLeft, Loader2, MapPin, Users, Info, Gift, ChevronRight, Check, Calendar, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { useLanguage } from "@/context/LanguageContext";
+import StorageImage from "@/components/StorageImage";
+import { whatsappLink } from "@/lib/whatsapp";
 
 declare global {
   interface Window {
@@ -100,6 +102,8 @@ const Checkout = () => {
   const [gotra, setGotra] = useState("");
   const [gotraUnknown, setGotraUnknown] = useState(false);
   const [loading, setLoading] = useState(false);
+  /** Pre-filled WhatsApp message offered when online booking fails. */
+  const [bookingFallback, setBookingFallback] = useState<string | null>(null);
   const [wantBox, setWantBox] = useState(false);
   const [pujaOfferings, setPujaOfferings] = useState<PujaOffering[]>([]);
   const [selectedOfferings, setSelectedOfferings] = useState<Record<string, boolean>>({});
@@ -219,6 +223,7 @@ const Checkout = () => {
     if (items.length === 0) { toast.error(t("co_err_empty")); return; }
 
     setLoading(true);
+    setBookingFallback(null);
 
     try {
       await loadRazorpayScript();
@@ -350,8 +355,34 @@ const Checkout = () => {
     } catch (err: any) {
       toast.error(err.message || t("co_err_generic"));
       setLoading(false);
+      // Online booking failed (server down, network, payment script blocked) —
+      // don't lose the customer: offer a pre-filled WhatsApp booking.
+      setBookingFallback(bookingWhatsappText());
     }
   };
+
+  const bookingWhatsappText = () => {
+    const lines = [t("wa_msg_checkout")];
+    items.forEach((i) => lines.push(`• ${i.name}${i.quantity > 1 ? ` ×${i.quantity}` : ""}${i.description ? ` — ${i.description}` : ""}`));
+    if (form.name.trim()) lines.push(`Name: ${form.name.trim()}`);
+    if (form.phone.trim()) lines.push(`Phone: ${form.phone.trim()}`);
+    lines.push(`Total: ₹${totalPrice.toLocaleString("en-IN")}`);
+    return lines.join("\n");
+  };
+
+  const WhatsAppFallback = ({ className = "" }: { className?: string }) =>
+    bookingFallback ? (
+      <a
+        href={whatsappLink(bookingFallback)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => trackContact("whatsapp_checkout_failed")}
+        className={`items-center justify-center gap-2 rounded-full py-3 text-center text-sm font-bold text-white shadow-md ${className}`}
+        style={{ background: "linear-gradient(135deg, #25d366 0%, #128c7e 100%)" }}
+      >
+        {t("book_whatsapp")}
+      </a>
+    ) : null;
 
   /* ── Empty cart ── */
   if (items.length === 0) {
@@ -474,7 +505,7 @@ const Checkout = () => {
                 <div className="rounded-2xl border border-gold/40 bg-ivory p-4 sm:p-6 shadow-soft">
                   <div className="flex items-start gap-4">
                     {pujaItem.image && (
-                      <img src={pujaItem.image} alt="" className="h-20 w-20 rounded-xl object-cover border border-gold/30 shrink-0" />
+                      <StorageImage src={pujaItem.image} width={80} alt="" className="h-20 w-20 rounded-xl object-cover border border-gold/30 shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-body text-base sm:text-lg font-bold text-maroon leading-snug">{pujaItem.name}</h3>
@@ -494,7 +525,7 @@ const Checkout = () => {
                 <div key={item.id} className="rounded-2xl border border-gold/40 bg-ivory p-4 sm:p-6 shadow-soft">
                   <div className="flex items-start gap-4">
                     {item.image && (
-                      <img src={item.image} alt="" className="h-20 w-20 rounded-xl object-cover border border-gold/30 shrink-0" />
+                      <StorageImage src={item.image} width={80} alt="" className="h-20 w-20 rounded-xl object-cover border border-gold/30 shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-body text-base font-bold text-maroon">{item.name}</h3>
@@ -532,7 +563,7 @@ const Checkout = () => {
                         >
                           <div className="h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-gold/10">
                             {off.image_url
-                              ? <img src={off.image_url} alt={off.name} className="h-full w-full object-cover" />
+                              ? <StorageImage src={off.image_url} width={48} alt={off.name} className="h-full w-full object-cover" />
                               : <div className="h-full w-full grid place-items-center text-xl">🌺</div>}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -853,6 +884,7 @@ const Checkout = () => {
                     </span>
                   )}
                 </button>
+                <WhatsAppFallback className="hidden lg:flex w-full" />
 
                 {/* Trust badges */}
                 <div className="flex flex-wrap justify-center gap-2">
@@ -871,6 +903,7 @@ const Checkout = () => {
 
       {/* ── Sticky bottom CTA bar (mobile only) ── */}
       <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-ivory/95 backdrop-blur-md border-t border-gold/30 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3">
+        {checkoutStep === "details" && <WhatsAppFallback className="mb-2 flex w-full" />}
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col">
             <span className="text-[11px] text-brown/50 font-medium">{t("co_total")}</span>

@@ -3,6 +3,7 @@ import { supabase, type Temple } from "@/lib/supabase";
 import { Plus, Pencil, Trash2, X, Loader2, Star, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
+import StorageImage from "@/components/StorageImage";
 
 interface Props { temples: Temple[]; onRefresh: () => void }
 
@@ -148,7 +149,7 @@ const TempleManager = ({ temples, onRefresh }: Props) => {
               className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-gold/30 bg-ivory p-4 shadow-soft transition-all hover:border-gold/60">
               <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-saffron/20 to-gold/20">
                 {t.image_url
-                  ? <img src={t.image_url} alt="" className="h-full w-full object-cover" />
+                  ? <StorageImage src={t.image_url} width={96} alt="" className="h-full w-full object-cover" />
                   : <div className="grid h-full w-full place-items-center text-2xl">🛕</div>}
               </div>
               <div className="flex-1 min-w-0">

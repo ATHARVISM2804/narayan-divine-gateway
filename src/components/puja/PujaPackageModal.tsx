@@ -7,10 +7,10 @@ import { toast } from "sonner";
 import type { Puja } from "@/lib/supabase";
 import LeadCaptureModal from "./LeadCaptureModal";
 
-import pkgSingle  from "@/assets/pkg-single.png";
-import pkgCouple  from "@/assets/pkg-couple.png";
-import pkgFamily4 from "@/assets/pkg-family4.png";
-import pkgFamily6 from "@/assets/pkg-family6.png";
+import pkgSingle  from "@/assets/pkg-single.webp";
+import pkgCouple  from "@/assets/pkg-couple.webp";
+import pkgFamily4 from "@/assets/pkg-family4.webp";
+import pkgFamily6 from "@/assets/pkg-family6.webp";
 
 const getTierImage = (label: string): string => {
   const l = label.toLowerCase();

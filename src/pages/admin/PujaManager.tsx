@@ -3,6 +3,7 @@ import { supabase, type Puja, type PujaOffering } from "@/lib/supabase";
 import { Plus, Pencil, Trash2, X, Loader2, Star, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
+import StorageImage from "@/components/StorageImage";
 
 interface Props { pujas: Puja[]; onRefresh: () => void }
 
@@ -94,7 +95,7 @@ const GalleryEditor = ({ images, onChange }: { images: string[]; onChange: (v: s
     <div className="grid grid-cols-3 gap-2">
       {images.map((url, i) => (
         <div key={i} className="relative rounded-lg overflow-hidden border border-gold/40 h-24">
-          <img src={url} alt="" className="h-full w-full object-cover" />
+          <StorageImage src={url} width={128} alt="" className="h-full w-full object-cover" />
           <button type="button" onClick={() => onChange(images.filter((_, j) => j !== i))}
             className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-maroon-deep/80 text-white hover:bg-red-600">
             <X size={10} />
@@ -273,7 +274,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
           {pujas.map((p) => (
             <div key={p.id} className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-gold/30 bg-ivory p-4 shadow-soft transition-all hover:border-gold/60">
               <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-saffron/20 to-gold/20">
-                {p.image_url ? <img src={p.image_url} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-2xl">🪔</div>}
+                {p.image_url ? <StorageImage src={p.image_url} width={96} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-2xl">🪔</div>}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -421,7 +422,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                         {offerings.map(o => (
                           <div key={o.id} className="flex items-center gap-3 rounded-xl border border-gold/20 bg-cream p-3">
                             <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-gold/10">
-                              {o.image_url ? <img src={o.image_url} className="h-full w-full object-cover" /> : <div className="h-full w-full grid place-items-center text-lg">🌺</div>}
+                              {o.image_url ? <StorageImage src={o.image_url} width={64} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full grid place-items-center text-lg">🌺</div>}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-semibold text-maroon truncate">{o.name}</p>

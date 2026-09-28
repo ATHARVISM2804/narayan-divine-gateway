@@ -3,6 +3,7 @@ import { supabase, type Chadhava, type ChadhavaOffering } from "@/lib/supabase";
 import { Plus, Pencil, Trash2, X, Loader2, ChevronDown, ChevronUp, Image as ImageIcon, Star } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
+import StorageImage from "@/components/StorageImage";
 
 interface Props { chadhavas: Chadhava[]; onRefresh: () => void }
 
@@ -220,7 +221,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
           {chadhavas.map((c) => (
             <div key={c.id} className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-gold/30 bg-ivory p-4 shadow-soft transition-all hover:border-gold/60">
               <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-saffron/20 to-gold/20">
-                {c.image_url ? <img src={c.image_url} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-2xl">🛕</div>}
+                {c.image_url ? <StorageImage src={c.image_url} width={96} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-2xl">🛕</div>}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -360,7 +361,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                   <div className="grid grid-cols-3 gap-3">
                     {(editing.gallery || []).map((url, i) => (
                       <div key={i} className="relative rounded-xl overflow-hidden border border-gold/30 aspect-square bg-cream">
-                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        <StorageImage src={url} width={128} alt="" className="w-full h-full object-cover" />
                         <button onClick={() => removeGalleryImage(i)}
                           className="absolute top-1 right-1 h-6 w-6 rounded-full bg-red-500 text-white grid place-items-center text-xs hover:bg-red-600">×</button>
                       </div>
@@ -396,7 +397,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                           {offerings.map(o => (
                             <div key={o.id} className="flex items-center gap-3 rounded-xl border border-gold/20 bg-cream p-3">
                               <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-gold/10">
-                                {o.image_url ? <img src={o.image_url} className="h-full w-full object-cover" /> : <div className="h-full w-full grid place-items-center text-lg">🌺</div>}
+                                {o.image_url ? <StorageImage src={o.image_url} width={64} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full grid place-items-center text-lg">🌺</div>}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-maroon truncate">{o.name}</p>

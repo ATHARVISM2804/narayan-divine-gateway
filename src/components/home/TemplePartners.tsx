@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, ChevronRight, Calendar } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 import FitImage from "@/components/FitImage";
 import { supabase, type Chadhava as CType } from "@/lib/supabase";
 import { useLanguage } from "@/context/LanguageContext";
+import { useCatalog } from "@/lib/catalog";
+import { CHADHAVA_CARD_COLUMNS, featuredChadhavasFromSnapshot, templesFromSnapshot } from "@/lib/catalogQueries";
+import { DegradedBanner, LoadError } from "@/components/LoadError";
 
 const Pill = ({ name }: { name: string }) => (
   <span className="mx-2 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-gold bg-ivory px-5 py-2.5 text-sm font-medium text-maroon shadow-soft">
@@ -26,56 +28,25 @@ const Skeleton = () => (
 
 const TemplePartners = () => {
   const { t, lang } = useLanguage();
-  const [chadhavas, setChadhavas] = useState<CType[]>([]);
-  const [minPrices, setMinPrices] = useState<Record<string, number>>({});
-  const [templeList, setTempleList] = useState<{ name: string; name_hi: string | null }[]>([]);
-  const [loading, setLoading] = useState(true);
-
   /* Marquee names come from the live Temples directory (active temples only) */
-  const templeNames = templeList.map((tp) => (lang === "hi" && tp.name_hi ? tp.name_hi : tp.name));
+  const { data: templeList } = useCatalog<{ name: string; name_hi: string | null }[]>(
+    "temples:names",
+    (signal) => supabase.from("temples").select("name, name_hi").eq("status", "active")
+      .order("sort_order", { ascending: true }).retry(false).abortSignal(signal).returns<{ name: string; name_hi: string | null }[]>(),
+    (s) => templesFromSnapshot(s)?.map((tp) => ({ name: tp.name, name_hi: tp.name_hi })),
+  );
+  const templeNames = (templeList ?? []).map((tp) => (lang === "hi" && tp.name_hi ? tp.name_hi : tp.name));
   const doubled = [...templeNames, ...templeNames];
   const reversed = [...templeNames].reverse();
   const doubledRev = [...reversed, ...reversed];
 
-  useEffect(() => {
-    supabase
-      .from("temples")
-      .select("name, name_hi")
-      .eq("status", "active")
-      .order("sort_order", { ascending: true })
-      .then(({ data }) => { if (data) setTempleList(data as { name: string; name_hi: string | null }[]); });
-  }, []);
-
-  useEffect(() => {
-    const load = async () => {
-      const { data: chData } = await supabase
-        .from("chadhavas")
-        .select("*")
-        .eq("status", "active")
-        .eq("featured", true)
-        .order("created_at", { ascending: false })
-        .limit(3);
-
-      if (chData) {
-        setChadhavas(chData as CType[]);
-        const { data: offData } = await supabase
-          .from("chadhava_offerings")
-          .select("chadhava_id, price")
-          .eq("status", "active");
-        if (offData) {
-          const mins: Record<string, number> = {};
-          offData.forEach((o: { chadhava_id: string; price: number }) => {
-            if (!mins[o.chadhava_id] || o.price < mins[o.chadhava_id]) {
-              mins[o.chadhava_id] = o.price;
-            }
-          });
-          setMinPrices(mins);
-        }
-      }
-      setLoading(false);
-    };
-    load();
-  }, []);
+  const { data, loading, degraded, failed, retry } = useCatalog<CType[]>(
+    "chadhavas:featured",
+    (signal) => supabase.from("chadhavas").select(CHADHAVA_CARD_COLUMNS).eq("status", "active").eq("featured", true)
+      .order("created_at", { ascending: false }).limit(3).retry(false).abortSignal(signal).returns<CType[]>(),
+    featuredChadhavasFromSnapshot,
+  );
+  const chadhavas = data ?? [];
 
   return (
     <section className="relative bg-gradient-to-b from-cream via-ivory to-cream py-20">
@@ -103,8 +74,11 @@ const TemplePartners = () => {
 
       {/* Chadhava cards — identical to Chadhava page */}
       <div className="container mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {degraded && <DegradedBanner />}
         {loading ? (
           <><Skeleton /><Skeleton /><Skeleton /></>
+        ) : failed ? (
+          <LoadError onRetry={retry} />
         ) : chadhavas.length === 0 ? (
           <p className="col-span-full py-12 text-center text-brown/60">
             {t("chadhava_empty")}

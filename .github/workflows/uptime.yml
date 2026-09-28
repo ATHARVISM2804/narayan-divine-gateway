@@ -1,0 +1,26 @@
+name: Site health check
+
+# Every 30 minutes: does narayankripa.in load, do the pujas load from Supabase,
+# and do puja images load? If not, this run fails and GitHub emails whoever last
+# edited this schedule (and anyone watching the repo's Actions), so an outage is
+# noticed within about half an hour instead of from a customer.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/uptime-check.mjs

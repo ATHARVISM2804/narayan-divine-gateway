@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MapPin, Phone, Mail, Clock, Plus, Minus, Facebook, Instagram, Youtube, Twitter, Loader2, CheckCircle } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
-import heroContact from "@/assets/hero-contact-page.png";
+import heroContact from "@/assets/hero-contact-page.webp";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import SectionHeading from "@/components/SectionHeading";
@@ -6,28 +6,21 @@ import FitImage from "@/components/FitImage";
 import { supabase, type Puja } from "@/lib/supabase";
 import { useLanguage } from "@/context/LanguageContext";
 import { parseDate } from "@/lib/parseDate";
+import { useCatalog } from "@/lib/catalog";
+import { PUJA_CARD_COLUMNS, featuredPujasFromSnapshot } from "@/lib/catalogQueries";
+import { DegradedBanner, LoadError } from "@/components/LoadError";
 
 const FeaturedPujas = () => {
   const { t, lang } = useLanguage();
-  const [pujas, setPujas] = useState<Puja[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase
-      .from("pujas")
-      .select("*")
-      .eq("status", "active")
-      .eq("featured", true)
-      .then(({ data }) => {
-        if (data) {
-          const sorted = (data as Puja[])
-            .sort((a, b) => parseDate(a.date) - parseDate(b.date))
-            .slice(0, 3);
-          setPujas(sorted);
-        }
-        setLoading(false);
-      });
-  }, []);
+  const { data, loading, degraded, failed, retry } = useCatalog<Puja[]>(
+    "pujas:featured",
+    (signal) => supabase.from("pujas").select(PUJA_CARD_COLUMNS).eq("status", "active").eq("featured", true).retry(false).abortSignal(signal).returns<Puja[]>(),
+    featuredPujasFromSnapshot,
+  );
+  const pujas = useMemo(
+    () => [...(data ?? [])].sort((a, b) => parseDate(a.date, a.countdown_datetime) - parseDate(b.date, b.countdown_datetime)).slice(0, 3),
+    [data],
+  );
 
   /* Loading skeleton */
   const Skeleton = () => (
@@ -42,7 +35,8 @@ const FeaturedPujas = () => {
     </div>
   );
 
-  if (!loading && pujas.length === 0) return null;
+  // Hide the section only when there really are no featured pujas — not when loading failed.
+  if (!loading && !failed && pujas.length === 0) return null;
 
   return (
     <section className="relative texture-parchment py-20">
@@ -57,8 +51,11 @@ const FeaturedPujas = () => {
         />
 
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3 mt-10">
+          {degraded && <DegradedBanner />}
           {loading ? (
             <><Skeleton /><Skeleton /><Skeleton /></>
+          ) : failed ? (
+            <LoadError onRetry={retry} />
           ) : pujas.map((p) => {
             const displayName = (lang === 'hi' && p.name_hi) ? p.name_hi : p.name;
             const displayLocation = (lang === 'hi' && p.location_hi) ? p.location_hi : p.location;

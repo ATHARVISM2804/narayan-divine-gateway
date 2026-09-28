@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { Search, MapPin, Clock, X, ChevronRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 import FitImage from "@/components/FitImage";
-import heroTemples from "@/assets/hero-temples-page.png";
+import heroTemples from "@/assets/hero-temples-page.webp";
 import fallbackTemple from "@/assets/hero-temple.jpg";
 import imgShiva from "@/assets/puja-shiva.jpg";
 import imgVishnu from "@/assets/puja-vishnu.jpg";
@@ -13,6 +13,9 @@ import imgDurga from "@/assets/puja-durga.jpg";
 import imgDarshan from "@/assets/hero-darshan.jpg";
 import { useLanguage } from "@/context/LanguageContext";
 import { supabase, type Temple } from "@/lib/supabase";
+import { useCatalog } from "@/lib/catalog";
+import { templesFromSnapshot } from "@/lib/catalogQueries";
+import { DegradedBanner, LoadError } from "@/components/LoadError";
 
 /* Fallback photo per seeded temple (used only until an admin uploads a real
    image_url). Matches the images the site originally shipped with. */
@@ -29,27 +32,20 @@ const templeImg = (tp: Temple) => tp.image_url || SEED_IMAGES[tp.name] || fallba
 
 const Temples = () => {
   const { t, lang } = useLanguage();
-  const [temples, setTemples] = useState<Temple[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, degraded, failed, retry } = useCatalog<Temple[]>(
+    "temples:active",
+    (signal) => supabase.from("temples").select("*").eq("status", "active")
+      .order("sort_order", { ascending: true }).order("created_at", { ascending: false })
+      .retry(false).abortSignal(signal).returns<Temple[]>(),
+    templesFromSnapshot,
+  );
+  const temples = useMemo(() => data ?? [], [data]);
   const [q, setQ] = useState("");
   const [state, setState] = useState("All");
   const [deity, setDeity] = useState("All");
   const [selected, setSelected] = useState<Temple | null>(null);
 
   usePageTitle("Sacred Temples of India — Narayan Kripa");
-
-  useEffect(() => {
-    supabase
-      .from("temples")
-      .select("*")
-      .eq("status", "active")
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        if (data) setTemples(data as Temple[]);
-        setLoading(false);
-      });
-  }, []);
 
   /* Filter options derived from the actual temples.
      value stays English (used by the filter); label is localized. */
@@ -101,11 +97,14 @@ const Temples = () => {
             </select>
           </div>
 
+          {degraded && <DegradedBanner className="mb-5" />}
           {/* Loading skeleton */}
           {loading ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="h-80 rounded-2xl bg-gold/10 animate-pulse" />)}
             </div>
+          ) : failed ? (
+            <LoadError onRetry={retry} />
           ) : filtered.length === 0 ? (
             <div className="mx-auto max-w-md rounded-2xl border border-gold/30 bg-ivory p-12 text-center">
               <p className="text-4xl mb-3">🛕</p>
@@ -207,7 +206,7 @@ const Temples = () => {
 
             {/* Hero image */}
             <div className="relative aspect-video overflow-hidden rounded-t-3xl sm:rounded-t-3xl">
-              <FitImage src={templeImg(selected)} alt={selected.name} loading="eager" />
+              <FitImage src={templeImg(selected)} alt={selected.name} loading="eager" width={640} />
               <div className="absolute inset-0 bg-gradient-to-t from-maroon-deep/90 via-maroon-deep/40 to-transparent" />
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-saffron via-gold to-saffron" />
 

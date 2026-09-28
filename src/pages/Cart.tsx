@@ -3,6 +3,7 @@ import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from "lucid
 import { useCart } from "@/context/CartContext";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useLanguage } from "@/context/LanguageContext";
+import StorageImage from "@/components/StorageImage";
 
 const Cart = () => {
   usePageTitle("Your Cart — Narayan Kripa");
@@ -74,7 +75,7 @@ const Cart = () => {
                 <div className="flex items-start md:items-center gap-4 pr-10 md:pr-0">
                   {item.image ? (
                     <div className="h-16 w-16 md:h-20 md:w-20 shrink-0 overflow-hidden rounded-xl border border-gold/30">
-                      <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                      <StorageImage src={item.image} width={80} alt={item.name} className="h-full w-full object-cover" />
                     </div>
                   ) : (
                     <div className="grid h-16 w-16 md:h-20 md:w-20 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-saffron/20 to-gold/30 text-2xl md:text-3xl">

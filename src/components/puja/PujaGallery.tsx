@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import FitImage from "@/components/FitImage";
+import StorageImage from "@/components/StorageImage";
 
 interface Props {
   images: string[];
@@ -26,7 +27,7 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
           designs at; object-contain guarantees the full poster is always visible,
           even when an upload is a slightly different shape. */}
       <div className="relative rounded-2xl overflow-hidden border-2 border-gold/30 shadow-2xl bg-gradient-to-br from-saffron/10 to-maroon/10 aspect-[1483/1061]">
-        <FitImage src={allImages[active]} alt={name} loading="eager" fetchPriority="high" className="transition-opacity duration-300" />
+        <FitImage src={allImages[active]} alt={name} loading="eager" fetchPriority="high" width={640} sizes="(min-width: 1024px) 640px, 100vw" className="transition-opacity duration-300" />
         {allImages.length > 1 && (
           <>
             <button onClick={() => setActive((active - 1 + allImages.length) % allImages.length)}
@@ -58,7 +59,7 @@ const PujaGallery = ({ images, fallbackUrl, name }: Props) => {
               aria-label={`View image ${i + 1}`}
               aria-current={i === active ? "true" : undefined}
               className={`shrink-0 h-16 w-16 rounded-lg overflow-hidden border-2 transition-all ${i === active ? "border-saffron shadow-md" : "border-gold/20 opacity-60 hover:opacity-100"}`}>
-              <img src={url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+              <StorageImage src={url} width={64} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
