@@ -7,6 +7,41 @@ interface Props {
   onChange: (url: string | null) => void;
 }
 
+const MAX_WIDTH = 1600;
+
+/**
+ * Downscale to MAX_WIDTH and re-encode as WebP (JPEG where the browser can't
+ * encode WebP) to cut storage egress. Falls back to the original file if the
+ * browser can't process it or the result isn't smaller. GIF/SVG are skipped so
+ * animation and vectors survive.
+ */
+async function compressImage(file: File): Promise<File> {
+  if (file.type === "image/gif" || file.type === "image/svg+xml") return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_WIDTH / bitmap.width);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+
+    const toBlob = (type: string) =>
+      new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.85));
+    let blob = await toBlob("image/webp");
+    // Older Safari silently returns PNG when it can't encode WebP.
+    if (blob?.type !== "image/webp") {
+      blob = file.type === "image/png" ? null : await toBlob("image/jpeg");
+    }
+    if (!blob || blob.size >= file.size) return file;
+
+    const ext = blob.type === "image/webp" ? "webp" : "jpg";
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + "." + ext, { type: blob.type });
+  } catch {
+    return file;
+  }
+}
+
 const ImageUpload = ({ value, onChange }: Props) => {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -25,12 +60,14 @@ const ImageUpload = ({ value, onChange }: Props) => {
     setError("");
     setUploading(true);
 
-    const ext = file.name.split(".").pop() || "jpg";
+    const compressed = await compressImage(file);
+    const ext = compressed.name.split(".").pop() || "jpg";
     const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
+    // Names are unique per upload, so browsers/CDN can cache for a year.
     const { error: upErr } = await supabase.storage
       .from("product-images")
-      .upload(name, file, { cacheControl: "3600", upsert: false });
+      .upload(name, compressed, { cacheControl: "31536000", upsert: false });
 
     if (upErr) {
       setError(upErr.message);
