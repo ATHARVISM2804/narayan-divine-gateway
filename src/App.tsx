@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
+import { lazyPage } from "@/lib/chunkReload";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useSearchParams } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,29 +18,29 @@ import { usePendingPaymentRecovery } from "@/hooks/usePendingPaymentRecovery";
 import Home from "./pages/Home";
 
 // ── Lazy: All other pages (code-split by route) ──
-const Puja = lazy(() => import("./pages/Puja"));
-const PujaDetail = lazy(() => import("./pages/PujaDetail"));
-const Chadhava = lazy(() => import("./pages/Chadhava"));
-const ChadhavaDetail = lazy(() => import("./pages/ChadhavaDetail"));
-const Astrology = lazy(() => import("./pages/Astrology"));
-const Temples = lazy(() => import("./pages/Temples"));
-const Contact = lazy(() => import("./pages/Contact"));
-const About = lazy(() => import("./pages/About"));
-const Cart = lazy(() => import("./pages/Cart"));
-const Checkout = lazy(() => import("./pages/Checkout"));
-const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
-const Login = lazy(() => import("./pages/Login"));
-const MyOrders = lazy(() => import("./pages/MyOrders"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Terms = lazy(() => import("./pages/Terms"));
-const Grievance = lazy(() => import("./pages/Grievance"));
-const Refund = lazy(() => import("./pages/Refund"));
-const Shipping = lazy(() => import("./pages/Shipping"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+const Puja = lazyPage(() => import("./pages/Puja"));
+const PujaDetail = lazyPage(() => import("./pages/PujaDetail"));
+const Chadhava = lazyPage(() => import("./pages/Chadhava"));
+const ChadhavaDetail = lazyPage(() => import("./pages/ChadhavaDetail"));
+const Astrology = lazyPage(() => import("./pages/Astrology"));
+const Temples = lazyPage(() => import("./pages/Temples"));
+const Contact = lazyPage(() => import("./pages/Contact"));
+const About = lazyPage(() => import("./pages/About"));
+const Cart = lazyPage(() => import("./pages/Cart"));
+const Checkout = lazyPage(() => import("./pages/Checkout"));
+const OrderSuccess = lazyPage(() => import("./pages/OrderSuccess"));
+const Login = lazyPage(() => import("./pages/Login"));
+const MyOrders = lazyPage(() => import("./pages/MyOrders"));
+const Privacy = lazyPage(() => import("./pages/Privacy"));
+const Terms = lazyPage(() => import("./pages/Terms"));
+const Grievance = lazyPage(() => import("./pages/Grievance"));
+const Refund = lazyPage(() => import("./pages/Refund"));
+const Shipping = lazyPage(() => import("./pages/Shipping"));
+const NotFound = lazyPage(() => import("./pages/NotFound"));
 
 // ── Lazy: Admin (never needed on public site) ──
-const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
-const AdminPanel = lazy(() => import("./pages/admin/AdminPanel"));
+const AdminLogin = lazyPage(() => import("./pages/admin/AdminLogin"));
+const AdminPanel = lazyPage(() => import("./pages/admin/AdminPanel"));
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 // ── QueryClient with sensible caching ──
@@ -119,7 +120,7 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <Navbar />
-      <ErrorBoundary>
+      <ErrorBoundary resetKey={location.pathname}>
         <Suspense fallback={<PageLoader />}>
           {children}
         </Suspense>

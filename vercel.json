@@ -13,7 +13,7 @@
     ]
   },
   "rewrites": [
-    { "source": "/((?!_vercel/).*)", "destination": "/index.html" }
+    { "source": "/((?!_vercel/|assets/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
