@@ -27,7 +27,6 @@ const Chadhava = () => {
     () => [...(data?.chadhavas ?? [])].sort((a, b) => parseDate(a.date, a.countdown_datetime) - parseDate(b.date, b.countdown_datetime)),
     [data],
   );
-  const minPrices = data?.minPrices ?? {};
 
   return (
     <main>
@@ -50,7 +49,7 @@ const Chadhava = () => {
               <p className="col-span-full rounded-xl border border-line bg-surface p-8 text-center text-ink-muted">{t("chadhava_empty")}</p>
             ) : (
               chadhavas.map((c, i) => (
-                <ChadhavaCard key={c.id} chadhava={c} minPrice={minPrices[c.id]} booked={stats?.by_item?.[c.id]} priority={i === 0} />
+                <ChadhavaCard key={c.id} chadhava={c} booked={stats?.by_item?.[c.id]} priority={i === 0} />
               ))
             )}
           </div>

@@ -6,7 +6,7 @@ import { prefetchProps } from "@/lib/prefetch";
 import { MIN_PROOF_COUNT } from "@/lib/proof";
 import FitImage from "@/components/FitImage";
 import { TempleIcon } from "@/components/icons";
-import { Eyebrow, Price } from "@/components/ui/typography";
+import { Eyebrow } from "@/components/ui/typography";
 
 interface CardProps {
   to: string;
@@ -16,7 +16,6 @@ interface CardProps {
   benefit?: string | null;
   place?: string | null;
   date?: string | null;
-  minPrice?: number | null;
   booked?: number;
   cta: string;
   prefetch: ReturnType<typeof prefetchProps>;
@@ -24,8 +23,9 @@ interface CardProps {
 }
 
 /** One card layout for pujas and chadhava: image, what it is, where, when,
-    price, and a full-width action. The whole card is the link. */
-const BookingCard = ({ to, image, title, occasion, benefit, place, date, minPrice, booked, cta, prefetch, priority }: CardProps) => {
+    and a full-width action. No "From ₹" price: prices show on the detail page.
+    The whole card is the link. */
+const BookingCard = ({ to, image, title, occasion, benefit, place, date, booked, cta, prefetch, priority }: CardProps) => {
   const { t } = useLanguage();
   return (
     <Link
@@ -61,15 +61,12 @@ const BookingCard = ({ to, image, title, occasion, benefit, place, date, minPric
           )}
         </ul>
         <div className="flex-1" />
-        <div className="mt-4 flex items-end justify-between gap-2">
-          {minPrice != null ? <Price amount={minPrice} prefix={t("pd_from")} className="text-lg" /> : <span />}
-          {booked != null && booked >= MIN_PROOF_COUNT && (
-            <span className="text-xs font-medium text-ink-soft">
-              {booked.toLocaleString("en-IN")} {t("pd_devotees_word")}
-            </span>
-          )}
-        </div>
-        <span className="btn-primary mt-3 w-full group-hover:bg-saffron-dark">
+        {booked != null && booked >= MIN_PROOF_COUNT && (
+          <p className="mt-4 text-xs font-medium text-ink-soft">
+            {booked.toLocaleString("en-IN")} {t("pd_devotees_word")}
+          </p>
+        )}
+        <span className="btn-primary mt-4 w-full group-hover:bg-saffron-dark">
           {cta} <ArrowRight size={18} />
         </span>
       </div>
@@ -80,7 +77,6 @@ const BookingCard = ({ to, image, title, occasion, benefit, place, date, minPric
 export const PujaCard = ({ puja, booked, priority }: { puja: Puja; booked?: number; priority?: boolean }) => {
   const { t, lang } = useLanguage();
   const hi = lang === "hi";
-  const prices = puja.prices ?? [];
   return (
     <BookingCard
       to={`/puja/${puja.id}`}
@@ -91,7 +87,6 @@ export const PujaCard = ({ puja, booked, priority }: { puja: Puja; booked?: numb
       benefit={hi && puja.benefit_hi ? puja.benefit_hi : puja.benefit}
       place={hi && puja.location_hi ? puja.location_hi : puja.location}
       date={puja.date}
-      minPrice={prices.length ? Math.min(...prices.map((p) => p.price)) : null}
       booked={booked}
       cta={t("btn_participate")}
       priority={priority}
@@ -101,12 +96,10 @@ export const PujaCard = ({ puja, booked, priority }: { puja: Puja; booked?: numb
 
 export const ChadhavaCard = ({
   chadhava,
-  minPrice,
   booked,
   priority,
 }: {
   chadhava: Chadhava;
-  minPrice?: number;
   booked?: number;
   priority?: boolean;
 }) => {
@@ -122,7 +115,6 @@ export const ChadhavaCard = ({
       benefit={hi && chadhava.description_hi ? chadhava.description_hi : chadhava.description}
       place={hi && chadhava.temple_hi ? chadhava.temple_hi : chadhava.temple}
       date={chadhava.date}
-      minPrice={minPrice ?? chadhava.price ?? null}
       booked={booked}
       cta={t("btn_participate")}
       priority={priority}

@@ -83,11 +83,9 @@ export const FeaturedPujas = ({
 /** Hidden entirely when no chadhava is open (never prints an empty message on home). */
 export const FeaturedChadhavas = ({
   chadhavas,
-  minPrices,
   stats,
 }: {
   chadhavas: Chadhava[];
-  minPrices: Record<string, number>;
   stats: SiteStats | null;
 }) => {
   const { t } = useLanguage();
@@ -102,7 +100,7 @@ export const FeaturedChadhavas = ({
         />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {chadhavas.slice(0, 3).map((c) => (
-            <ChadhavaCard key={c.id} chadhava={c} minPrice={minPrices[c.id]} booked={stats?.by_item?.[c.id]} />
+            <ChadhavaCard key={c.id} chadhava={c} booked={stats?.by_item?.[c.id]} />
           ))}
         </div>
       </div>

@@ -121,7 +121,6 @@ const PujaDetail = () => {
   const faqs = [...dbFaqs, ...standardFaqs.filter((f) => !dbFaqs.some((d) => d.question === f.question))];
 
   const prices = puja.prices ?? [];
-  const minPrice = prices.length ? Math.min(...prices.map((p) => p.price)) : null;
   const reviews = reviewsFor(allReviews, { pujaId: puja.id });
   const bookedCount = stats?.by_item?.[puja.id];
   const devotees = stats && stats.devotees >= MIN_PROOF_COUNT ? stats.devotees : null;
@@ -298,7 +297,7 @@ const PujaDetail = () => {
 
       {prices.length > 0 && (
         <StickyActionBar
-          title={selected ? formatInr(selected.price) : minPrice != null ? `${t("pd_from")} ${formatInr(minPrice)}` : name}
+          title={selected ? formatInr(selected.price) : name}
           subtitle={selected ? selected.label : t("pd_select_hint")}
           cta={selected ? t("btn_continue") : t("pd_tab_packages")}
           onClick={onBarClick}

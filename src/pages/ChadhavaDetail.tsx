@@ -125,7 +125,6 @@ const ChadhavaDetail = () => {
 
   const reviews = reviewsFor(allReviews, { chadhavaId: chadhava.id });
   const bookedCount = stats?.by_item?.[chadhava.id];
-  const minPrice = offerings.length ? Math.min(...offerings.map((o) => o.price)) : chadhava.price;
 
   const sections: NavSection[] = [
     { id: "offerings", labelKey: "ch_view_offerings" },
@@ -301,7 +300,7 @@ const ChadhavaDetail = () => {
       </section>
 
       <StickyActionBar
-        title={selectedCount > 0 ? formatInr(totalPrice) : `${t("pd_from")} ${formatInr(minPrice)}`}
+        title={selectedCount > 0 ? formatInr(totalPrice) : item}
         subtitle={selectedCount > 0 ? `${selectedCount} ${t("ch_items_selected")}` : t("ch_select_hint")}
         cta={selectedCount > 0 ? t("ch_proceed") : t("ch_view_offerings")}
         onClick={handleProceed}

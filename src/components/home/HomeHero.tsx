@@ -9,7 +9,7 @@ import { MIN_PROOF_COUNT, roundedCount, type SiteStats } from "@/lib/proof";
 import FitImage from "@/components/FitImage";
 import Countdown from "@/components/shared/Countdown";
 import { TempleIcon } from "@/components/icons";
-import { Eyebrow, Highlight, Price } from "@/components/ui/typography";
+import { Eyebrow, Highlight } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
 const AUTOPLAY_MS = 7000;
@@ -23,8 +23,6 @@ const Slide = ({ puja, priority }: { puja: Puja; priority: boolean }) => {
   const name = hi && puja.name_hi ? puja.name_hi : puja.name;
   const occasion = hi && puja.occasion_hi ? puja.occasion_hi : puja.occasion;
   const place = hi && puja.location_hi ? puja.location_hi : puja.location;
-  const prices = puja.prices ?? [];
-  const minPrice = prices.length ? Math.min(...prices.map((p) => p.price)) : null;
 
   return (
     <article className="overflow-hidden rounded-xl border border-line bg-surface">
@@ -46,7 +44,6 @@ const Slide = ({ puja, priority }: { puja: Puja; priority: boolean }) => {
           <Countdown left={left} label={t("timer_label")} expiredLabel={t("timer_expired")} compact />
         </div>
         <div className="mt-4 flex items-center gap-3">
-          {minPrice != null && <Price amount={minPrice} prefix={t("pd_from")} className="text-lg" />}
           <Link to={`/puja/${puja.id}`} {...prefetchProps("puja", puja.id)} className="btn-primary flex-1">
             {t("hero_book")} <ArrowRight size={18} />
           </Link>
