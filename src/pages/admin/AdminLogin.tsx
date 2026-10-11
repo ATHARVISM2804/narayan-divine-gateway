@@ -59,7 +59,7 @@ const AdminLogin = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@narayankripa.com"
-              className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm text-brown outline-none transition-all focus:border-saffron focus:ring-2 focus:ring-saffron/20"
+              className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm text-brown outline-none transition-all focus:border-saffron"
             />
           </div>
 
@@ -72,7 +72,7 @@ const AdminLogin = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 pr-11 text-sm text-brown outline-none transition-all focus:border-saffron focus:ring-2 focus:ring-saffron/20"
+                className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 pr-11 text-sm text-brown outline-none transition-all focus:border-saffron"
               />
               <button
                 type="button"

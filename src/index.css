@@ -81,8 +81,19 @@
     @apply border-border;
   }
 
-  a, button, input, select, textarea, [tabindex]:not([tabindex="-1"]) {
+  /* Keyboard focus ring for things you click. */
+  a, button, [tabindex]:not([tabindex="-1"]) {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Text fields show focus through their own border (focus:border-saffron or the
+     wrapper's focus-within), so no extra ring or outline inside the box. */
+  input, select, textarea {
+    @apply outline-none focus:outline-none focus-visible:outline-none;
+    box-shadow: none;
+  }
+  input[type="checkbox"], input[type="radio"] {
+    @apply focus-visible:ring-2 focus-visible:ring-saffron/70 focus-visible:ring-offset-2;
   }
 
   html {
