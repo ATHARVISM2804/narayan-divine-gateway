@@ -50,7 +50,7 @@ const Puja = () => {
 
   return (
     <main>
-      <ListingHeader title={t("puja_hero_title")} subtitle={t("puja_hero_sub")} crumb={t("nav_puja")} />
+      <ListingHeader title={t("puja_hero_title")} subtitle={t("puja_hero_sub")} crumb={t("nav_puja")} centered />
 
       <section className="py-6 md:py-10">
         <div className="container">
