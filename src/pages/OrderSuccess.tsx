@@ -6,12 +6,14 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useCart } from "@/context/CartContext";
 import { checkOrderPayment } from "@/lib/orderStatus";
 import { trackPurchase } from "@/lib/metaPixel";
+import { claimConfirmation } from "@/lib/pendingPayment";
 
 /*
  * Two ways to land here:
  *   ?id=…&payment=…        the browser already had the payment verified (normal flow)
- *   ?id=…&status=checking  verification failed in the browser; the server is asked to
- *                          confirm with Razorpay directly and this page polls until it does
+ *   ?id=…&status=checking  verification failed in the browser, or the customer came back
+ *                          from redirect-mode checkout (razorpay-callback); the server is asked
+ *                          to confirm with Razorpay directly and this page polls until it does
  */
 const POLL_MS = 3000;
 const POLL_LIMIT_MS = 90_000;
@@ -36,7 +38,8 @@ const OrderSuccess = () => {
   // Payment was confirmed only now (server-side): report it and release the cart.
   const onLateConfirmation = (amountPaise: number, pid: string | null) => {
     const cart = cartRef.current;
-    if (cart.length > 0) {
+    // Claimed once per order, whichever path (this page, checkout, return-from-UPI) gets here first.
+    if (orderId && claimConfirmation(orderId) && cart.length > 0) {
       trackPurchase({
         items: cart.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
         value: amountPaise / 100,

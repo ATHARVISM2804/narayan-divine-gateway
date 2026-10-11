@@ -9,22 +9,7 @@
 //   Events: payment.captured, payment.failed, order.paid
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { markOrderPaid, unixToIso } from "../_shared/razorpay.ts";
-
-async function hmacSHA256(key: string, message: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(key),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signature = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(message));
-  return Array.from(new Uint8Array(signature))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+import { hmacSHA256, markOrderPaid, timingSafeEqual, toPaymentError, unixToIso } from "../_shared/razorpay.ts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -34,6 +19,12 @@ interface PaymentEntity {
   amount?: number;
   status?: string;
   created_at?: number;
+  method?: string;
+  error_code?: string | null;
+  error_description?: string | null;
+  error_source?: string | null;
+  error_step?: string | null;
+  error_reason?: string | null;
   notes?: Record<string, unknown> | unknown[];
 }
 
@@ -88,7 +79,7 @@ Deno.serve(async (req) => {
     const rawBody = await req.text();
     const expectedSignature = await hmacSHA256(webhookSecret, rawBody);
 
-    if (expectedSignature !== receivedSignature) {
+    if (!timingSafeEqual(expectedSignature, receivedSignature)) {
       console.error("WEBHOOK SIGNATURE MISMATCH — wrong secret or spoofing attempt");
       return new Response("Invalid signature", { status: 400 });
     }
@@ -138,6 +129,15 @@ Deno.serve(async (req) => {
     if (eventType === "payment.failed") {
       const payment: PaymentEntity | undefined = event.payload?.payment?.entity;
       const order = await findOrder(supabase, payment?.order_id, [noteValue(payment?.notes, "db_order_id")]);
+
+      if (order) {
+        // Why it failed (bank decline, UPI timeout, customer cancelled…) — kept on the order
+        // whatever its status, so the last failure stays visible to the admin.
+        const paymentError = toPaymentError(payment, { method: payment?.method, payment_id: payment?.id });
+        const { error: errSaveErr } = await supabase.from("orders").update({ payment_error: paymentError }).eq("id", order.id);
+        if (errSaveErr) console.error("Webhook: could not store payment_error", order.id, errSaveErr.message);
+        console.log(`Webhook: payment ${payment?.id} failed for order ${order.id}:`, paymentError.reason, paymentError.description);
+      }
 
       if (order && order.status === "pending") {
         await supabase

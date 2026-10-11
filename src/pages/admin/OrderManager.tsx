@@ -10,8 +10,9 @@ import {
 import SevaFilter from "./SevaFilter";
 import OrderPaymentPanel, { type PaymentPanelOrder } from "./OrderPaymentPanel";
 import { findPaidDuplicates } from "@/lib/orderDuplicates";
-import { downloadCsv, formatDateTimeIST, slugify, toCsv } from "@/lib/csv";
-import { ORDER_CSV_HEADERS, orderToCsvRow } from "@/lib/orderExport";
+import { formatDateTimeIST, slugify } from "@/lib/csv";
+import { PANDIT_LIST_HEADERS, orderToPanditRow } from "@/lib/orderExport";
+import { downloadPanditListPdf } from "@/lib/panditPdf";
 import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,6 +26,8 @@ interface Order {
   paid_at?: string | null;
   payment_method?: string | null;
   manual_payment?: Record<string, unknown> | null;
+  /** Last Razorpay failure (webhook payment.failed / redirect callback). */
+  payment_error?: { description?: string | null; reason?: string | null; method?: string | null; at?: string | null } | null;
   customer_name: string;
   customer_email: string | null;
   customer_phone: string;
@@ -37,6 +40,10 @@ interface Order {
 }
 
 interface Props { onRefresh?: () => void }
+
+/** "Payment was cancelled by user · upi · payment_cancelled" */
+const paymentErrorText = (e: NonNullable<Order["payment_error"]>) =>
+  [e.description || "Payment failed", e.method, e.reason].filter(Boolean).join(" · ");
 
 const statusColors: Record<string, string> = {
   paid:     "bg-green-100 text-green-700",
@@ -258,20 +265,35 @@ const OrderManager = (_props: Props) => {
     revenue: filtered.filter((o) => o.status === "paid").reduce((s, o) => s + o.amount, 0),
   };
 
-  /* ── CSV Export: exactly the filtered orders, incl. members, gotra and the booked date ── */
-  const exportCSV = () => {
-    const csv = toCsv(ORDER_CSV_HEADERS, filtered.map(orderToCsvRow));
-    // File name says what was exported, e.g. "…-orders-paid-pitra-shanti-…-26-sep-2026-couple-2026-09-27.csv"
+  /* ── PDF Export: name, members and gotra for Panditji, exactly the filtered orders ── */
+  const [exporting, setExporting] = useState(false);
+  const exportPDF = async () => {
     const presetLabel = datePreset === "custom"
       ? [customFrom, customTo].filter(Boolean).join(" to ")
       : presets.find((p) => p.key === datePreset)?.label ?? "";
-    const scope = slugify([
+    const scopeParts = [
+      sevaSummary ?? "",
       statusFilter !== "all" ? statusFilter : "",
       datePreset !== "all" ? presetLabel : "",
-      sevaSummary ?? "",
-    ].filter(Boolean).join(" "), 80);
-    const today = formatDateTimeIST(new Date().toISOString()).slice(0, 10);
-    downloadCsv(`narayan-kripa-orders${scope ? `-${scope}` : ""}-${today}.csv`, csv);
+    ].filter(Boolean);
+    const now = formatDateTimeIST(new Date().toISOString());
+    // File name says what was exported, e.g. "…-sankalp-list-pitra-shanti-…-26-sep-2026-couple-paid-2026-09-27.pdf"
+    const scope = slugify(scopeParts.join(" "), 80);
+    setExporting(true);
+    try {
+      await downloadPanditListPdf({
+        title: "Narayan Kripa — Sankalp List",
+        subtitle: [...scopeParts, `${filtered.length} booking${filtered.length === 1 ? "" : "s"}`, `Generated ${now} IST`].join(" • "),
+        headers: PANDIT_LIST_HEADERS,
+        rows: filtered.map(orderToPanditRow),
+        filename: `narayan-kripa-sankalp-list${scope ? `-${scope}` : ""}-${now.slice(0, 10)}.pdf`,
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not create the PDF. Please try again.");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const clearAll = () => {
@@ -519,9 +541,10 @@ const OrderManager = (_props: Props) => {
             className="flex items-center gap-1.5 rounded-xl border border-saffron/40 bg-saffron/10 px-4 py-2 text-xs font-bold text-maroon hover:bg-saffron/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
             <ShieldCheck size={13} className={syncing ? "animate-pulse" : ""} /> {syncing ? "Syncing…" : "Sync with Razorpay"}
           </button>
-          <button onClick={exportCSV} disabled={filtered.length === 0}
+          <button onClick={exportPDF} disabled={filtered.length === 0 || exporting}
+            title="Name, member names and gotra of the orders shown — for Panditji"
             className="flex items-center gap-1.5 rounded-xl border border-green-300 bg-green-50 px-4 py-2 text-xs font-bold text-green-700 hover:bg-green-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-            <Download size={13} /> Export CSV ({filtered.length})
+            <Download size={13} className={exporting ? "animate-pulse" : ""} /> {exporting ? "Creating PDF…" : `Export PDF (${filtered.length})`}
           </button>
           <button onClick={fetchOrders}
             className="grid h-8 w-8 place-items-center rounded-lg bg-gold/15 text-maroon hover:bg-gold/30 transition-colors">
@@ -572,6 +595,11 @@ const OrderManager = (_props: Props) => {
                   )}
                   {o.status === "paid" && o.payment_method && o.payment_method !== "razorpay" && (
                     <p className="text-[11px] font-semibold text-green-700 mt-0.5">💵 Paid offline ({o.payment_method === "bank_transfer" ? "bank transfer" : o.payment_method.toUpperCase() === "UPI" ? "UPI" : o.payment_method}) — marked by admin</p>
+                  )}
+                  {o.status !== "paid" && o.payment_error && (
+                    <p className="text-[11px] text-red-600 mt-0.5">
+                      ❌ {paymentErrorText(o.payment_error)}
+                    </p>
                   )}
                   {o.status === "paid" && o.puja_details && !o.puja_details.gotra?.trim() && (
                     <p className="text-[11px] text-amber-600 mt-0.5">🕉️ Gotra not provided — open the order to add it</p>
@@ -739,6 +767,11 @@ const OrderManager = (_props: Props) => {
                   {detail.razorpay_order_id && <p className="font-mono text-xs text-brown/60">Order: {detail.razorpay_order_id}</p>}
                   {detail.razorpay_payment_id && <p className="font-mono text-xs text-brown/60">Payment: {detail.razorpay_payment_id}</p>}
                   {detail.paid_at && <p className="text-xs text-green-700 mt-1">Paid at: {new Date(detail.paid_at).toLocaleString("en-IN")}</p>}
+                  {detail.payment_error && (
+                    <p className="text-xs text-red-600 mt-1">
+                      Last failed attempt{detail.payment_error.at ? ` (${new Date(detail.payment_error.at).toLocaleString("en-IN")})` : ""}: {paymentErrorText(detail.payment_error)}
+                    </p>
+                  )}
                   {detail.status !== "paid" && detail.razorpay_order_id && (
                     <button
                       onClick={() => checkOne(detail)}

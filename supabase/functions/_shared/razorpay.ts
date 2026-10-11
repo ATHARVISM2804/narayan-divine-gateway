@@ -2,9 +2,10 @@
 // Razorpay is the source of truth for whether an order was paid.
 //
 // Three server-side paths confirm a payment, all funnelling into markOrderPaid():
-//   1. verify-payment   — the browser's callback (fast, but the mobile UPI flow often kills the tab)
-//   2. razorpay-webhook — Razorpay pushes payment.captured / order.paid
-//   3. reconcile-orders — asks Razorpay's API directly (cron every 10 min, admin "Sync", customer "Check")
+//   1. verify-payment     — the browser's callback (fast, but the mobile UPI flow often kills the tab)
+//   2. razorpay-callback  — redirect mode: Razorpay POSTs the result (used in in-app browsers)
+//   3. razorpay-webhook   — Razorpay pushes payment.captured / order.paid
+//   4. reconcile-orders   — asks Razorpay's API directly (cron every 10 min, admin "Sync", customer "Check")
 //
 // Secrets: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET.
 
@@ -16,6 +17,78 @@ const FETCH_TIMEOUT_MS = 8000;
 // deno-lint-ignore no-explicit-any
 const runtime = globalThis as any;
 const env = (key: string): string | undefined => runtime.Deno?.env?.get(key) || undefined;
+
+/* ── Signatures ── */
+
+export async function hmacSHA256(key: string, message: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(key),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(message));
+  return Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** Compares two strings in time independent of where they first differ. */
+export function timingSafeEqual(a: string, b: string): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  let diff = a.length ^ b.length;
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i++) diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  return diff === 0;
+}
+
+/** Checkout signature: HMAC-SHA256(`order_id|payment_id`, key secret), hex. */
+export async function verifyPaymentSignature(
+  keySecret: string,
+  razorpayOrderId: string,
+  razorpayPaymentId: string,
+  signature: string,
+): Promise<boolean> {
+  const expected = await hmacSHA256(keySecret, `${razorpayOrderId}|${razorpayPaymentId}`);
+  return timingSafeEqual(expected, signature);
+}
+
+/* ── Payment failures ── */
+
+export interface PaymentError {
+  code: string | null;
+  description: string | null;
+  source: string | null;
+  step: string | null;
+  reason: string | null;
+  method: string | null;
+  payment_id: string | null;
+  at: string;
+}
+
+const str = (v: unknown, max = 300) => (typeof v === "string" && v ? v.slice(0, max) : null);
+
+/**
+ * Normalises a failure from either a webhook payment entity (`error_code`, `error_reason`, …)
+ * or a checkout error object (`code`, `reason`, … — what Razorpay POSTs to callback_url).
+ */
+// deno-lint-ignore no-explicit-any
+export function toPaymentError(src: any, extra: { method?: unknown; payment_id?: unknown } = {}, now = new Date()): PaymentError {
+  const s = src && typeof src === "object" ? src : {};
+  const meta = s.metadata && typeof s.metadata === "object" ? s.metadata : {};
+  return {
+    code: str(s.error_code ?? s.code),
+    description: str(s.error_description ?? s.description),
+    source: str(s.error_source ?? s.source),
+    step: str(s.error_step ?? s.step),
+    reason: str(s.error_reason ?? s.reason),
+    method: str(extra.method ?? s.method),
+    payment_id: str(extra.payment_id ?? meta.payment_id),
+    at: now.toISOString(),
+  };
+}
 
 /* ── Razorpay API ── */
 
@@ -84,7 +157,7 @@ export interface MarkPaidInput {
   paymentId: string;
   signature?: string;
   paidAt: string; // ISO
-  source: "verify-payment" | "webhook" | "reconcile";
+  source: "verify-payment" | "callback" | "webhook" | "reconcile";
 }
 
 /**

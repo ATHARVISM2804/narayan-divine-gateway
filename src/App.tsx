@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MobileCartBar from "@/components/MobileCartBar";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { usePendingPaymentRecovery } from "@/hooks/usePendingPaymentRecovery";
 
 // ── Eager: Home (landing page — always needed first) ──
 import Home from "./pages/Home";
@@ -86,6 +87,12 @@ const ScrollToTop = () => {
   return null;
 };
 
+/* Finishes a booking whose payment completed while the customer was in their UPI app. */
+const PendingPaymentRecovery = () => {
+  usePendingPaymentRecovery();
+  return null;
+};
+
 /* ── Route loading fallback — branded spinner ── */
 const PageLoader = () => (
   <div className="min-h-[50vh] flex items-center justify-center bg-background">
@@ -136,6 +143,7 @@ const App = () => (
         <BrowserRouter>
           <LanguageUrlSync />
           <ScrollToTop />
+          <PendingPaymentRecovery />
           <Routes>
             {/* ── Admin routes (standalone — no Navbar/Footer) ── */}
             <Route path="/admin/login" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><AdminLogin /></Suspense></ErrorBoundary>} />

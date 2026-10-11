@@ -6,6 +6,11 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase, type PujaOffering } from "@/lib/supabase";
 import { getMetaTrackingContext, trackContact, trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
 import { checkOrderPayment } from "@/lib/orderStatus";
+import { loadRazorpayScript } from "@/lib/razorpayScript";
+import { isInAppBrowser, isIOS } from "@/lib/browserEnv";
+import { claimConfirmation, clearPendingPayment, loadPendingPayment, savePendingPayment } from "@/lib/pendingPayment";
+import { checkCartAgainstCatalog } from "@/lib/cartRefresh";
+import { isValidIndianMobile, normaliseIndianMobile } from "@/lib/phone";
 import { ShoppingBag, Shield, ArrowLeft, Loader2, MapPin, Users, Info, Gift, ChevronRight, Check, Calendar, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,19 +24,9 @@ declare global {
   }
 }
 
-/** Load Razorpay checkout script on demand (cached after first load) */
-const loadRazorpayScript = (): Promise<void> =>
-  new Promise((resolve, reject) => {
-    if (window.Razorpay) { resolve(); return; }
-    const existing = document.querySelector('script[src*="razorpay"]');
-    if (existing) { resolve(); return; }
-    const s = document.createElement("script");
-    s.src = "https://checkout.razorpay.com/v1/checkout.js";
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Failed to load Razorpay"));
-    document.head.appendChild(s);
-  });
+/** Phone as typed or pre-filled → the 10-digit form the input expects (or digits as-is). */
+const toPhoneField = (raw: unknown) =>
+  normaliseIndianMobile(raw) ?? (typeof raw === "string" ? raw.replace(/\D/g, "").slice(0, 10) : "");
 
 /* ── Progress Steps ── */
 const STEPS = [
@@ -72,7 +67,7 @@ const ProgressBar = ({ current, lang }: { current: "review" | "details"; lang: s
 const Checkout = () => {
   usePageTitle("Checkout — Narayan Kripa");
   const nav = useNavigate();
-  const { items, totalPrice: cartTotal, clearCart } = useCart();
+  const { items, totalPrice: cartTotal, clearCart, removeItem, setItemPrice } = useCart();
   const { user } = useAuth();
   const { t, lang } = useLanguage();
 
@@ -93,7 +88,7 @@ const Checkout = () => {
     try {
       const lead = JSON.parse(localStorage.getItem("nk_lead") || "{}");
       localStorage.removeItem("nk_lead");
-      return { name: lead.name || "", phone: lead.phone || "" };
+      return { name: lead.name || "", phone: toPhoneField(lead.phone) };
     } catch {
       return { name: "", phone: "" };
     }
@@ -166,10 +161,43 @@ const Checkout = () => {
       setForm((f) => ({
         ...f,
         name: user.user_metadata?.full_name || f.name,
-        phone: user.user_metadata?.phone || f.phone,
+        phone: user.user_metadata?.phone ? toPhoneField(user.user_metadata.phone) : f.phone,
       }));
     }
   }, [user]);
+
+  // Start fetching checkout.js now, so tapping Pay doesn't wait on it (slow mobile networks).
+  useEffect(() => {
+    loadRazorpayScript().catch(() => { /* retried when the customer taps Pay */ });
+  }, []);
+
+  // The cart can be days old: drop lines that can no longer be booked and refresh prices,
+  // so the total shown is the total charged.
+  useEffect(() => {
+    if (items.length === 0) return;
+    let cancelled = false;
+    checkCartAgainstCatalog(items).then((changes) => {
+      if (cancelled || !changes) return;
+      changes.remove.forEach((id) => removeItem(id));
+      changes.reprice.forEach(({ id, price }) => setItemPrice(id, price));
+      if (changes.remove.length) toast.info(t("co_cart_updated"));
+      else if (changes.reprice.length) toast.info(t("co_price_updated"));
+    });
+    return () => { cancelled = true; };
+    // Once per visit — not on every cart change this check itself makes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Back from redirect-mode checkout (in-app browsers) with a failed payment.
+  useEffect(() => {
+    if (searchParams.get("payment") !== "failed") return;
+    toast.error(t("co_retry_payment"));
+    setBookingFallback(bookingWhatsappText());
+    const next = new URLSearchParams(searchParams);
+    next.delete("payment");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm(prev => ({ ...prev, [field]: e.target.value }));
@@ -198,7 +226,7 @@ const Checkout = () => {
 
   const validateDetails = () => {
     if (!form.name.trim()) { toast.error(t("co_err_name")); return false; }
-    if (!form.phone.trim() || form.phone.length < 10) { toast.error(t("co_err_phone")); return false; }
+    if (!isValidIndianMobile(form.phone)) { toast.error(t("co_err_phone_in")); return false; }
     if (memberCount > 0 && !syncedMemberNames[0].trim()) { toast.error(t("co_err_member")); return false; }
     // Panditji recites the gotra in the sankalp — ask for it, or the "I don't know" tick (Kashyap).
     if (memberCount > 0 && !gotraUnknown && !gotra.trim()) { toast.error(t("co_err_gotra")); return false; }
@@ -226,6 +254,21 @@ const Checkout = () => {
     setBookingFallback(null);
 
     try {
+      // An earlier attempt from this browser may have been paid in the UPI app while this
+      // page was reloaded. Never open a second payment for an order that's already paid.
+      const pending = loadPendingPayment();
+      if (pending) {
+        const status = await checkOrderPayment(pending.dbOrderId);
+        if (status?.status === "paid") {
+          if (claimConfirmation(pending.dbOrderId)) {
+            trackPurchase({ items: pending.items, value: pending.value, orderId: pending.dbOrderId, eventId: `purchase.${pending.dbOrderId}` });
+            clearCart();
+          }
+          nav(`/order-success?id=${pending.dbOrderId}&payment=${status.razorpay_payment_id || ""}`);
+          return;
+        }
+      }
+
       await loadRazorpayScript();
 
       const orderItems = items.map((i) => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, category: i.category as string }));
@@ -255,15 +298,27 @@ const Checkout = () => {
       });
 
       if (fnError || !fnData?.order_id) {
-        let errorMsg: string = fnData?.error || "Failed to create order";
-        if (!fnData?.error && fnError && (fnError as any).context) {
-          try {
-            const errBody = await (fnError as any).context.json();
-            errorMsg = errBody.error || errorMsg;
-          } catch {}
+        let errBody: { error?: string; code?: string; item_id?: string } = fnData ?? {};
+        if (!errBody.error && fnError && (fnError as any).context) {
+          try { errBody = await (fnError as any).context.json(); } catch {}
         }
-        console.error("create-order failed:", { fnError, fnData });
-        throw new Error(errorMsg);
+        console.error("create-order failed:", { fnError, fnData, errBody });
+        // A line in the (possibly days-old) cart can no longer be booked: drop it so the
+        // customer can carry on with the rest, instead of hitting the same error again.
+        if (errBody.code === "ITEM_UNAVAILABLE" && errBody.item_id) {
+          const id = errBody.item_id;
+          if (id.startsWith("offering-")) {
+            const offeringId = id.slice("offering-".length);
+            setPujaOfferings((prev) => prev.filter((o) => o.id !== offeringId));
+            setSelectedOfferings((prev) => ({ ...prev, [offeringId]: false }));
+          } else {
+            removeItem(id);
+          }
+          toast.error(errBody.error || t("co_cart_updated"));
+          setLoading(false);
+          return;
+        }
+        throw new Error(errBody.error || "Failed to create order");
       }
 
       // Fired once the order exists so the browser event can share its event id with
@@ -274,6 +329,28 @@ const Checkout = () => {
         eventId: `checkout.${fnData.db_order_id}`,
       });
 
+      const dbOrderId: string = fnData.db_order_id;
+      // The server's amount is what Razorpay charges; use it for analytics too.
+      const paidValue = typeof fnData.amount === "number" ? fnData.amount / 100 : totalPrice;
+      const purchaseItems = orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price }));
+
+      const onConfirmed = (paymentId: string) => {
+        // Server has confirmed this is a real, paid order. The Purchase is fired here
+        // rather than on /order-success so a page refresh there can never double-count.
+        if (claimConfirmation(dbOrderId)) {
+          trackPurchase({
+            items: purchaseItems,
+            value: paidValue,
+            orderId: dbOrderId,
+            // the server-side Purchase uses this same id, so Meta counts the pair once
+            eventId: `purchase.${dbOrderId}`,
+          });
+          clearCart();
+        }
+        nav(`/order-success?id=${dbOrderId}&payment=${paymentId}`);
+      };
+
+      const inApp = isInAppBrowser();
       const options = {
         key: fnData.key_id,
         amount: fnData.amount,
@@ -281,24 +358,21 @@ const Checkout = () => {
         name: "Narayan Kripa",
         description: `Order: ${items.length} item${items.length > 1 ? "s" : ""}`,
         order_id: fnData.order_id,
-        prefill: { name: form.name, contact: form.phone },
+        // Razorpay expects the country code; without it some numbers stall the contact step.
+        prefill: { name: form.name, contact: `+91${form.phone}` },
         theme: { color: "#D4891A" },
+        // In-app browsers (Facebook / Instagram / WhatsApp) often reload or kill this page
+        // while the customer is in their UPI app, so the handler below never runs. There,
+        // Razorpay posts the result to our server instead, which redirects back to the site.
+        ...(inApp && import.meta.env.VITE_SUPABASE_URL
+          ? {
+              redirect: true,
+              callback_url:
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-callback` +
+                `?db=${encodeURIComponent(dbOrderId)}&o=${encodeURIComponent(window.location.origin)}`,
+            }
+          : {}),
         handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
-          const dbOrderId: string = fnData.db_order_id;
-          const onConfirmed = (paymentId: string) => {
-            // Server has confirmed this is a real, paid order. The Purchase is fired here
-            // rather than on /order-success so a page refresh there can never double-count.
-            trackPurchase({
-              items: orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
-              value: totalPrice,
-              orderId: dbOrderId,
-              // the server-side Purchase uses this same id, so Meta counts the pair once
-              eventId: `purchase.${dbOrderId}`,
-            });
-            clearCart();
-            nav(`/order-success?id=${dbOrderId}&payment=${paymentId}`);
-          };
-
           try {
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-payment", {
               body: {
@@ -328,29 +402,30 @@ const Checkout = () => {
           ondismiss: async () => {
             // On mobile UPI the customer can complete the payment in their UPI app and
             // then close the popup — that is not a cancellation. Check before saying so.
-            const status = await checkOrderPayment(fnData.db_order_id);
+            // (The pending-payment record stays: a UPI payment can still land a little later.)
+            const status = await checkOrderPayment(dbOrderId);
             if (status?.status === "paid") {
-              trackPurchase({
-                items: orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
-                value: totalPrice,
-                orderId: fnData.db_order_id,
-                eventId: `purchase.${fnData.db_order_id}`,
-              });
-              clearCart();
-              nav(`/order-success?id=${fnData.db_order_id}&payment=${status.razorpay_payment_id || ""}`);
+              onConfirmed(status.razorpay_payment_id || "");
               return;
             }
             setLoading(false);
             toast.info(t("co_payment_cancelled"));
+            if (inApp) setBookingFallback(bookingWhatsappText());
           },
         },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", (response: any) => {
+        // Razorpay keeps the modal open so the customer can retry another method.
+        console.warn("razorpay payment.failed", response?.error?.code, response?.error?.reason, response?.error?.description);
         toast.error(response.error?.description || t("co_payment_failed"));
         setLoading(false);
+        if (inApp) setBookingFallback(bookingWhatsappText());
       });
+      // Remember this order before handing over to Razorpay: if this page is reloaded while
+      // the customer is in their UPI app, the app checks it on return (usePendingPaymentRecovery).
+      savePendingPayment({ dbOrderId, value: paidValue, items: purchaseItems, createdAt: Date.now() });
       rzp.open();
     } catch (err: any) {
       toast.error(err.message || t("co_err_generic"));
@@ -370,18 +445,26 @@ const Checkout = () => {
     return lines.join("\n");
   };
 
-  const WhatsAppFallback = ({ className = "" }: { className?: string }) =>
+  const WhatsAppFallback = ({ className = "", showHint = false }: { className?: string; showHint?: boolean }) =>
     bookingFallback ? (
-      <a
-        href={whatsappLink(bookingFallback)}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => trackContact("whatsapp_checkout_failed")}
-        className={`items-center justify-center gap-2 rounded-full py-3 text-center text-sm font-bold text-white shadow-md ${className}`}
-        style={{ background: "linear-gradient(135deg, #25d366 0%, #128c7e 100%)" }}
-      >
-        {t("book_whatsapp")}
-      </a>
+      <>
+        <a
+          href={whatsappLink(bookingFallback)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => trackContact("whatsapp_checkout_failed")}
+          className={`items-center justify-center gap-2 rounded-full py-3 text-center text-sm font-bold text-white shadow-md ${className}`}
+          style={{ background: "linear-gradient(135deg, #25d366 0%, #128c7e 100%)" }}
+        >
+          {t("book_whatsapp")}
+        </a>
+        {/* In-app browsers block card / netbanking pages; a real browser usually works. */}
+        {showHint && isInAppBrowser() && (
+          <p className="mb-2 text-center text-[11px] leading-snug text-brown/60">
+            {t(isIOS() ? "co_inapp_hint_ios" : "co_inapp_hint_android")}
+          </p>
+        )}
+      </>
     ) : null;
 
   /* ── Empty cart ── */
@@ -903,7 +986,7 @@ const Checkout = () => {
 
       {/* ── Sticky bottom CTA bar (mobile only) ── */}
       <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-ivory/95 backdrop-blur-md border-t border-gold/30 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3">
-        {checkoutStep === "details" && <WhatsAppFallback className="mb-2 flex w-full" />}
+        {checkoutStep === "details" && <WhatsAppFallback className="mb-2 flex w-full" showHint />}
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col">
             <span className="text-[11px] text-brown/50 font-medium">{t("co_total")}</span>

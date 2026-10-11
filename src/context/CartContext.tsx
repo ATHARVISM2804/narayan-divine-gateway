@@ -16,6 +16,8 @@ interface CartContextType {
   addItem: (item: Omit<CartItem, "quantity">, initialQuantity?: number) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
+  /** Corrects a line's price to the current catalog price (the cart can be days old). */
+  setItemPrice: (id: string, price: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -89,6 +91,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const setItemPrice = useCallback((id: string, price: number) => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, price } : i)));
+  }, []);
+
   const clearCart = useCallback(() => {
     setItems([]);
     // Also clear storage immediately on explicit clear
@@ -100,7 +106,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}
+      value={{ items, addItem, removeItem, updateQuantity, setItemPrice, clearCart, totalItems, totalPrice }}
     >
       {children}
     </CartContext.Provider>

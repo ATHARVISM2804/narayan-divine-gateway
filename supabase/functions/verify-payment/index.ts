@@ -4,28 +4,13 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { runInBackground, sendPurchaseForOrder } from "../_shared/metaCapi.ts";
-import { markOrderPaid } from "../_shared/razorpay.ts";
+import { markOrderPaid, verifyPaymentSignature } from "../_shared/razorpay.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-async function hmacSHA256(key: string, message: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(key),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signature = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(message));
-  return Array.from(new Uint8Array(signature))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -44,10 +29,9 @@ Deno.serve(async (req) => {
 
     // ── Verify signature using HMAC SHA256 ──
     const keySecret = Deno.env.get("RAZORPAY_KEY_SECRET")!;
-    const message = `${razorpay_order_id}|${razorpay_payment_id}`;
-    const expectedSignature = await hmacSHA256(keySecret, message);
+    const valid = await verifyPaymentSignature(keySecret, String(razorpay_order_id), String(razorpay_payment_id), String(razorpay_signature));
 
-    if (expectedSignature !== razorpay_signature) {
+    if (!valid) {
       // SECURITY: Signature mismatch — possible tampering!
       console.error("PAYMENT SIGNATURE MISMATCH", { razorpay_order_id, db_order_id });
       return new Response(
