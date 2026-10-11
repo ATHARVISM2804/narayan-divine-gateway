@@ -31,7 +31,7 @@ const Contact = () => {
                   href={href}
                   {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   onClick={() => trackContact(track)}
-                  className="flex items-center gap-4 rounded-xl border border-line bg-surface p-4 transition-colors hover:border-saffron/40"
+                  className="flex items-center gap-4 rounded-xl border border-line bg-surface p-4 transition-[border-color,box-shadow,transform] duration-200 hover:border-saffron/40 lg:p-5 lg:hover:-translate-y-0.5 lg:hover:shadow-raised"
                 >
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-saffron-soft text-saffron-dark">
                     <Icon size={20} strokeWidth={1.75} />
@@ -74,8 +74,21 @@ const Contact = () => {
       </section>
 
       <section className="border-t border-line bg-surface-muted/60 py-10 md:py-14">
-        <div className="container max-w-3xl">
-          <SectionHeading title={t("ct_faq_title")} />
+        {/* Laptops: heading and a WhatsApp nudge on the left, the questions on the right. */}
+        <div className="container max-w-3xl lg:grid lg:max-w-[1400px] lg:grid-cols-[1fr_1.6fr] lg:gap-12">
+          <div>
+            <SectionHeading title={t("ct_faq_title")} className="lg:mb-3" />
+            <p className="hidden text-[15px] leading-relaxed text-ink-muted lg:block">{t("about_contact_d")}</p>
+            <a
+              href={whatsappLink(t("wa_msg_book"))}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackContact("whatsapp_contact")}
+              className="btn-primary mt-5 hidden lg:inline-flex"
+            >
+              <MessageCircle size={18} /> WhatsApp
+            </a>
+          </div>
           <FaqList faqs={faqs} firstOpen />
         </div>
       </section>

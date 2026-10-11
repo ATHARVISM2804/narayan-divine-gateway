@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { Eye, EyeOff, Loader2, User, Mail, Phone } from "lucide-react";
+import { Check, Eye, EyeOff, Loader2, User, Mail, Phone } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 const Login = () => {
@@ -47,74 +47,90 @@ const Login = () => {
 
   return (
     <main className="flex min-h-[70vh] items-center justify-center py-10">
-      <form onSubmit={handleSubmit} className="mx-4 w-full max-w-md rounded-xl border border-line bg-surface p-5 sm:p-8">
-        <div className="mb-6">
-          <h1 className="text-[22px] font-bold text-ink">
-            {mode === "login" ? t("login_welcome") : t("login_create")}
-          </h1>
-          <p className="mt-1 text-[15px] text-ink-muted">
-            {mode === "login" ? t("login_sub") : t("login_signup_sub")}
-          </p>
+      {/* Laptops: a short "why sign in" panel beside the form. */}
+      <div className="mx-4 w-full max-w-md lg:grid lg:max-w-4xl lg:grid-cols-2 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-line lg:bg-surface lg:shadow-card">
+        <div className="hidden flex-col justify-center bg-surface-muted p-10 lg:flex">
+          <h2 className="text-2xl font-bold leading-tight text-ink">{t("login_side_title")}</h2>
+          <ul className="mt-6 space-y-4">
+            {[t("login_side_p1"), t("login_side_p2"), t("login_side_p3")].map((line) => (
+              <li key={line} className="flex items-start gap-3 text-[15px] text-ink-muted">
+                <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-success/10 text-success">
+                  <Check size={14} strokeWidth={2.5} />
+                </span>
+                {line}
+              </li>
+            ))}
+          </ul>
         </div>
+        <form onSubmit={handleSubmit} className="w-full rounded-xl border border-line bg-surface p-5 sm:p-8 lg:rounded-none lg:border-0 lg:p-10">
+          <div className="mb-6">
+            <h1 className="text-[22px] font-bold text-ink">
+              {mode === "login" ? t("login_welcome") : t("login_create")}
+            </h1>
+            <p className="mt-1 text-[15px] text-ink-muted">
+              {mode === "login" ? t("login_sub") : t("login_signup_sub")}
+            </p>
+          </div>
 
-        {error && <div className="mb-5 rounded-[10px] bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">{error}</div>}
-        {success && <div className="mb-5 rounded-[10px] bg-success/10 px-4 py-3 text-sm font-medium text-success">{success}</div>}
+          {error && <div className="mb-5 rounded-[10px] bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">{error}</div>}
+          {success && <div className="mb-5 rounded-[10px] bg-success/10 px-4 py-3 text-sm font-medium text-success">{success}</div>}
 
-        <div className="space-y-4">
-          {mode === "signup" && (
+          <div className="space-y-4">
+            {mode === "signup" && (
+              <div>
+                <label className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-ink">
+                  <User size={12} /> {t("login_name")}
+                </label>
+                <input type="text" value={form.name} onChange={set("name")} placeholder={t("login_ph_name")}
+                  className="h-12 w-full rounded-[10px] border border-input bg-surface px-3 text-[15px] text-ink outline-none focus:border-saffron" />
+              </div>
+            )}
             <div>
               <label className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-ink">
-                <User size={12} /> {t("login_name")}
+                <Mail size={12} /> {t("login_email")}
               </label>
-              <input type="text" value={form.name} onChange={set("name")} placeholder={t("login_ph_name")}
+              <input type="email" required value={form.email} onChange={set("email")} placeholder={t("login_ph_email")}
                 className="h-12 w-full rounded-[10px] border border-input bg-surface px-3 text-[15px] text-ink outline-none focus:border-saffron" />
             </div>
-          )}
-          <div>
-            <label className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-ink">
-              <Mail size={12} /> {t("login_email")}
-            </label>
-            <input type="email" required value={form.email} onChange={set("email")} placeholder={t("login_ph_email")}
-              className="h-12 w-full rounded-[10px] border border-input bg-surface px-3 text-[15px] text-ink outline-none focus:border-saffron" />
-          </div>
-          {mode === "signup" && (
+            {mode === "signup" && (
+              <div>
+                <label className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-ink">
+                  <Phone size={12} /> {t("co_phone")}
+                </label>
+                <input type="tel" value={form.phone} onChange={set("phone")} placeholder="+91 XXXXX XXXXX"
+                  className="h-12 w-full rounded-[10px] border border-input bg-surface px-3 text-[15px] text-ink outline-none focus:border-saffron" />
+              </div>
+            )}
             <div>
-              <label className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-ink">
-                <Phone size={12} /> {t("co_phone")}
-              </label>
-              <input type="tel" value={form.phone} onChange={set("phone")} placeholder="+91 XXXXX XXXXX"
-                className="h-12 w-full rounded-[10px] border border-input bg-surface px-3 text-[15px] text-ink outline-none focus:border-saffron" />
-            </div>
-          )}
-          <div>
-            <label className="mb-1.5 block text-sm font-semibold text-ink">{t("login_password")}</label>
-            <div className="relative">
-              <input type={showPw ? "text" : "password"} required value={form.password} onChange={set("password")} placeholder="••••••••"
-                className="h-12 w-full rounded-[10px] border border-input bg-surface px-3 pr-11 text-[15px] text-ink outline-none focus:border-saffron" />
-              <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-soft hover:text-ink">
-                {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+              <label className="mb-1.5 block text-sm font-semibold text-ink">{t("login_password")}</label>
+              <div className="relative">
+                <input type={showPw ? "text" : "password"} required value={form.password} onChange={set("password")} placeholder="••••••••"
+                  className="h-12 w-full rounded-[10px] border border-input bg-surface px-3 pr-11 text-[15px] text-ink outline-none focus:border-saffron" />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-soft hover:text-ink">
+                  {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <button type="submit" disabled={loading}
-          className="btn-primary mt-6 w-full">
-          {loading ? <><Loader2 size={18} className="animate-spin" /> {mode === "login" ? t("login_signing") : t("login_creating")}</> : mode === "login" ? t("login_signin") : t("login_signup")}
-        </button>
+          <button type="submit" disabled={loading}
+            className="btn-primary mt-6 w-full">
+            {loading ? <><Loader2 size={18} className="animate-spin" /> {mode === "login" ? t("login_signing") : t("login_creating")}</> : mode === "login" ? t("login_signin") : t("login_signup")}
+          </button>
 
-        <div className="mt-5 text-center text-sm text-ink-muted">
-          {mode === "login" ? (
-            <>{t("login_no_account")} <button type="button" onClick={() => { setMode("signup"); setError(""); setSuccess(""); }} className="font-semibold text-saffron-dark hover:underline">{t("login_signup_link")}</button></>
-          ) : (
-            <>{t("login_has_account")} <button type="button" onClick={() => { setMode("login"); setError(""); setSuccess(""); }} className="font-semibold text-saffron-dark hover:underline">{t("login_signin_link")}</button></>
-          )}
-        </div>
+          <div className="mt-5 text-center text-sm text-ink-muted">
+            {mode === "login" ? (
+              <>{t("login_no_account")} <button type="button" onClick={() => { setMode("signup"); setError(""); setSuccess(""); }} className="font-semibold text-saffron-dark hover:underline">{t("login_signup_link")}</button></>
+            ) : (
+              <>{t("login_has_account")} <button type="button" onClick={() => { setMode("login"); setError(""); setSuccess(""); }} className="font-semibold text-saffron-dark hover:underline">{t("login_signin_link")}</button></>
+            )}
+          </div>
 
-        <Link to="/" className="mt-4 block text-center text-sm text-ink-soft hover:text-ink">
-          {t("login_back")}
-        </Link>
-      </form>
+          <Link to="/" className="mt-4 block text-center text-sm text-ink-soft hover:text-ink">
+            {t("login_back")}
+          </Link>
+        </form>
+      </div>
     </main>
   );
 };

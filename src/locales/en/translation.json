@@ -524,5 +524,18 @@
   "about_how_4_t": "Prasad to your home", "about_how_4_d": "If you add a prasad box, we courier it to any address in India.",
   "about_contact_t": "Talk to us",
   "about_contact_d": "Our team answers on WhatsApp and phone, Monday to Saturday, 9 AM to 7 PM.",
-  "about_company": "Company details"
+  "about_company": "Company details",
+  "ch_empty_sub": "New chadhavas open before big festivals. Message us on WhatsApp and we will tell you when the next one opens, or book a pooja below.",
+  "ch_empty_cta": "Tell me on WhatsApp",
+  "wa_msg_chadhava_notify": "Namaste, please tell me when the next chadhava opens for booking.",
+  "mo_help_title": "Need help with a booking?",
+  "mo_help_sub": "Send us your phone number or the pooja name on WhatsApp and we will find it for you.",
+  "mo_help_see": "What you will see here",
+  "mo_help_p1": "Every booking made with this number",
+  "mo_help_p2": "Pooja date and payment status",
+  "mo_help_p3": "Pooja video on WhatsApp within 24 to 48 hours",
+  "login_side_title": "Your bookings in one place",
+  "login_side_p1": "See every pooja and chadhava you have booked",
+  "login_side_p2": "Check the pooja date and payment status",
+  "login_side_p3": "Book again faster next time"
 }

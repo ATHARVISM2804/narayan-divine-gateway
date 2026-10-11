@@ -51,33 +51,36 @@ const Temples = () => {
 
       <section className="py-6 md:py-10">
         <div className="container">
-          <label className="flex max-w-md items-center gap-2 rounded-[10px] border border-input bg-surface px-3 focus-within:border-saffron">
-            <Search size={18} className="shrink-0 text-ink-soft" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder={t("tmp_search")}
-              aria-label={t("tmp_search")}
-              className="h-11 w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-soft/70"
-            />
-          </label>
+          {/* Laptops: deity filters on the left, search on the right, one row. */}
+          <div className="lg:flex lg:flex-row-reverse lg:items-center lg:justify-between lg:gap-6">
+            <label className="flex max-w-md items-center gap-2 rounded-[10px] border border-input bg-surface px-3 focus-within:border-saffron lg:w-80 lg:shrink-0">
+              <Search size={18} className="shrink-0 text-ink-soft" />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder={t("tmp_search")}
+                aria-label={t("tmp_search")}
+                className="h-11 w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-soft/70"
+              />
+            </label>
 
-          {deities.length > 1 && (
-            <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide">
-              {[[null, t("filter_all")] as const, ...deities].map(([value, label]) => (
-                <button
-                  key={value ?? "all"}
-                  onClick={() => setDeity(value)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-                    deity === value ? "border-maroon bg-maroon text-white" : "border-line bg-surface text-ink hover:border-ink-soft",
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
+            {deities.length > 1 && (
+              <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide lg:mx-0 lg:mt-0 lg:flex-wrap lg:px-0 lg:pb-0">
+                {[[null, t("filter_all")] as const, ...deities].map(([value, label]) => (
+                  <button
+                    key={value ?? "all"}
+                    onClick={() => setDeity(value)}
+                    className={cn(
+                      "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+                      deity === value ? "border-maroon bg-maroon text-white" : "border-line bg-surface text-ink hover:border-ink-soft",
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {degraded && <DegradedBanner className="mt-5" />}
 
@@ -98,10 +101,10 @@ const Temples = () => {
                   <li key={tp.id}>
                     <button
                       onClick={() => setSelected(tp)}
-                      className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-line bg-surface text-left transition-colors hover:border-saffron/40"
+                      className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-line bg-surface text-left transition-[border-color,box-shadow,transform] duration-200 hover:border-saffron/40 lg:hover:-translate-y-0.5 lg:hover:shadow-raised"
                     >
                       <div className="relative aspect-[16/10] w-full overflow-hidden bg-surface-muted">
-                        <FitImage src={templeImg(tp)} alt={dName(tp)} width={384} />
+                        <FitImage src={templeImg(tp)} alt={dName(tp)} width={384} sizes="(min-width: 1024px) 440px, (min-width: 640px) 50vw, 100vw" />
                       </div>
                       <div className="flex flex-1 flex-col p-4">
                         {dDeity(tp) && <p className="text-xs font-semibold uppercase tracking-[0.06em] text-maroon">{dDeity(tp)}</p>}

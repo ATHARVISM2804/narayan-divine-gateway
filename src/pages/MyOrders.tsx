@@ -5,7 +5,8 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase } from "@/lib/supabase";
 import { checkOrderPayment } from "@/lib/orderStatus";
 import { orderItemWhen } from "@/lib/orderItems";
-import { CalendarDays, ChevronRight, CircleCheck, CircleX, Clock, LogOut, Phone, RefreshCw, Search, ShoppingBag } from "lucide-react";
+import { CalendarDays, Check, ChevronRight, CircleCheck, CircleX, Clock, LogOut, MessageCircle, Phone, RefreshCw, Search, ShoppingBag } from "lucide-react";
+import { whatsappLink } from "@/lib/whatsapp";
 import BottomSheet from "@/components/shared/BottomSheet";
 import { useLanguage } from "@/context/LanguageContext";
 import { LoadError } from "@/components/LoadError";
@@ -159,11 +160,11 @@ const MyOrders = () => {
   return (
     <main className="min-h-screen">
       <header className="border-b border-line bg-surface-muted/60">
-        <div className="container py-6 md:py-10">
+        <div className="container py-6 md:py-10 lg:py-12">
           {user ? (
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <h1 className="text-[22px] font-bold text-ink md:text-[28px]">{t("mo_title")}</h1>
+                <h1 className="text-[22px] font-bold text-ink md:text-[28px] lg:text-4xl">{t("mo_title")}</h1>
                 <p className="mt-1 truncate text-[15px] text-ink-muted">
                   {userName}
                   {(user.email || user.phone) && <span className="text-ink-soft"> · {user.email || user.phone}</span>}
@@ -175,102 +176,126 @@ const MyOrders = () => {
             </div>
           ) : (
             <>
-              <h1 className="text-[22px] font-bold text-ink md:text-[28px]">{t("mo_track_title")}</h1>
+              <h1 className="text-[22px] font-bold text-ink md:text-[28px] lg:text-4xl">{t("mo_track_title")}</h1>
               <p className="mt-1 text-[15px] text-ink-muted">{t("mo_track_sub")}</p>
             </>
           )}
         </div>
       </header>
 
-      <div className="container max-w-3xl py-6 md:py-10">
-        {!user && (
-          <div className="mb-6 rounded-xl border border-line bg-surface p-4 md:p-6">
-            <h2 className="text-lg font-bold text-ink">{t("mo_lookup_title")}</h2>
-            <p className="mt-0.5 text-sm text-ink-muted">{t("mo_lookup_sub")}</p>
-            <form onSubmit={handlePhoneLookup} className="mt-4 flex flex-col gap-3 sm:flex-row">
-              <label className="flex flex-1 items-center gap-2 rounded-[10px] border border-input bg-surface px-3 focus-within:border-saffron">
-                <Phone size={16} className="shrink-0 text-ink-soft" />
-                <input
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  value={lookupPhone}
-                  onChange={(e) => setLookupPhone(e.target.value)}
-                  placeholder={t("co_ph_phone")}
-                  aria-label={t("co_phone")}
-                  className="h-12 w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-soft/70"
-                />
-              </label>
-              <button type="submit" disabled={loading} className="btn-primary">
-                <Search size={16} /> {t("mo_lookup_btn")}
-              </button>
-            </form>
-            {lookupError && <p className="mt-3 text-sm font-medium text-destructive">{lookupError}</p>}
-            <p className="mt-4 text-center text-sm text-ink-soft">
-              {t("mo_or")}{" "}
-              <Link to="/login" className="font-semibold text-saffron-dark hover:underline">
-                {t("mo_login_link")}
-              </Link>
-            </p>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 animate-pulse rounded-xl bg-surface-muted" />
-            ))}
-          </div>
-        ) : user && ordersFailed ? (
-          <LoadError onRetry={() => setReloadKey((k) => k + 1)} />
-        ) : lookupDone && orders.length === 0 ? (
-          <div className="rounded-xl border border-line bg-surface p-10 text-center">
-            <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-surface-muted text-maroon">
-              <ShoppingBag size={22} strokeWidth={1.75} />
-            </span>
-            <h3 className="mt-3 text-lg font-bold text-ink">{t("mo_empty_title")}</h3>
-            <p className="mt-1 text-sm text-ink-muted">{t("mo_empty_sub")}</p>
-            <Link to="/puja" className="btn-primary mt-5">
-              {t("mo_browse")}
-            </Link>
-          </div>
-        ) : lookupDone ? (
-          <ul className="space-y-3">
-            {orders.map((o) => (
-              <li key={o.id}>
-                <button
-                  onClick={() => setDetail(o)}
-                  className="flex w-full items-center gap-4 rounded-xl border border-line bg-surface p-4 text-left transition-colors hover:border-saffron/40"
-                >
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface-muted text-maroon">
-                    {o.status === "paid" ? <CircleCheck size={20} className="text-success" /> : o.status === "pending" ? <Clock size={20} /> : <CircleX size={20} />}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <StatusBadge status={o.status} />
-                      <span className="text-xs text-ink-soft">
-                        {new Date(o.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                      </span>
-                    </span>
-                    <span className="mt-1 block truncate text-[15px] font-medium text-ink">
-                      {(o.items || []).map((item: any) => item.name).join(", ")}
-                    </span>
-                    {(o.items || [])
-                      .map((item: any) => orderItemWhen(item))
-                      .filter(Boolean)
-                      .map((when, idx) => (
-                        <span key={idx} className="mt-0.5 flex items-center gap-1 truncate text-xs text-ink-soft">
-                          <CalendarDays size={12} /> {when}
-                        </span>
-                      ))}
-                  </span>
-                  <span className="tabular shrink-0 text-base font-bold text-ink">₹{(o.amount / 100).toLocaleString("en-IN")}</span>
-                  <ChevronRight size={18} className="shrink-0 text-ink-soft" />
+      {/* Laptops: bookings on the left (aligned with the header), help on the right. */}
+      <div className="container max-w-3xl py-6 md:py-10 lg:grid lg:max-w-[1400px] lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-12">
+        <div className="min-w-0">
+          {!user && (
+            <div className="mb-6 rounded-xl border border-line bg-surface p-4 md:p-6">
+              <h2 className="text-lg font-bold text-ink">{t("mo_lookup_title")}</h2>
+              <p className="mt-0.5 text-sm text-ink-muted">{t("mo_lookup_sub")}</p>
+              <form onSubmit={handlePhoneLookup} className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <label className="flex flex-1 items-center gap-2 rounded-[10px] border border-input bg-surface px-3 focus-within:border-saffron">
+                  <Phone size={16} className="shrink-0 text-ink-soft" />
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    value={lookupPhone}
+                    onChange={(e) => setLookupPhone(e.target.value)}
+                    placeholder={t("co_ph_phone")}
+                    aria-label={t("co_phone")}
+                    className="h-12 w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-soft/70"
+                  />
+                </label>
+                <button type="submit" disabled={loading} className="btn-primary">
+                  <Search size={16} /> {t("mo_lookup_btn")}
                 </button>
+              </form>
+              {lookupError && <p className="mt-3 text-sm font-medium text-destructive">{lookupError}</p>}
+              <p className="mt-4 text-center text-sm text-ink-soft">
+                {t("mo_or")}{" "}
+                <Link to="/login" className="font-semibold text-saffron-dark hover:underline">
+                  {t("mo_login_link")}
+                </Link>
+              </p>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-24 animate-pulse rounded-xl bg-surface-muted" />
+              ))}
+            </div>
+          ) : user && ordersFailed ? (
+            <LoadError onRetry={() => setReloadKey((k) => k + 1)} />
+          ) : lookupDone && orders.length === 0 ? (
+            <div className="rounded-xl border border-line bg-surface p-10 text-center">
+              <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-surface-muted text-maroon">
+                <ShoppingBag size={22} strokeWidth={1.75} />
+              </span>
+              <h3 className="mt-3 text-lg font-bold text-ink">{t("mo_empty_title")}</h3>
+              <p className="mt-1 text-sm text-ink-muted">{t("mo_empty_sub")}</p>
+              <Link to="/puja" className="btn-primary mt-5">
+                {t("mo_browse")}
+              </Link>
+            </div>
+          ) : lookupDone ? (
+            <ul className="space-y-3">
+              {orders.map((o) => (
+                <li key={o.id}>
+                  <button
+                    onClick={() => setDetail(o)}
+                    className="flex w-full items-center gap-4 rounded-xl border border-line bg-surface p-4 text-left transition-colors hover:border-saffron/40"
+                  >
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface-muted text-maroon">
+                      {o.status === "paid" ? <CircleCheck size={20} className="text-success" /> : o.status === "pending" ? <Clock size={20} /> : <CircleX size={20} />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <StatusBadge status={o.status} />
+                        <span className="text-xs text-ink-soft">
+                          {new Date(o.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                      </span>
+                      <span className="mt-1 block truncate text-[15px] font-medium text-ink">
+                        {(o.items || []).map((item: any) => item.name).join(", ")}
+                      </span>
+                      {(o.items || [])
+                        .map((item: any) => orderItemWhen(item))
+                        .filter(Boolean)
+                        .map((when, idx) => (
+                          <span key={idx} className="mt-0.5 flex items-center gap-1 truncate text-xs text-ink-soft">
+                            <CalendarDays size={12} /> {when}
+                          </span>
+                        ))}
+                    </span>
+                    <span className="tabular shrink-0 text-base font-bold text-ink">₹{(o.amount / 100).toLocaleString("en-IN")}</span>
+                    <ChevronRight size={18} className="shrink-0 text-ink-soft" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+
+        <aside className="hidden rounded-xl border border-line bg-surface p-6 lg:block">
+          <h2 className="text-lg font-bold text-ink">{t("mo_help_title")}</h2>
+          <p className="mt-1 text-sm leading-relaxed text-ink-muted">{t("mo_help_sub")}</p>
+          <div className="mt-4 grid gap-2">
+            <a href={whatsappLink(t("wa_msg_book"))} target="_blank" rel="noopener noreferrer" className="btn-primary">
+              <MessageCircle size={18} /> WhatsApp
+            </a>
+            <a href="tel:+919286345941" className="btn-secondary">
+              <Phone size={18} /> {t("ct_phone_text")}
+            </a>
+          </div>
+          <h3 className="mt-6 border-t border-line pt-5 text-sm font-semibold text-ink">{t("mo_help_see")}</h3>
+          <ul className="mt-3 space-y-2.5">
+            {[t("mo_help_p1"), t("mo_help_p2"), t("mo_help_p3")].map((line) => (
+              <li key={line} className="flex items-start gap-2 text-sm text-ink-muted">
+                <Check size={16} strokeWidth={2.5} className="mt-0.5 shrink-0 text-success" /> {line}
               </li>
             ))}
           </ul>
-        ) : null}
+        </aside>
       </div>
 
       <BottomSheet

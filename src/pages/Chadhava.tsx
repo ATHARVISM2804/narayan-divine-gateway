@@ -3,12 +3,23 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { useLanguage } from "@/context/LanguageContext";
 import { parseDate } from "@/lib/parseDate";
 import { useCatalog } from "@/lib/catalog";
-import { chadhavaListFetcher, chadhavaListFromSnapshot, type ChadhavaList } from "@/lib/catalogQueries";
+import {
+  activePujasFetcher,
+  activePujasFromSnapshot,
+  chadhavaListFetcher,
+  chadhavaListFromSnapshot,
+  type ChadhavaList,
+} from "@/lib/catalogQueries";
+import type { Puja } from "@/lib/supabase";
+import { whatsappLink } from "@/lib/whatsapp";
+import { trackContact } from "@/lib/metaPixel";
+import { MessageCircle } from "lucide-react";
 import { useReviews, useSiteStats } from "@/lib/proof";
 import { DegradedBanner, LoadError } from "@/components/LoadError";
 import ListingHeader from "@/components/shared/ListingHeader";
 import TrustRow from "@/components/shared/TrustRow";
-import { CardSkeleton, ChadhavaCard } from "@/components/cards/PujaCard";
+import { CardSkeleton, ChadhavaCard, PujaCard } from "@/components/cards/PujaCard";
+import { cardGridClass, isWideGrid } from "@/components/cards/cardGrid";
 import ReviewsSection from "@/components/proof/ReviewsSection";
 import SectionHeading from "@/components/SectionHeading";
 
@@ -29,15 +40,25 @@ const Chadhava = () => {
   );
   const minPrices = data?.minPrices ?? {};
 
+  // Nothing open: offer the upcoming pujas instead of a dead end (fetched only then).
+  const isEmpty = !loading && !failed && chadhavas.length === 0;
+  const { data: pujas } = useCatalog<Puja[]>(isEmpty ? "pujas:active" : null, activePujasFetcher, activePujasFromSnapshot);
+  const suggested = (pujas ?? []).slice(0, 3);
+
   return (
     <main>
-      <ListingHeader title={t("chadhava_hero_title")} subtitle={t("chadhava_hero_sub")} crumb={t("breadcrumb_chadhava")} />
+      <ListingHeader
+        title={t("chadhava_hero_title")}
+        subtitle={t("chadhava_hero_sub")}
+        crumb={t("breadcrumb_chadhava")}
+        aside={<TrustRow className="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:gap-y-3" />}
+      />
 
       <section className="py-6 md:py-10">
         <div className="container">
-          <TrustRow className="mb-6" />
+          <TrustRow className="mb-6 lg:hidden" />
           {degraded && <DegradedBanner className="mb-4" />}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={loading || failed ? cardGridClass(3) : cardGridClass(chadhavas.length)}>
             {loading ? (
               <>
                 <CardSkeleton />
@@ -47,13 +68,36 @@ const Chadhava = () => {
             ) : failed ? (
               <LoadError onRetry={retry} className="col-span-full" />
             ) : chadhavas.length === 0 ? (
-              <p className="col-span-full rounded-xl border border-line bg-surface p-8 text-center text-ink-muted">{t("chadhava_empty")}</p>
+              <div className="col-span-full rounded-xl border border-line bg-surface p-6 text-center md:p-8">
+                <p className="text-[15px] font-semibold text-ink">{t("chadhava_empty")}</p>
+                <p className="mx-auto mt-1.5 max-w-xl text-sm leading-relaxed text-ink-muted">{t("ch_empty_sub")}</p>
+                <a
+                  href={whatsappLink(t("wa_msg_chadhava_notify"))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackContact("whatsapp_chadhava_notify")}
+                  className="btn-secondary mt-4"
+                >
+                  <MessageCircle size={18} /> {t("ch_empty_cta")}
+                </a>
+              </div>
             ) : (
               chadhavas.map((c, i) => (
-                <ChadhavaCard key={c.id} chadhava={c} minPrice={minPrices[c.id]} booked={stats?.by_item?.[c.id]} priority={i === 0} />
+                <ChadhavaCard key={c.id} chadhava={c} minPrice={minPrices[c.id]} booked={stats?.by_item?.[c.id]} priority={i === 0} wide={isWideGrid(chadhavas.length)} />
               ))
             )}
           </div>
+
+          {isEmpty && suggested.length > 0 && (
+            <div className="mt-10">
+              <SectionHeading title={t("featured_title")} subtitle={t("featured_sub")} />
+              <div className={cardGridClass(suggested.length)}>
+                {suggested.map((p) => (
+                  <PujaCard key={p.id} puja={p} booked={stats?.by_item?.[p.id]} wide={isWideGrid(suggested.length)} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

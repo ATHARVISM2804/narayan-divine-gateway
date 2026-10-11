@@ -11,6 +11,7 @@ import { DegradedBanner, LoadError } from "@/components/LoadError";
 import ListingHeader from "@/components/shared/ListingHeader";
 import TrustRow from "@/components/shared/TrustRow";
 import { CardSkeleton, PujaCard } from "@/components/cards/PujaCard";
+import { cardGridClass, isWideGrid } from "@/components/cards/cardGrid";
 import HowItWorks from "@/components/home/HowItWorks";
 import ReviewsSection from "@/components/proof/ReviewsSection";
 import { cn } from "@/lib/utils";
@@ -50,14 +51,20 @@ const Puja = () => {
 
   return (
     <main>
-      <ListingHeader title={t("puja_hero_title")} subtitle={t("puja_hero_sub")} crumb={t("nav_puja")} centered />
+      <ListingHeader
+        title={t("puja_hero_title")}
+        subtitle={t("puja_hero_sub")}
+        crumb={t("nav_puja")}
+        centered
+        aside={<TrustRow className="lg:justify-center" />}
+      />
 
       <section className="py-6 md:py-10">
         <div className="container">
-          <TrustRow className="mb-6" />
+          <TrustRow className="mb-6 lg:hidden" />
 
           {showFilters && (
-            <div className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide">
+            <div className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide lg:mx-0 lg:flex-wrap lg:px-0">
               {[null, ...places].map((v) => (
                 <button
                   key={v ?? "all"}
@@ -74,7 +81,7 @@ const Puja = () => {
           )}
 
           {degraded && <DegradedBanner className="mb-4" />}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={loading || failed ? cardGridClass(3) : cardGridClass(shown.length)}>
             {loading ? (
               <>
                 <CardSkeleton />
@@ -88,7 +95,7 @@ const Puja = () => {
                 {place ? t("filter_none") : t("puja_empty")}
               </p>
             ) : (
-              shown.map((p, i) => <PujaCard key={p.id} puja={p} booked={stats?.by_item?.[p.id]} priority={i === 0} />)
+              shown.map((p, i) => <PujaCard key={p.id} puja={p} booked={stats?.by_item?.[p.id]} priority={i === 0} wide={isWideGrid(shown.length)} />)
             )}
           </div>
         </div>
