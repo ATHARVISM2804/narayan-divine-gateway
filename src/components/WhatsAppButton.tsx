@@ -9,12 +9,13 @@ const WhatsAppButton = () => {
   const { totalItems } = useCart();
   const { pathname } = useLocation();
 
-  // Sit above whichever bottom bar the page shows. Checkout's pay bar can grow a
-  // "Book on WhatsApp" row, so it needs the most room.
+  // Sit above whichever bottom bar the page shows (the booking and cart bars are
+  // phone/tablet only). Checkout's pay bar can grow a "Book on WhatsApp" row, so
+  // it needs the most room.
   const offset = pathname.startsWith("/checkout")
     ? "bottom-40 sm:bottom-8"
     : hasBookingBar(pathname)
-      ? "bottom-24"
+      ? "bottom-24 lg:bottom-6"
       : showsCartBar(pathname, totalItems)
         ? "bottom-24 lg:bottom-6"
         : "bottom-5 sm:bottom-6";

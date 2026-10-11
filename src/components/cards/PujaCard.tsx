@@ -7,6 +7,7 @@ import { MIN_PROOF_COUNT } from "@/lib/proof";
 import FitImage from "@/components/FitImage";
 import { TempleIcon } from "@/components/icons";
 import { Eyebrow, Price } from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
 
 interface CardProps {
   to: string;
@@ -21,30 +22,52 @@ interface CardProps {
   cta: string;
   prefetch: ReturnType<typeof prefetchProps>;
   priority?: boolean;
+  /** Horizontal layout from lg up, for rows of only one or two cards (see cardGrid.ts). */
+  wide?: boolean;
 }
+
+// Card image widths on screen: full width on phones, half on tablets, a third
+// (or the wide card's image column) on laptops. Keeps posters sharp at 125% zoom.
+const SIZES = "(min-width: 1024px) 460px, (min-width: 640px) 50vw, 100vw";
 
 /** One card layout for pujas and chadhava: image, what it is, where, when,
     price, and a full-width action. The whole card is the link. */
-const BookingCard = ({ to, image, title, occasion, benefit, place, date, minPrice, booked, cta, prefetch, priority }: CardProps) => {
+const BookingCard = ({ to, image, title, occasion, benefit, place, date, minPrice, booked, cta, prefetch, priority, wide }: CardProps) => {
   const { t } = useLanguage();
   return (
     <Link
       to={to}
       {...prefetch}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition-colors hover:border-saffron/40"
+      className={cn(
+        "group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition-[border-color,box-shadow,transform] duration-200 hover:border-saffron/40 lg:hover:-translate-y-0.5 lg:hover:shadow-raised",
+        wide && "lg:flex-row",
+      )}
     >
-      <div className="relative aspect-[1483/1061] overflow-hidden bg-surface-muted">
+      <div
+        className={cn(
+          "relative aspect-[1483/1061] overflow-hidden bg-surface-muted",
+          wide && "lg:aspect-auto lg:min-h-[300px] lg:w-[48%] lg:shrink-0",
+        )}
+      >
         {image ? (
-          <FitImage src={image} alt={title} width={384} loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} />
+          <FitImage
+            src={image}
+            alt={title}
+            width={384}
+            sizes={SIZES}
+            className="transition-transform duration-300 lg:group-hover:scale-[1.03]"
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : undefined}
+          />
         ) : (
           <span className="grid h-full w-full place-items-center text-ink-soft">
             <TempleIcon size={36} />
           </span>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-4">
+      <div className={cn("flex flex-1 flex-col p-4", wide && "lg:p-6")}>
         {occasion && <Eyebrow className="mb-1.5">{occasion}</Eyebrow>}
-        <h3 className="line-clamp-2 text-[17px] font-semibold leading-snug text-ink">{title}</h3>
+        <h3 className={cn("line-clamp-2 text-[17px] font-semibold leading-snug text-ink", wide && "lg:text-xl")}>{title}</h3>
         {benefit && <p className="mt-1 line-clamp-2 text-sm text-ink-muted">{benefit}</p>}
         <ul className="mt-3 space-y-1.5 text-sm font-medium text-ink-muted">
           {place && (
@@ -77,7 +100,7 @@ const BookingCard = ({ to, image, title, occasion, benefit, place, date, minPric
   );
 };
 
-export const PujaCard = ({ puja, booked, priority }: { puja: Puja; booked?: number; priority?: boolean }) => {
+export const PujaCard = ({ puja, booked, priority, wide }: { puja: Puja; booked?: number; priority?: boolean; wide?: boolean }) => {
   const { t, lang } = useLanguage();
   const hi = lang === "hi";
   // No "From ₹" on pooja cards (client's choice); chadhava cards keep theirs.
@@ -94,6 +117,7 @@ export const PujaCard = ({ puja, booked, priority }: { puja: Puja; booked?: numb
       booked={booked}
       cta={t("btn_participate")}
       priority={priority}
+      wide={wide}
     />
   );
 };
@@ -103,11 +127,13 @@ export const ChadhavaCard = ({
   minPrice,
   booked,
   priority,
+  wide,
 }: {
   chadhava: Chadhava;
   minPrice?: number;
   booked?: number;
   priority?: boolean;
+  wide?: boolean;
 }) => {
   const { t, lang } = useLanguage();
   const hi = lang === "hi";
@@ -125,6 +151,7 @@ export const ChadhavaCard = ({
       booked={booked}
       cta={t("btn_participate")}
       priority={priority}
+      wide={wide}
     />
   );
 };

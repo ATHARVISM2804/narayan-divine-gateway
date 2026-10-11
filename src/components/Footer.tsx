@@ -1,14 +1,12 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Facebook, Instagram, Lock, Mail, MapPin, MessageCircle, Phone, Video } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { whatsappLink } from "@/lib/whatsapp";
-import { hasBookingBar } from "@/lib/stickyBars";
 import { PrasadBoxIcon } from "@/components/icons";
 
 const Footer = React.memo(() => {
   const { t } = useLanguage();
-  const { pathname } = useLocation();
   const links = [
     { to: "/puja", label: t("nav_puja") },
     { to: "/chadhava", label: t("nav_chadhava") },
@@ -107,7 +105,7 @@ const Footer = React.memo(() => {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="container flex flex-col gap-3 py-5 text-xs text-white/55 md:flex-row md:items-center md:justify-between">
+        <div className="container flex flex-col gap-3 py-5 text-xs text-white/55 md:flex-row md:items-center md:justify-between lg:pr-24">
           <p>{t("footer_copyright")}</p>
           <ul className="flex flex-wrap gap-x-4 gap-y-1.5">
             {policies.map((p) => (
@@ -120,8 +118,8 @@ const Footer = React.memo(() => {
           </ul>
         </div>
       </div>
-      {/* Room for the fixed booking/cart bars so they never cover the last links. */}
-      <div className={hasBookingBar(pathname) ? "h-20" : "h-20 lg:h-0"} aria-hidden="true" />
+      {/* Room for the fixed booking/cart bars (phones and tablets only) so they never cover the last links. */}
+      <div className="h-20 lg:h-0" aria-hidden="true" />
     </footer>
   );
 });

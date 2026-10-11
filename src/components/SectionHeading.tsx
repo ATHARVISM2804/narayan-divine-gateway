@@ -38,11 +38,11 @@ const SectionHeading = ({
           {eyebrow}
         </p>
       )}
-      <h2 className={cn("text-xl font-bold md:text-2xl", light ? "text-white" : "text-ink")}>
+      <h2 className={cn("text-xl font-bold md:text-2xl lg:text-[28px] lg:leading-tight", light ? "text-white" : "text-ink")}>
         {title}
       </h2>
       {subtitle && (
-        <p className={cn("mt-2 text-[15px] md:text-base", light ? "text-white/75" : "text-ink-muted")}>
+        <p className={cn("mt-2 text-[15px] md:text-base lg:text-[17px]", light ? "text-white/75" : "text-ink-muted")}>
           {subtitle}
         </p>
       )}
