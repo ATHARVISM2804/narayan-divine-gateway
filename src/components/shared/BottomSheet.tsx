@@ -18,25 +18,36 @@ const BottomSheet = ({
   className?: string;
 }) => {
   const panel = useRef<HTMLDivElement>(null);
+  // Parents pass a new inline onClose on every render (PujaDetail re-renders every
+  // second for its countdown). Read it from a ref so a re-render never re-runs the
+  // effect below: re-running it pulled focus out of the input being typed in, which
+  // closed the phone keyboard straight away.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const close = () => onCloseRef.current();
 
+  // Runs once per open, never on re-renders.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCloseRef.current();
     const prev = document.body.style.overflow;
+    const opener = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
-    panel.current?.focus();
+    if (!panel.current?.contains(document.activeElement)) panel.current?.focus();
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
+      // Back to the button that opened the sheet, for keyboard and screen-reader users.
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="animate-fade-in absolute inset-0 bg-ink/50" onClick={onClose} />
+      <div className="animate-fade-in absolute inset-0 bg-ink/50" onClick={close} />
       <div
         ref={panel}
         tabIndex={-1}
@@ -48,7 +59,7 @@ const BottomSheet = ({
       >
         <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-line sm:hidden" />
         <button
-          onClick={onClose}
+          onClick={close}
           aria-label="Close"
           className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full text-ink-soft transition-colors hover:bg-surface-muted hover:text-ink"
         >
