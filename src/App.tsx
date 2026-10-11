@@ -13,7 +13,7 @@ import MobileCartBar from "@/components/MobileCartBar";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { usePendingPaymentRecovery } from "@/hooks/usePendingPaymentRecovery";
 
-// ── Eager: Home (landing page — always needed first) ──
+// Eager: Home (landing page, always needed first)
 import Home from "./pages/Home";
 
 // ── Lazy: All other pages (code-split by route) ──
@@ -24,6 +24,7 @@ const ChadhavaDetail = lazy(() => import("./pages/ChadhavaDetail"));
 const Astrology = lazy(() => import("./pages/Astrology"));
 const Temples = lazy(() => import("./pages/Temples"));
 const Contact = lazy(() => import("./pages/Contact"));
+const About = lazy(() => import("./pages/About"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
@@ -45,7 +46,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,   // 5 min — avoid refetching static-ish data on every focus
+      staleTime: 5 * 60 * 1000,   // 5 min: avoid refetching static-ish data on every focus
       retry: 1,
     },
   },
@@ -93,17 +94,14 @@ const PendingPaymentRecovery = () => {
   return null;
 };
 
-/* ── Route loading fallback — branded spinner ── */
+/* Route loading fallback */
 const PageLoader = () => (
-  <div className="min-h-[50vh] flex items-center justify-center bg-background">
-    <div className="flex flex-col items-center gap-3">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-gold border-t-saffron" />
-      <p className="text-sm text-brown/50 font-serif italic">Loading…</p>
-    </div>
+  <div className="flex min-h-[50vh] items-center justify-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-line border-t-saffron" role="status" aria-label="Loading" />
   </div>
 );
 
-/* Guards the /admin route — redirects before rendering AdminPanel at all */
+/* Guards the /admin route: redirects before rendering AdminPanel at all */
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
@@ -113,7 +111,7 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-/* Public layout — Navbar + Footer wrap all public pages */
+/* Public layout: Navbar + Footer wrap all public pages */
 const PublicLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const isCheckout = location.pathname === "/checkout";
@@ -145,11 +143,11 @@ const App = () => (
           <ScrollToTop />
           <PendingPaymentRecovery />
           <Routes>
-            {/* ── Admin routes (standalone — no Navbar/Footer) ── */}
+            {/* Admin routes (standalone, no Navbar/Footer) */}
             <Route path="/admin/login" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><AdminLogin /></Suspense></ErrorBoundary>} />
             <Route path="/admin" element={<ProtectedAdminRoute><ErrorBoundary><Suspense fallback={<PageLoader />}><AdminPanel /></Suspense></ErrorBoundary></ProtectedAdminRoute>} />
 
-            {/* ── Public routes ── */}
+            {/* Public routes */}
             <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
             <Route path="/puja" element={<PublicLayout><Puja /></PublicLayout>} />
             <Route path="/puja/:id" element={<PublicLayout><PujaDetail /></PublicLayout>} />
@@ -158,6 +156,7 @@ const App = () => (
             <Route path="/astrology" element={<PublicLayout><Astrology /></PublicLayout>} />
             <Route path="/temples" element={<PublicLayout><Temples /></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+            <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
             <Route path="/cart" element={<PublicLayout><Cart /></PublicLayout>} />
             <Route path="/checkout" element={<PublicLayout><Checkout /></PublicLayout>} />
             <Route path="/order-success" element={<PublicLayout><OrderSuccess /></PublicLayout>} />

@@ -1,20 +1,21 @@
+import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 
 const Terms = () => {
-  usePageTitle("Terms & Conditions — Narayan Kripa");
+  usePageTitle("Terms & Conditions | Narayan Kripa");
 
   return (
     <main>
       <PageHero title="Terms & Conditions" breadcrumb="Terms & Conditions" />
-      <section className="container py-16 md:py-24 max-w-4xl">
-        <p className="text-sm text-brown/50 mb-8 italic">Last updated: 11 May 2026</p>
+      <section className="container max-w-3xl py-8 md:py-12">
+        <p className="text-sm mb-6 text-ink-soft">Last updated: 11 May 2026</p>
 
-        <div className="space-y-10 text-brown/80 leading-relaxed text-[15px]">
+        <div className="space-y-10 text-ink-muted leading-relaxed text-[15px]">
 
           {/* 1 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">1. Acceptance of Terms</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">1. Acceptance of Terms</h2>
             <p>
               By accessing, browsing, or using the website <strong>narayankripa.com</strong> ("Website") and
               the services offered by Narayan Kripa ("we", "our", or "Company"), you ("User", "you", or
@@ -25,7 +26,7 @@ const Terms = () => {
 
           {/* 2 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">2. About Our Services</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">2. About Our Services</h2>
             <p className="mb-3">Narayan Kripa is an online platform that provides the following spiritual services:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li><strong>Online Puja Booking:</strong> Book sacred pujas performed by verified, experienced pandits at partnered temples across India.</li>
@@ -38,7 +39,7 @@ const Terms = () => {
 
           {/* 3 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">3. Eligibility</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">3. Eligibility</h2>
             <p>
               To use our services, you must be at least 18 years of age and legally capable of entering into
               binding contracts under Indian law. By using our services, you represent and warrant that you
@@ -48,7 +49,7 @@ const Terms = () => {
 
           {/* 4 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">4. User Account</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">4. User Account</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>You may create an account to track your orders and access order history.</li>
               <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
@@ -60,7 +61,7 @@ const Terms = () => {
 
           {/* 5 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">5. Booking & Order Process</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">5. Booking & Order Process</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>All puja and chadhava bookings are subject to availability and confirmation.</li>
               <li>By placing an order, you make an offer to purchase our services at the listed price.</li>
@@ -72,7 +73,7 @@ const Terms = () => {
 
           {/* 6 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">6. Pricing & Payment</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">6. Pricing & Payment</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>All prices displayed on the Website are in Indian Rupees (₹) and are inclusive of applicable taxes unless stated otherwise.</li>
               <li>We reserve the right to change prices at any time without prior notice. However, price changes will not affect orders that have already been confirmed.</li>
@@ -83,34 +84,34 @@ const Terms = () => {
 
           {/* 7 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">7. Refund & Cancellation</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">7. Refund & Cancellation</h2>
             <p>
               Please refer to our{" "}
-              <a href="/refund-policy" className="text-saffron hover:text-maroon font-semibold underline">
+              <Link to="/refund-policy" className="text-saffron-dark hover:underline font-semibold underline">
                 Refund & Cancellation Policy
-              </a>{" "}
+              </Link>{" "}
               for detailed information on cancellations, refund eligibility, timelines, and the refund process.
             </p>
           </div>
 
           {/* 8 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">8. Shipping & Delivery</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">8. Shipping & Delivery</h2>
             <p>
               Please refer to our{" "}
-              <a href="/shipping-policy" className="text-saffron hover:text-maroon font-semibold underline">
+              <Link to="/shipping-policy" className="text-saffron-dark hover:underline font-semibold underline">
                 Shipping & Delivery Policy
-              </a>{" "}
+              </Link>{" "}
               for details on prasad delivery timelines, coverage areas, and delivery procedures.
             </p>
           </div>
 
           {/* 9 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">9. Intellectual Property</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">9. Intellectual Property</h2>
             <p>
-              All content on this Website — including text, images, logos, graphics, icons, videos, and software
-              — is the property of Narayan Kripa or its content suppliers and is protected by Indian and
+              All content on this Website (including text, images, logos, graphics, icons, videos, and software)
+              is the property of Narayan Kripa or its content suppliers and is protected by Indian and
               international copyright, trademark, and intellectual property laws. You may not reproduce,
               distribute, modify, or create derivative works from any content without our prior written consent.
             </p>
@@ -118,7 +119,7 @@ const Terms = () => {
 
           {/* 10 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">10. User Conduct</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">10. User Conduct</h2>
             <p className="mb-3">You agree not to:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Use our services for any unlawful or prohibited purpose</li>
@@ -132,7 +133,7 @@ const Terms = () => {
 
           {/* 11 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">11. Disclaimer of Warranties</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">11. Disclaimer of Warranties</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>Our services are provided on an "as is" and "as available" basis without warranties of any kind, either express or implied.</li>
               <li>We do not guarantee uninterrupted, error-free, or secure access to our Website.</li>
@@ -143,7 +144,7 @@ const Terms = () => {
 
           {/* 12 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">12. Limitation of Liability</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">12. Limitation of Liability</h2>
             <p>
               To the maximum extent permitted by law, Narayan Kripa, its directors, employees, and partners
               shall not be liable for any indirect, incidental, special, consequential, or punitive damages
@@ -156,7 +157,7 @@ const Terms = () => {
 
           {/* 13 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">13. Indemnification</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">13. Indemnification</h2>
             <p>
               You agree to indemnify, defend, and hold harmless Narayan Kripa, its affiliates, officers,
               directors, employees, and agents from and against any claims, liabilities, damages, losses, and
@@ -167,7 +168,7 @@ const Terms = () => {
 
           {/* 14 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">14. Governing Law & Jurisdiction</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">14. Governing Law & Jurisdiction</h2>
             <p>
               These Terms shall be governed by and construed in accordance with the laws of India. Any disputes
               arising from these Terms or your use of our services shall be subject to the exclusive
@@ -177,7 +178,7 @@ const Terms = () => {
 
           {/* 15 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">15. Modifications to Terms</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">15. Modifications to Terms</h2>
             <p>
               We reserve the right to modify or update these Terms at any time. Changes will be effective
               immediately upon posting on this page. Your continued use of the Website after such changes
@@ -188,7 +189,7 @@ const Terms = () => {
 
           {/* 16 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">16. Severability</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">16. Severability</h2>
             <p>
               If any provision of these Terms is found to be unenforceable or invalid by a court of competent
               jurisdiction, the remaining provisions shall remain in full force and effect.
@@ -197,13 +198,13 @@ const Terms = () => {
 
           {/* 17 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">17. Contact Us</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">17. Contact Us</h2>
             <p>If you have any questions about these Terms and Conditions, please contact us:</p>
-            <div className="mt-4 bg-ivory p-6 rounded-xl border border-gold/30 space-y-1">
-              <p className="font-bold text-maroon">Narayan Kripa</p>
+            <div className="mt-4 bg-surface p-6 rounded-xl border border-line space-y-1">
+              <p className="font-semibold text-ink">Narayan Kripa</p>
               <p>Lanka, Varanasi, Uttar Pradesh 221005, India</p>
-              <p>Email: <a href="mailto:Asknarayankripa@gmail.com" className="text-saffron hover:text-maroon font-semibold">Asknarayankripa@gmail.com</a></p>
-              <p>Phone: <a href="tel:+919286345941" className="text-saffron hover:text-maroon font-semibold">+91 92863 45941</a></p>
+              <p>Email: <a href="mailto:Asknarayankripa@gmail.com" className="text-saffron-dark hover:underline font-semibold">Asknarayankripa@gmail.com</a></p>
+              <p>Phone: <a href="tel:+919286345941" className="text-saffron-dark hover:underline font-semibold">+91 92863 45941</a></p>
               <p>Support Hours: Mon–Sat, 9:00 AM – 7:00 PM IST</p>
             </div>
           </div>

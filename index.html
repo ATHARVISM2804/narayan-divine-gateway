@@ -1,11 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" translate="no">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-    <title>Narayan Kripa — Sacred Pujas, Chadhava & Temple Services</title>
-    <meta name="description" content="Book Vedic pujas, offer chadhava at 50+ sacred temples, consult expert pandits and watch live darshan — all from home. Trusted by 2 lakh+ devotees." />
+    <title>Narayan Kripa | Online Puja and Chadhava at Famous Temples</title>
+    <meta name="description" content="Book a puja or chadhava at famous Indian temples in your name and gotra. Pandit ji performs it, you get the video on WhatsApp and prasad at home." />
     <meta name="author" content="Narayan Kripa" />
+    <!-- The site has its own Hindi/English switch; browser auto-translate garbles it. -->
+    <meta name="google" content="notranslate" />
     <meta name="theme-color" content="#5C1A1A" />
 
     <link rel="icon" type="image/png" href="/favicon.png" />
@@ -20,26 +22,23 @@
     <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
     <link rel="dns-prefetch" href="https://api.razorpay.com" />
 
-    <!-- Google Fonts — loaded non-blocking via media swap pattern -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <!-- Google Fonts: Noto Sans (Latin) + Noto Sans Devanagari (Hindi), loaded non-blocking -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
     <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" />
     </noscript>
-
-    <!-- Preload LCP hero image for Home Page -->
-    <link rel="preload" as="image" href="/src/assets/hero-temple.jpg" fetchpriority="high" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Narayan Kripa — Sacred Pujas, Chadhava & Temple Services" />
-    <meta property="og:description" content="Book Vedic pujas, offer chadhava at 50+ sacred temples, consult expert pandits and watch live darshan — all from home." />
+    <meta property="og:title" content="Narayan Kripa | Online Puja and Chadhava at Famous Temples" />
+    <meta property="og:description" content="Book a puja or chadhava at famous Indian temples in your name and gotra. Pandit ji performs it, you get the video on WhatsApp and prasad at home." />
     <meta property="og:image" content="https://res.cloudinary.com/dmhabztbf/image/upload/v1777662309/favicon_khlzjo.png" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Narayan Kripa — Sacred Pujas, Chadhava & Temple Services" />
-    <meta name="twitter:description" content="Book Vedic pujas, offer chadhava at 50+ sacred temples, consult expert pandits and watch live darshan — all from home." />
+    <meta name="twitter:title" content="Narayan Kripa | Online Puja and Chadhava at Famous Temples" />
+    <meta name="twitter:description" content="Book a puja or chadhava at famous Indian temples in your name and gotra. Pandit ji performs it, you get the video on WhatsApp and prasad at home." />
 
     <!-- Facebook Pixel Code -->
     <script>
@@ -56,7 +55,7 @@
       // App.tsx (ScrollToTop) sends exactly one PageView per real route change instead.
       fbq.disablePushState = true;
       // Dataset: "Narayan Kripa" (the one selected on the ad account).
-      // To ALSO feed the "NK web's data" dataset, uncomment the second init —
+      // To ALSO feed the "NK web's data" dataset, uncomment the second init;
       // fbq('track', ...) automatically broadcasts to every dataset inited here.
       fbq('init', '3979726935662067');
       // fbq('init', '1800515227776569');
@@ -66,14 +65,14 @@
   </head>
 
   <body>
-    <!-- Facebook Pixel (noscript fallback) — must live in <body>: an <img> inside
+    <!-- Facebook Pixel (noscript fallback): must live in <body>: an <img> inside
          <noscript> in <head> is invalid HTML and aborts head parsing. -->
     <noscript>
       <img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=3979726935662067&ev=PageView&noscript=1"/>
     </noscript>
 
     <div id="root"></div>
-    <!-- Razorpay script removed from here — loaded dynamically only on Checkout page -->
+    <!-- Razorpay script removed from here; loaded dynamically only on Checkout page -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

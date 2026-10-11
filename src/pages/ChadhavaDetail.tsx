@@ -1,487 +1,311 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { ArrowRight, CalendarDays, Check, ChevronRight, Minus, Plus } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
-import { supabase, type Chadhava, type ChadhavaOffering } from "@/lib/supabase";
-import { trackViewContent } from "@/lib/metaPixel";
-import { Loader2, ShoppingCart, Check, ChevronRight, ChevronDown, ChevronUp, Plus, Minus, MapPin, Calendar } from "lucide-react";
-import { toast } from "sonner";
-import PujaGallery from "@/components/puja/PujaGallery";
-import FitImage from "@/components/FitImage";
 import { useLanguage } from "@/context/LanguageContext";
-import StorageImage from "@/components/StorageImage";
-import { DegradedBanner, LoadError } from "@/components/LoadError";
+import { trackViewContent } from "@/lib/metaPixel";
 import { useCatalog } from "@/lib/catalog";
-import { chadhavaFromSnapshot, type ChadhavaWithOfferings } from "@/lib/catalogQueries";
+import { chadhavaCacheKey, chadhavaFetcher, chadhavaFromSnapshot, type ChadhavaWithOfferings } from "@/lib/catalogQueries";
+import { bookingDeadline, useCountdown } from "@/lib/countdown";
+import { MIN_PROOF_COUNT, reviewsFor, useReviews, useSiteStats } from "@/lib/proof";
+import PujaGallery from "@/components/puja/PujaGallery";
+import PujaSectionNav, { type NavSection } from "@/components/puja/PujaSectionNav";
+import FitImage from "@/components/FitImage";
+import Countdown from "@/components/shared/Countdown";
+import StickyActionBar from "@/components/shared/StickyActionBar";
+import TrustRow from "@/components/shared/TrustRow";
+import FaqList, { type Faq } from "@/components/shared/FaqList";
+import SectionHeading from "@/components/SectionHeading";
+import RatingSummary from "@/components/proof/RatingSummary";
+import ReviewsSection from "@/components/proof/ReviewsSection";
+import { DegradedBanner, LoadError } from "@/components/LoadError";
+import { Eyebrow, Highlight, formatInr } from "@/components/ui/typography";
+import { TempleIcon } from "@/components/icons";
+import { cn } from "@/lib/utils";
 
-const parseChadhavaDate = (dateStr: string, countdownDatetime?: string | null): Date => {
-  // If an exact ISO datetime is provided (e.g. "2026-07-12T16:00:00+05:30"), use it directly
-  if (countdownDatetime) {
-    const exact = new Date(countdownDatetime);
-    if (!isNaN(exact.getTime())) return exact;
-  }
-  // Fallback: parse the display date string with end-of-day time
-  const year = new Date().getFullYear();
-  const hasYear = /\d{4}/.test(dateStr);
-  const fullStr = hasYear ? dateStr : `${dateStr} ${year}`;
-  const d = new Date(`${fullStr} 23:59:59`);
-  if (isNaN(d.getTime()) || d < new Date()) {
-    const next = new Date(`${dateStr} ${year + 1} 23:59:59`);
-    return isNaN(next.getTime()) ? d : next;
-  }
-  return d;
-};
-
-const getTimeLeft = (target: Date) => {
-  const diff = target.getTime() - Date.now();
-  if (diff <= 0) return { days: 0, hours: 0, mins: 0, secs: 0, expired: true };
-  return {
-    days: Math.floor(diff / 86400000),
-    hours: Math.floor((diff % 86400000) / 3600000),
-    mins: Math.floor((diff % 3600000) / 60000),
-    secs: Math.floor((diff % 60000) / 1000),
-    expired: false,
-  };
-};
+const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
 const ChadhavaDetail = () => {
   const { id } = useParams<{ id: string }>();
   const nav = useNavigate();
   const { addItem } = useCart();
   const { t, lang } = useLanguage();
-
   const [selected, setSelected] = useState<Record<string, number>>({});
-  const [faqOpen, setFaqOpen] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0, expired: false });
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { data, loading, degraded, failed, notFound, retry } = useCatalog<ChadhavaWithOfferings>(
-    id ? `chadhava:${id}` : null,
-    async (signal) => {
-      const [ch, off] = await Promise.all([
-        supabase.from("chadhavas").select("*").eq("id", id!).eq("status", "active").retry(false).abortSignal(signal).maybeSingle<Chadhava>(),
-        supabase.from("chadhava_offerings").select("*").eq("chadhava_id", id!).eq("status", "active").order("sort_order")
-          .retry(false).abortSignal(signal).returns<ChadhavaOffering[]>(),
-      ]);
-      // Offerings are what the visitor buys here, so either query failing counts as a failure.
-      const error = ch.error ?? off.error;
-      if (error) return { data: null, error };
-      return { data: ch.data ? { chadhava: ch.data, offerings: off.data ?? [] } : null, error: null };
-    },
+    id ? chadhavaCacheKey(id) : null,
+    chadhavaFetcher(id ?? ""),
     id ? chadhavaFromSnapshot(id) : undefined,
   );
+  const { data: allReviews } = useReviews();
+  const { data: stats } = useSiteStats();
   const chadhava = data?.chadhava ?? null;
-  const offerings = data?.offerings ?? [];
+  const offerings = useMemo(() => data?.offerings ?? [], [data]);
 
-  usePageTitle(chadhava ? `${chadhava.item} — Narayan Kripa` : "Loading…");
+  const deadline = useMemo(() => (chadhava ? bookingDeadline(chadhava.date, chadhava.countdown_datetime) : null), [chadhava]);
+  const left = useCountdown(deadline);
 
-  // Leave only when the chadhava really doesn't exist — a failed request shows Retry instead.
+  usePageTitle(chadhava ? `${lang === "hi" && chadhava.item_hi ? chadhava.item_hi : chadhava.item} | Narayan Kripa` : "Narayan Kripa");
+
   useEffect(() => {
     if (notFound) nav("/chadhava", { replace: true });
   }, [notFound, nav]);
 
-  // ViewContent — once per chadhava. Ref guard prevents a double send under
-  // React StrictMode's double-invoked effects in dev.
+  // ViewContent once per chadhava (ref guards StrictMode's double effects).
   const viewTracked = useRef<string | null>(null);
   useEffect(() => {
     if (!chadhava || viewTracked.current === chadhava.id) return;
     viewTracked.current = chadhava.id;
-    trackViewContent({
-      id: chadhava.id,
-      name: `${chadhava.item} — ${chadhava.temple}`,
-      value: chadhava.price,
-      category: "chadhava",
-    });
+    trackViewContent({ id: chadhava.id, name: `${chadhava.item} | ${chadhava.temple}`, value: chadhava.price, category: "chadhava" });
   }, [chadhava]);
 
-  useEffect(() => {
-    if (!chadhava?.date) return;
-    const target = parseChadhavaDate(chadhava.date, chadhava.countdown_datetime);
-    setTimeLeft(getTimeLeft(target));
-    timerRef.current = setInterval(() => setTimeLeft(getTimeLeft(target)), 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [chadhava?.date, chadhava?.countdown_datetime]);
-
-  /* ── Selection logic ── */
-  const toggleOffering = (offId: string) => {
-    setSelected(prev => {
+  const setQty = (offId: string, qty: number) =>
+    setSelected((prev) => {
       const copy = { ...prev };
-      if (copy[offId]) delete copy[offId];
-      else copy[offId] = 1;
+      if (qty <= 0) delete copy[offId];
+      else copy[offId] = qty;
       return copy;
     });
-  };
 
-  const updateQty = (offId: string, delta: number) => {
-    setSelected(prev => {
-      const copy = { ...prev };
-      const newQty = (copy[offId] || 1) + delta;
-      if (newQty <= 0) delete copy[offId];
-      else copy[offId] = newQty;
-      return copy;
-    });
-  };
-
-  const selectedCount = Object.keys(selected).length;
+  const selectedCount = Object.values(selected).reduce((s, q) => s + q, 0);
   const totalPrice = offerings.reduce((sum, o) => sum + (selected[o.id] || 0) * o.price, 0);
 
   const handleProceed = () => {
-    if (!chadhava || selectedCount === 0) return;
-    offerings.forEach(o => {
+    if (!chadhava || selectedCount === 0) return scrollToId("offerings");
+    offerings.forEach((o) => {
       const qty = selected[o.id];
       if (!qty) return;
-      // Use only the offering ID so the edge function can look it up directly
-      addItem({
-        id: `chadhava-${o.id}`,
-        name: `${o.name}`,
-        description: chadhava.item,
-        price: o.price,
-        category: "chadhava",
-        image: o.image_url || chadhava.image_url || undefined,
-      }, qty);
+      // Only the offering id, so the edge function can look the price up directly.
+      addItem(
+        {
+          id: `chadhava-${o.id}`,
+          name: o.name,
+          description: chadhava.item,
+          price: o.price,
+          category: "chadhava",
+          image: o.image_url || chadhava.image_url || undefined,
+        },
+        qty,
+      );
     });
-    toast.success(`${selectedCount} ${t("toast_offerings_added")}`);
-    nav("/cart");
+    nav("/checkout");
   };
 
-  /* ── Loading ── */
-  if (loading) return (
-    <main className="min-h-[60vh] bg-background flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <Loader2 size={32} className="animate-spin text-saffron" />
-        <p className="text-brown/60 font-serif italic">Loading chadhava details…</p>
-      </div>
-    </main>
-  );
-
-  if (failed) return (
-    <main className="min-h-[60vh] bg-background flex items-center justify-center px-4 py-12">
-      <LoadError onRetry={retry} className="max-w-lg w-full" />
-    </main>
-  );
-
-  if (!chadhava) return null;
-
-  const displayItem = (lang === "hi" && chadhava.item_hi) ? chadhava.item_hi : chadhava.item;
-  const displayTemple = (lang === "hi" && chadhava.temple_hi) ? chadhava.temple_hi : chadhava.temple;
-  const displayDesc = (lang === "hi" && chadhava.description_hi) ? chadhava.description_hi : chadhava.description;
-  const displayAbout = (lang === "hi" && chadhava.about_hi) ? chadhava.about_hi : chadhava.about;
-  const displayOccasion = (lang === "hi" && chadhava.occasion_hi) ? chadhava.occasion_hi : chadhava.occasion;
-  const faqs = (lang === "hi" && chadhava.faqs_hi?.length) ? chadhava.faqs_hi : chadhava.faqs;
-  const galleryImages = chadhava.gallery?.length ? chadhava.gallery : [];
-
-  return (
-    <main className="bg-background min-h-screen pb-28 md:pb-10">
-      {degraded && <div className="container pt-3"><DegradedBanner /></div>}
-
-      {/* ══════════════════════════════════════════════
-          HERO — Same dark maroon style as PujaDetail
-          ══════════════════════════════════════════════ */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-maroon via-maroon-deep to-maroon">
-        {chadhava.image_url && (
-          <StorageImage src={chadhava.image_url} width={640} fixed alt="" fetchPriority="high" decoding="async" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-maroon/60 via-maroon-deep/80 to-maroon" />
-
-        <div className="container relative py-10 md:py-14">
-          <div className="flex flex-col md:flex-row gap-8 items-start">
-
-            {/* Gallery — same sizing as PujaDetail */}
-            <div className="w-full md:w-[480px] lg:w-[560px] xl:w-[800px] shrink-0">
-              <PujaGallery images={galleryImages} fallbackUrl={chadhava.image_url} name={chadhava.item} />
-            </div>
-
-            {/* Title + Info */}
-            <div className="flex-1">
-              {/* Special Occasion badge */}
-              {displayOccasion && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/20 border border-gold/40 px-3 py-1 text-[11px] sm:text-xs font-bold text-gold tracking-wide uppercase mb-3">
-                  ✦ {displayOccasion}
-                </span>
-              )}
-              <h1 className="font-body text-2xl md:text-3xl font-bold text-gold leading-snug">{displayItem}</h1>
-
-              {displayDesc && (
-                <div className="mt-3 rounded-xl bg-white/10 border border-gold/30 px-4 py-3">
-                  <p className="text-base font-bold text-gold leading-snug">✦ {displayDesc}</p>
-                </div>
-              )}
-
-              <div className="mt-4 flex flex-col gap-2.5">
-                {chadhava.date && (
-                  <span className="flex items-center gap-2.5 text-cream/90 text-lg font-semibold">
-                    <span className="w-6 flex items-center justify-center shrink-0"><Calendar size={20} className="text-gold" /></span> {chadhava.date}
-                  </span>
-                )}
-                <span className="flex items-center gap-2.5 text-cream/90 text-lg font-semibold">
-                  <span className="w-6 flex items-center justify-center shrink-0 text-xl leading-none">🛕</span> {displayTemple}
-                </span>
-              </div>
-
-              {/* Countdown Timer */}
-              {chadhava.date && (
-                <div className="mt-5">
-                  {timeLeft.expired ? (
-                    <div className="inline-flex items-center gap-2 rounded-xl bg-red-900/40 border border-red-500/30 px-4 py-2.5">
-                      <span className="text-red-300 font-bold text-sm">{t("timer_expired_chadhava")}</span>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-cream/60 text-xs font-semibold uppercase tracking-wider mb-2">{t("timer_label_chadhava")}</p>
-                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        {[
-                          { val: timeLeft.days, label: t("timer_days") },
-                          { val: timeLeft.hours, label: t("timer_hours") },
-                          { val: timeLeft.mins, label: t("timer_mins") },
-                          { val: timeLeft.secs, label: t("timer_secs") },
-                        ].map(({ val, label }, i) => (
-                          <div key={label} className="flex items-center gap-2">
-                            <div className={`flex flex-col items-center justify-center rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 min-w-[44px] sm:min-w-[52px] border ${
-                              timeLeft.days === 0 ? "bg-red-900/50 border-red-500/40" : "bg-maroon-deep/60 border-gold/20"
-                            }`}>
-                              <span className={`font-bold text-lg sm:text-xl leading-none tabular-nums ${timeLeft.days === 0 ? "text-red-300" : "text-gold"}`}>
-                                {String(val).padStart(2, "0")}
-                              </span>
-                              <span className="text-[10px] font-semibold text-cream/50 mt-0.5">{label}</span>
-                            </div>
-                            {i < 3 && <span className="text-gold/60 font-bold text-lg mb-3">:</span>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-
-
-              {/* Scroll to offerings CTA — same style as PujaDetail "Select Package" */}
-              <button onClick={() => document.getElementById("offerings")?.scrollIntoView({ behavior: "smooth" })}
-                className="mt-6 flex items-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-gold px-6 py-3.5 text-[15px] font-bold text-white shadow-lg transition-all hover:shadow-gold-glow hover:-translate-y-0.5">
-                {t("ch_choose_offering")} <ChevronDown size={18} />
-              </button>
-
-              {/* Trust badges — same style as PujaDetail */}
-              <div className="mt-6 hidden md:flex flex-wrap gap-2">
-                {[
-                  { icon: "🪔", text: t("trust_temple") },
-                  { icon: "📦", text: t("trust_prasad_home") },
-                  { icon: "🔒", text: t("trust_cert") },
-                ].map(b => (
-                  <span key={b.text} className="flex items-center gap-1.5 rounded-full bg-white/10 border border-gold/20 px-3 py-1.5 text-xs font-semibold text-cream/80">
-                    {b.icon} {b.text}
-                  </span>
-                ))}
-              </div>
-            </div>
+  if (loading)
+    return (
+      <main className="container animate-pulse py-6 md:py-10">
+        <div className="grid gap-6 md:grid-cols-[1.15fr_1fr]">
+          <div className="aspect-[1483/1061] rounded-xl bg-surface-muted" />
+          <div className="space-y-4">
+            <div className="h-7 w-full rounded bg-surface-muted" />
+            <div className="h-5 w-2/3 rounded bg-surface-muted" />
+            <div className="h-12 w-full rounded-[10px] bg-surface-muted" />
           </div>
         </div>
-      </div>
+      </main>
+    );
+  if (failed)
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center px-4 py-12">
+        <LoadError onRetry={retry} className="w-full max-w-lg" />
+      </main>
+    );
+  if (!chadhava) return null;
 
-      {/* ══════════════════════════════════════════════
-          CHOOSE YOUR OFFERING — styled like Packages section
-          ══════════════════════════════════════════════ */}
-      <section id="offerings" className="scroll-mt-32 bg-cream border-b border-gold/20 py-10">
-        <div className="container">
-          <h2 className="font-body text-xl md:text-2xl font-bold text-maroon mb-1">{t("ch_choose_offering")}</h2>
-          <p className="text-sm text-brown/60 font-semibold mb-6">{t("ch_choose_sub")}</p>
+  const hi = lang === "hi";
+  const item = hi && chadhava.item_hi ? chadhava.item_hi : chadhava.item;
+  const temple = hi && chadhava.temple_hi ? chadhava.temple_hi : chadhava.temple;
+  const desc = hi && chadhava.description_hi ? chadhava.description_hi : chadhava.description;
+  const about = hi && chadhava.about_hi ? chadhava.about_hi : chadhava.about;
+  const occasion = hi && chadhava.occasion_hi ? chadhava.occasion_hi : chadhava.occasion;
+  const dbFaqs = (hi && chadhava.faqs_hi?.length ? chadhava.faqs_hi : chadhava.faqs) ?? [];
+  const standardFaqs: Faq[] = [1, 3, 4, 5].map((n) => ({ question: t(`faq_home_q${n}`), answer: t(`faq_home_a${n}`) }));
+  const faqs = [...dbFaqs, ...standardFaqs.filter((f) => !dbFaqs.some((d) => d.question === f.question))];
 
-          {offerings.length === 0 ? (
-            <div className="rounded-2xl border border-gold/30 bg-ivory p-12 text-center">
-              <p className="text-3xl mb-3">🌺</p>
-              <p className="font-display text-maroon">{t("ch_no_offerings")}</p>
+  const reviews = reviewsFor(allReviews, { chadhavaId: chadhava.id });
+  const bookedCount = stats?.by_item?.[chadhava.id];
+  const minPrice = offerings.length ? Math.min(...offerings.map((o) => o.price)) : chadhava.price;
+
+  const sections: NavSection[] = [
+    { id: "offerings", labelKey: "ch_view_offerings" },
+    ...(about ? [{ id: "aboutChadhava", labelKey: "ch_about_temple" }] : []),
+    { id: "howItWorks", labelKey: "how_works" },
+    ...(reviews.length ? [{ id: "reviews", labelKey: "pd_tab_reviews" }] : []),
+    { id: "faqSection", labelKey: "pd_faqs" },
+  ];
+
+  return (
+    <main className="pb-24">
+      {degraded && (
+        <div className="container pt-3">
+          <DegradedBanner />
+        </div>
+      )}
+
+      <section className="container pb-8 pt-4 md:pb-12 md:pt-6">
+        <nav aria-label="Breadcrumb" className="mb-4 hidden items-center gap-1.5 text-sm text-ink-soft md:flex">
+          <Link to="/" className="hover:text-ink">{t("breadcrumb_home")}</Link>
+          <ChevronRight size={14} />
+          <Link to="/chadhava" className="hover:text-ink">{t("breadcrumb_chadhava")}</Link>
+          <ChevronRight size={14} />
+          <span className="truncate text-ink">{item}</span>
+        </nav>
+
+        <div className="grid gap-5 md:grid-cols-[1.15fr_1fr] md:gap-8 lg:gap-12">
+          <PujaGallery images={chadhava.gallery?.length ? chadhava.gallery : []} fallbackUrl={chadhava.image_url} name={item} />
+
+          <div className="flex flex-col">
+            {occasion && <Eyebrow className="mb-2">{occasion}</Eyebrow>}
+            <h1 className="text-[22px] font-bold leading-snug text-ink md:text-[28px]">{item}</h1>
+            {desc && <p className="mt-2 text-base font-semibold leading-snug text-ink-muted md:text-lg">{desc}</p>}
+
+            <ul className="mt-4 space-y-2 text-[15px] font-medium text-ink-muted">
+              {temple && (
+                <li className="flex items-start gap-2.5">
+                  <TempleIcon size={18} className="mt-0.5 shrink-0 text-saffron" /> {temple}
+                </li>
+              )}
+              {chadhava.date && (
+                <li className="flex items-start gap-2.5">
+                  <CalendarDays size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-saffron" /> {chadhava.date}
+                </li>
+              )}
+            </ul>
+
+            <div className="mt-5">
+              <Countdown left={left} label={t("timer_label_chadhava")} expiredLabel={t("timer_expired_chadhava")} />
             </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              {offerings.map(o => {
-                const qty = selected[o.id] || 0;
-                const isSelected = qty > 0;
-                const dName = (lang === "hi" && o.name_hi) ? o.name_hi : o.name;
-                return (
-                  <div key={o.id}
-                    className={`relative group rounded-2xl overflow-hidden border-2 text-left transition-all duration-300 shadow-soft hover:-translate-y-1 hover:shadow-lg ${
-                      isSelected ? "border-saffron shadow-lg -translate-y-1" : "border-gold/30 hover:border-saffron/60"
-                    }`}>
 
-                    {/* Image — same style as package cards */}
-                    <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-saffron/20 via-gold/15 to-maroon/10 cursor-pointer"
-                      onClick={() => toggleOffering(o.id)}>
-                      {o.image_url ? (
-                        <FitImage src={o.image_url} alt={o.name} width={200} className="transition-transform duration-500 group-hover:scale-105" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl">🌺</div>
-                      )}
-                      {isSelected && <div className="absolute inset-0 bg-saffron/20" />}
-                      {isSelected && (
-                        <div className="absolute top-2 right-2 h-7 w-7 rounded-full bg-saffron flex items-center justify-center shadow-md">
-                          <Check size={14} className="text-white" strokeWidth={3} />
-                        </div>
-                      )}
-                    </div>
+            {(reviews.length > 0 || (bookedCount ?? 0) >= MIN_PROOF_COUNT) && (
+              <div className="mt-5 space-y-2.5">
+                <RatingSummary reviews={reviews} onClick={() => scrollToId("reviews")} />
+                {bookedCount != null && bookedCount >= MIN_PROOF_COUNT && (
+                  <p className="text-[15px] text-ink-muted">
+                    <Highlight>{bookedCount.toLocaleString("en-IN")}</Highlight> {t("pd_booked_here")}
+                  </p>
+                )}
+              </div>
+            )}
 
-                    {/* Info — same padding/style as package cards */}
-                    <div className={`p-3 md:p-4 transition-colors ${isSelected ? "bg-saffron/5" : "bg-ivory"}`}>
-                      <p className="font-bold text-maroon text-sm md:text-base leading-snug line-clamp-2 min-h-[36px]">{dName}</p>
-                      <p className="font-bold text-lg md:text-xl mt-1 text-saffron">₹{o.price.toLocaleString("en-IN")}</p>
+            <button onClick={() => scrollToId("offerings")} className="btn-primary mt-6 w-full md:max-w-sm">
+              {t("ch_choose_offering")} <ArrowRight size={18} />
+            </button>
 
-                      {/* Add / Qty controls */}
-                      {!isSelected ? (
-                        <button onClick={() => toggleOffering(o.id)}
-                          className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-xl border-2 border-gold/50 bg-cream py-2 text-sm font-bold text-maroon transition-all hover:bg-gold/10 hover:border-saffron">
-                          <Plus size={14} className="text-saffron" /> {t("ch_add")}
-                        </button>
-                      ) : (
-                        <div className="mt-2 flex items-center justify-between rounded-xl border-2 border-saffron bg-saffron/10 overflow-hidden">
-                          <button onClick={() => updateQty(o.id, -1)}
-                            className="px-3 py-2 text-saffron hover:bg-saffron hover:text-white transition-colors">
-                            <Minus size={14} />
-                          </button>
-                          <span className="font-bold text-maroon text-sm">{qty}</span>
-                          <button onClick={() => updateQty(o.id, 1)}
-                            className="px-3 py-2 text-saffron hover:bg-saffron hover:text-white transition-colors">
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Selection hint */}
-          {selectedCount > 0 ? (
-            <p className="mt-5 text-center text-sm text-saffron font-semibold animate-fadeIn">
-              ✓ {selectedCount} {t("ch_items_selected")} — {t("ch_proceed")} ↓
-            </p>
-          ) : (
-            <p className="mt-5 text-center text-sm text-brown/50 font-semibold">{t("ch_select_hint") || "Tap offerings above to add them"}</p>
-          )}
-
-          {/* Trust row — same as PujaDetail packages section */}
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {[
-              { icon: "🪔", text: t("trust_temple") },
-              { icon: "🧑‍🦳", text: t("trust_priests") },
-              { icon: "📦", text: t("trust_prasad_home") },
-              { icon: "📞", text: t("trust_cert") },
-            ].map(b => (
-              <span key={b.text} className="flex items-center gap-2 rounded-xl bg-ivory border border-gold/30 px-4 py-2.5 text-sm font-semibold text-maroon shadow-soft">
-                <span className="text-lg">{b.icon}</span> {b.text}
-              </span>
-            ))}
+            <TrustRow className="mt-5 border-t border-line pt-4" />
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════
-          ABOUT — same card style as PujaDetail sections
-          ══════════════════════════════════════════════ */}
-      {displayAbout && (
-        <section className="bg-background border-b border-gold/20">
-          <div className="container py-10">
-            <div className="max-w-4xl mx-auto rounded-2xl border border-gold/40 bg-ivory p-6 shadow-soft">
-              <h2 className="font-body text-xl font-bold text-maroon mb-4">{t("ch_about_temple")}</h2>
-              <p className="text-sm text-brown/70 leading-relaxed whitespace-pre-line">{displayAbout}</p>
-            </div>
-          </div>
-        </section>
-      )}
+      <PujaSectionNav sections={sections} />
 
-      {/* ══════════════════════════════════════════════
-          WHAT'S INCLUDED — same as PujaDetail includes
-          ══════════════════════════════════════════════ */}
-      <section className="bg-cream border-b border-gold/20">
-        <div className="container py-10">
-          <div className="max-w-4xl mx-auto rounded-2xl border border-gold/40 bg-ivory p-6 shadow-soft">
-            <h3 className="text-sm font-bold text-maroon mb-3">{t("whats_included")}</h3>
-            <ul className="space-y-2">
-              {[t("inc1"), t("inc2"), t("inc3"), t("inc4"), t("inc5")].map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm font-medium text-brown/80">
-                  <Check size={14} className="text-green-500 shrink-0 mt-0.5" /> {item}
+      <section id="offerings" className="scroll-mt-32 border-b border-line py-10 md:py-12">
+        <div className="container max-w-4xl">
+          <SectionHeading title={t("ch_choose_offering")} subtitle={t("ch_choose_sub")} />
+
+          {offerings.length === 0 ? (
+            <p className="rounded-xl border border-line bg-surface p-8 text-center text-ink-muted">{t("ch_no_offerings")}</p>
+          ) : (
+            <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+              {offerings.map((o) => {
+                const qty = selected[o.id] || 0;
+                const name = hi && o.name_hi ? o.name_hi : o.name;
+                const odesc = hi && o.description_hi ? o.description_hi : o.description;
+                return (
+                  <li key={o.id} className={cn("flex items-center gap-3 p-3 transition-colors md:p-4", qty > 0 && "bg-saffron-soft")}>
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-surface-muted">
+                      {o.image_url ? (
+                        <FitImage src={o.image_url} alt={name} width={128} />
+                      ) : (
+                        <span className="grid h-full w-full place-items-center text-ink-soft">
+                          <TempleIcon size={22} />
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-semibold leading-snug text-ink">{name}</p>
+                      {odesc && <p className="mt-0.5 line-clamp-2 text-[13px] text-ink-soft">{odesc}</p>}
+                      <p className="tabular mt-1 text-base font-bold text-saffron-dark">{formatInr(o.price)}</p>
+                    </div>
+                    {qty === 0 ? (
+                      <button
+                        onClick={() => setQty(o.id, 1)}
+                        className="inline-flex h-10 shrink-0 items-center gap-1 rounded-[10px] border border-saffron px-4 text-sm font-semibold text-saffron-dark transition-colors hover:bg-saffron hover:text-white"
+                      >
+                        <Plus size={16} /> {t("ch_add")}
+                      </button>
+                    ) : (
+                      <div className="flex h-10 shrink-0 items-center overflow-hidden rounded-[10px] bg-saffron text-white">
+                        <button onClick={() => setQty(o.id, qty - 1)} className="grid h-full w-10 place-items-center hover:bg-saffron-dark" aria-label="Remove one">
+                          <Minus size={16} />
+                        </button>
+                        <span className="tabular w-6 text-center text-sm font-bold">{qty}</span>
+                        <button onClick={() => setQty(o.id, qty + 1)} className="grid h-full w-10 place-items-center hover:bg-saffron-dark" aria-label="Add one">
+                          <Plus size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          <div className="mt-6 rounded-xl border border-line bg-surface-muted/60 p-4 md:p-5">
+            <h3 className="mb-3 text-[15px] font-semibold text-ink">{t("whats_included")}</h3>
+            <ul className="space-y-2.5">
+              {[t("inc1"), t("inc2"), t("inc4"), t("inc3"), t("inc5")].map((line) => (
+                <li key={line} className="flex items-start gap-2.5 text-[15px] text-ink-muted">
+                  <Check size={16} strokeWidth={2.5} className="mt-0.5 shrink-0 text-success" /> {line}
                 </li>
               ))}
             </ul>
           </div>
+          <TrustRow className="mt-5" />
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════
-          HOW IT WORKS — same as PujaDetail fallback
-          ══════════════════════════════════════════════ */}
-      <section className="bg-background border-b border-gold/20">
-        <div className="container py-10">
-          <div className="max-w-4xl mx-auto rounded-2xl border border-gold/40 bg-ivory p-6 shadow-soft">
-            <h2 className="font-body text-xl font-bold text-maroon mb-4">{t("how_works")}</h2>
-            <div className="flex flex-col gap-5">
-              {[
-                { step: "1", title: t("ch_step1t"), desc: t("ch_step1d") },
-                { step: "2", title: t("ch_step2t"), desc: t("ch_step2d") },
-                { step: "3", title: t("ch_step3t"), desc: t("ch_step3d") },
-              ].map((s) => (
-                <div key={s.step} className="flex items-start gap-4">
-                  <div className="shrink-0 grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-saffron to-maroon text-white font-bold text-sm shadow-md">
-                    {s.step}
-                  </div>
-                  <div>
-                    <p className="font-bold text-maroon text-sm">{s.title}</p>
-                    <p className="text-xs text-brown/60 mt-0.5">{s.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════
-          FAQs — same accordion style
-          ══════════════════════════════════════════════ */}
-      {faqs && faqs.length > 0 && (
-        <section className="bg-cream">
-          <div className="container py-10">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="font-body text-xl font-bold text-maroon mb-6">{t("pd_faqs")}</h2>
-              <div className="space-y-3">
-                {faqs.map((faq, i) => (
-                  <div key={i} className="rounded-2xl border border-gold/30 bg-ivory shadow-soft overflow-hidden">
-                    <button onClick={() => setFaqOpen(faqOpen === i ? null : i)}
-                      className="w-full flex items-center justify-between px-5 py-4 text-left">
-                      <span className="font-bold text-maroon text-sm pr-4">{faq.question}</span>
-                      {faqOpen === i ? <ChevronUp size={18} className="text-saffron shrink-0" /> : <ChevronDown size={18} className="text-brown/40 shrink-0" />}
-                    </button>
-                    {faqOpen === i && (
-                      <div className="px-5 pb-4 border-t border-gold/20">
-                        <p className="text-sm text-brown/70 leading-relaxed pt-3">{faq.answer}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+      {about && (
+        <section id="aboutChadhava" className="scroll-mt-32 border-b border-line bg-surface-muted/60 py-10 md:py-12">
+          <div className="container max-w-4xl">
+            <SectionHeading title={t("ch_about_temple")} className="mb-4" />
+            <p className="whitespace-pre-line text-[15px] leading-[1.75] text-ink-muted md:text-base">{about}</p>
           </div>
         </section>
       )}
 
-      {/* ══════════════════════════════════════════════
-          STICKY BOTTOM BAR (all screens) — always visible when items selected
-          ══════════════════════════════════════════════ */}
-      {selectedCount > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-[51] bg-ivory/95 backdrop-blur-md border-t-2 border-gold/30 shadow-[0_-4px_24px_rgba(0,0,0,0.10)] safe-bottom">
-          <div className="container py-3 md:py-4 flex items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs md:text-sm text-brown/50 font-semibold">{selectedCount} {t("ch_items_selected")}</p>
-              <p className="font-bold text-saffron text-xl md:text-2xl leading-tight">₹{totalPrice.toLocaleString("en-IN")}</p>
-            </div>
-            <p className="hidden md:block text-xs text-brown/40 font-serif italic mr-2">{t("secure_pay")}</p>
-            <button onClick={handleProceed}
-              className="shrink-0 flex items-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-maroon px-5 md:px-8 py-3 md:py-3.5 text-[14px] md:text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5">
-              <ShoppingCart size={16} /> {t("ch_proceed")} <ChevronRight size={16} />
-            </button>
-          </div>
+      <section id="howItWorks" className="scroll-mt-32 border-b border-line py-10 md:py-12">
+        <div className="container max-w-4xl">
+          <SectionHeading title={t("ch_how_title")} className="mb-5" />
+          <ol className="relative space-y-5 border-l border-dashed border-saffron/40 pl-7">
+            {[1, 2, 3].map((n) => (
+              <li key={n} className="relative">
+                <span className="tabular absolute -left-[42px] top-0 grid h-7 w-7 place-items-center rounded-full bg-saffron text-sm font-bold text-white">
+                  {n}
+                </span>
+                <p className="text-base font-semibold text-ink">{t(`ch_how_s${n}_title`)}</p>
+                <p className="mt-1 text-[15px] leading-relaxed text-ink-muted">{t(`ch_how_s${n}_desc`)}</p>
+              </li>
+            ))}
+          </ol>
         </div>
-      )}
+      </section>
+
+      <ReviewsSection id="reviews" reviews={reviews} className="scroll-mt-32 border-b border-line py-10 md:py-12" />
+
+      <section id="faqSection" className="scroll-mt-32 py-10 md:py-12">
+        <div className="container max-w-4xl">
+          <SectionHeading title={t("pd_faqs")} />
+          <FaqList faqs={faqs} />
+        </div>
+      </section>
+
+      <StickyActionBar
+        title={selectedCount > 0 ? formatInr(totalPrice) : `${t("pd_from")} ${formatInr(minPrice)}`}
+        subtitle={selectedCount > 0 ? `${selectedCount} ${t("ch_items_selected")}` : t("ch_select_hint")}
+        cta={selectedCount > 0 ? t("ch_proceed") : t("ch_view_offerings")}
+        onClick={handleProceed}
+      />
     </main>
   );
 };

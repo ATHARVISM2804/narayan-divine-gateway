@@ -1,0 +1,69 @@
+import { Clock } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import type { TimeLeft } from "@/lib/countdown";
+import { cn } from "@/lib/utils";
+
+/** "Booking closes in" boxes. Digits turn maroon on the final day. */
+const Countdown = ({
+  left,
+  label,
+  expiredLabel,
+  compact = false,
+  onDark = false,
+}: {
+  left: TimeLeft | null;
+  label: string;
+  expiredLabel: string;
+  compact?: boolean;
+  onDark?: boolean;
+}) => {
+  const { t } = useLanguage();
+  if (!left) return null;
+
+  if (left.expired) {
+    return (
+      <p className={cn("inline-flex items-center gap-2 text-sm font-semibold", onDark ? "text-white/80" : "text-ink-soft")}>
+        <Clock size={16} /> {expiredLabel}
+      </p>
+    );
+  }
+
+  const urgent = left.days === 0;
+  const units = [
+    { v: left.days, l: t("timer_days") },
+    { v: left.hours, l: t("timer_hours") },
+    { v: left.mins, l: t("timer_mins") },
+    { v: left.secs, l: t("timer_secs") },
+  ];
+
+  return (
+    <div>
+      <p className={cn("mb-2 text-sm font-semibold", onDark ? "text-white/85" : "text-ink")}>{label}</p>
+      <div className="flex gap-1.5" role="timer" aria-live="off">
+        {units.map(({ v, l }) => (
+          <div
+            key={l}
+            className={cn(
+              "flex items-baseline gap-1 rounded-lg",
+              compact ? "px-2 py-1" : "px-2.5 py-1.5",
+              onDark ? "bg-white/15" : urgent ? "bg-maroon/10" : "bg-saffron-soft",
+            )}
+          >
+            <span
+              className={cn(
+                "tabular font-bold leading-none",
+                compact ? "text-base" : "text-lg",
+                onDark ? "text-white" : urgent ? "text-maroon" : "text-saffron-dark",
+              )}
+            >
+              {String(v).padStart(2, "0")}
+            </span>
+            <span className={cn("text-xs font-medium", onDark ? "text-white/70" : "text-ink-soft")}>{l}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Countdown;

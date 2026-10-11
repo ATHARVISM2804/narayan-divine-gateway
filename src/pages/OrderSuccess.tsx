@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { CheckCircle, Home, ShoppingBag, Loader2, Clock, RefreshCw } from "lucide-react";
+import { CheckCircle, Home, ShoppingBag, Loader2, Clock, RefreshCw, MessageCircle } from "lucide-react";
+import { whatsappLink } from "@/lib/whatsapp";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCart } from "@/context/CartContext";
 import { checkOrderPayment } from "@/lib/orderStatus";
@@ -10,8 +11,8 @@ import { claimConfirmation } from "@/lib/pendingPayment";
 
 /*
  * Two ways to land here:
- *   ?id=…&payment=…        the browser already had the payment verified (normal flow)
- *   ?id=…&status=checking  verification failed in the browser, or the customer came back
+ *   ?id=...&payment=...    the browser already had the payment verified (normal flow)
+ *   ?id=...&status=checking verification failed in the browser, or the customer came back
  *                          from redirect-mode checkout (razorpay-callback); the server is asked
  *                          to confirm with Razorpay directly and this page polls until it does
  */
@@ -21,7 +22,7 @@ const POLL_LIMIT_MS = 90_000;
 type Phase = "confirmed" | "checking" | "unconfirmed";
 
 const OrderSuccess = () => {
-  usePageTitle("Order Confirmed — Narayan Kripa");
+  usePageTitle("Order Confirmed | Narayan Kripa");
   const { t } = useLanguage();
   const { items, clearCart } = useCart();
   const [params] = useSearchParams();
@@ -88,76 +89,106 @@ const OrderSuccess = () => {
   const subheading =
     phase === "confirmed" ? t("os_subtitle") : phase === "checking" ? t("os_checking_sub") : t("os_unconfirmed_sub");
 
+  const steps = [t("os_next1"), t("os_next2"), t("os_next3")];
+
   return (
-    <main className="min-h-[70vh] bg-background flex items-center justify-center py-16">
-      <div className="max-w-lg text-center px-4">
-        <div className={`mx-auto mb-6 grid h-24 w-24 place-items-center rounded-full animate-scaleIn shadow-lg ${
-          phase === "confirmed" ? "bg-green-100 text-green-500" : phase === "checking" ? "bg-yellow-100 text-saffron" : "bg-orange-100 text-orange-500"
-        }`}>
-          {phase === "confirmed" ? <CheckCircle size={48} /> : phase === "checking" ? <Loader2 size={48} className="animate-spin" /> : <Clock size={48} />}
-        </div>
-        <h1 className="font-display text-3xl text-maroon md:text-4xl">{heading}</h1>
-        <p className="mt-4 font-serif italic text-lg text-brown/70">{subheading}</p>
-
-        <div className="mt-8 rounded-2xl border border-gold/50 bg-ivory p-6 text-left shadow-soft">
-          <h3 className="font-display text-lg text-maroon mb-3">{t("os_details")}</h3>
-          <div className="space-y-2 text-sm">
-            {orderId && (
-              <div className="flex justify-between">
-                <span className="text-brown/60">{t("os_order_id")}</span>
-                <span className="font-mono text-xs text-maroon">{orderId.slice(0, 8)}…</span>
-              </div>
-            )}
-            {paymentId && (
-              <div className="flex justify-between">
-                <span className="text-brown/60">{t("os_payment_id")}</span>
-                <span className="font-mono text-xs text-maroon">{paymentId}</span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-brown/60">{t("os_status")}</span>
-              {phase === "confirmed" ? (
-                <span className="rounded-full bg-green-100 px-3 py-0.5 text-xs font-bold text-green-700">{t("os_paid")}</span>
-              ) : (
-                <span className="rounded-full bg-yellow-100 px-3 py-0.5 text-xs font-bold text-yellow-700">{t("os_status_checking")}</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {phase === "confirmed" ? (
-          <div className="mt-6 rounded-2xl border border-gold/40 bg-cream p-5 text-left">
-            <h4 className="font-display text-maroon mb-2">{t("os_next_title")}</h4>
-            <ul className="space-y-2 text-sm text-brown/70">
-              <li className="flex items-start gap-2"><span className="text-gold mt-0.5">✦</span>{t("os_next1")}</li>
-              <li className="flex items-start gap-2"><span className="text-gold mt-0.5">✦</span>{t("os_next2")}</li>
-              <li className="flex items-start gap-2"><span className="text-gold mt-0.5">✦</span>{t("os_next3")}</li>
-            </ul>
-          </div>
-        ) : (
-          <div className="mt-6 rounded-2xl border border-gold/40 bg-cream p-5 text-left">
-            <p className="text-sm text-brown/70">{t("os_unconfirmed_help")}</p>
-            {phase === "unconfirmed" && (
-              <button
-                onClick={checkAgain}
-                disabled={retrying}
-                className="mt-4 flex items-center gap-2 rounded-full bg-saffron px-5 py-2.5 text-sm font-semibold text-white hover:bg-maroon transition-colors disabled:opacity-60"
-              >
-                <RefreshCw size={14} className={retrying ? "animate-spin" : ""} /> {t("os_check_again")}
-              </button>
-            )}
-          </div>
-        )}
-
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link to="/" className="flex items-center gap-2 rounded-full bg-saffron px-6 py-3 text-sm font-semibold text-white hover:bg-maroon transition-colors">
-            <Home size={16} /> {t("os_go_home")}
-          </Link>
-          <Link to="/my-orders" className="flex items-center gap-2 rounded-full border-2 border-gold px-6 py-3 text-sm font-semibold text-maroon hover:bg-gold transition-colors">
-            <ShoppingBag size={16} /> {t("mo_track_title")}
-          </Link>
-        </div>
+    <main className="container max-w-lg py-10 md:py-16">
+      <div className="text-center">
+        <span
+          className={`mx-auto grid h-16 w-16 place-items-center rounded-full ${
+            phase === "confirmed" ? "bg-success/10 text-success" : "bg-saffron-soft text-saffron-dark"
+          }`}
+        >
+          {phase === "confirmed" ? (
+            <CheckCircle size={34} strokeWidth={1.75} />
+          ) : phase === "checking" ? (
+            <Loader2 size={34} className="animate-spin" />
+          ) : (
+            <Clock size={34} strokeWidth={1.75} />
+          )}
+        </span>
+        <h1 className="mt-4 text-[22px] font-bold text-ink md:text-[28px]">{heading}</h1>
+        <p className="mt-2 text-[15px] leading-relaxed text-ink-muted">{subheading}</p>
       </div>
+
+      <div className="mt-6 rounded-xl border border-line bg-surface p-4 md:p-5">
+        <h2 className="mb-3 text-[15px] font-semibold text-ink">{t("os_details")}</h2>
+        <dl className="space-y-2.5 text-sm">
+          {orderId && (
+            <div className="flex justify-between gap-4">
+              <dt className="text-ink-soft">{t("os_order_id")}</dt>
+              <dd className="font-mono text-xs font-medium uppercase text-ink">{orderId.slice(0, 8)}</dd>
+            </div>
+          )}
+          {paymentId && (
+            <div className="flex justify-between gap-4">
+              <dt className="text-ink-soft">{t("os_payment_id")}</dt>
+              <dd className="break-all font-mono text-xs text-ink">{paymentId}</dd>
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-4">
+            <dt className="text-ink-soft">{t("os_status")}</dt>
+            <dd>
+              {phase === "confirmed" ? (
+                <span className="rounded-md bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">{t("os_paid")}</span>
+              ) : (
+                <span className="rounded-md bg-saffron-soft px-2.5 py-1 text-xs font-semibold text-saffron-dark">{t("os_status_checking")}</span>
+              )}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      {phase === "confirmed" ? (
+        <div className="mt-4 rounded-xl border border-line bg-surface p-4 md:p-5">
+          <h2 className="mb-4 text-[15px] font-semibold text-ink">{t("os_next_title")}</h2>
+          <ol className="relative space-y-4 border-l border-dashed border-saffron/40 pl-6">
+            {steps.map((step, i) => (
+              <li key={step} className="relative text-[15px] text-ink-muted">
+                <span className="tabular absolute -left-[37px] top-0 grid h-6 w-6 place-items-center rounded-full bg-saffron text-xs font-bold text-white">
+                  {i + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : (
+        <div className="mt-4 rounded-xl border border-line bg-surface p-4 md:p-5">
+          <p className="text-[15px] text-ink-muted">{t("os_unconfirmed_help")}</p>
+          {phase === "unconfirmed" && (
+            <button onClick={checkAgain} disabled={retrying} className="btn-secondary mt-4 min-h-[44px] text-sm">
+              <RefreshCw size={16} className={retrying ? "animate-spin" : ""} /> {t("os_check_again")}
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-surface-muted p-4">
+        <p className="text-sm font-medium text-ink">{t("os_help")}</p>
+        <a
+          href={whatsappLink(`${t("wa_msg_book")} ${orderId ? `(${orderId.slice(0, 8).toUpperCase()})` : ""}`.trim())}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] bg-[#25D366] px-3.5 py-2 text-sm font-semibold text-white"
+        >
+          <MessageCircle size={16} /> WhatsApp
+        </a>
+      </div>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <Link to="/my-orders" className="btn-primary">
+          <ShoppingBag size={18} /> {t("mo_track_title")}
+        </Link>
+        <Link to="/puja" className="btn-secondary">
+          {t("os_continue")}
+        </Link>
+      </div>
+      <p className="mt-4 text-center">
+        <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-ink">
+          <Home size={15} /> {t("os_go_home")}
+        </Link>
+      </p>
     </main>
   );
 };

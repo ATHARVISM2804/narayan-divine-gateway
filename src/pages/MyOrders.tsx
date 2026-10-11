@@ -5,7 +5,8 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { supabase } from "@/lib/supabase";
 import { checkOrderPayment } from "@/lib/orderStatus";
 import { orderItemWhen } from "@/lib/orderItems";
-import { Package, LogOut, ShoppingBag, Eye, X, Phone, Search, RefreshCw } from "lucide-react";
+import { CalendarDays, ChevronRight, CircleCheck, CircleX, Clock, LogOut, Phone, RefreshCw, Search, ShoppingBag } from "lucide-react";
+import BottomSheet from "@/components/shared/BottomSheet";
 import { useLanguage } from "@/context/LanguageContext";
 import { LoadError } from "@/components/LoadError";
 
@@ -21,18 +22,18 @@ interface Order {
 }
 
 const statusColors: Record<string, string> = {
-  paid: "bg-green-100 text-green-700",
-  pending: "bg-yellow-100 text-yellow-700",
-  failed: "bg-red-100 text-red-600",
-  refunded: "bg-gray-100 text-gray-600",
-  cancelled: "bg-gray-100 text-gray-500",
+  paid: "bg-success/10 text-success",
+  pending: "bg-saffron-soft text-saffron-dark",
+  failed: "bg-destructive/10 text-destructive",
+  refunded: "bg-surface-muted text-ink-soft",
+  cancelled: "bg-surface-muted text-ink-soft",
 };
 
 const MyOrders = () => {
-  usePageTitle("My Orders — Narayan Kripa");
   const { user, loading: authLoading, signOut } = useAuth();
   const nav = useNavigate();
   const { t } = useLanguage();
+  usePageTitle(`${t("mo_title")} | Narayan Kripa`);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [detail, setDetail] = useState<Order | null>(null);
@@ -122,13 +123,13 @@ const MyOrders = () => {
       });
 
       if (error || !data?.orders) {
-        setLookupError("Something went wrong. Please try again.");
+        setLookupError(t("contact_err_generic"));
         setLoading(false);
         return;
       }
       setOrders(data.orders as Order[]);
     } catch {
-      setLookupError("Something went wrong. Please try again.");
+      setLookupError(t("contact_err_generic"));
     }
     setLoading(false);
     setLookupDone(true);
@@ -141,231 +142,212 @@ const MyOrders = () => {
 
   if (authLoading) {
     return (
-      <main className="min-h-[60vh] flex items-center justify-center bg-background">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gold border-t-saffron" />
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-line border-t-saffron" role="status" aria-label="Loading" />
       </main>
     );
   }
 
-  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Devotee";
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "";
+  const statusLabel = (s: string) => t(`mo_st_${s}`) || s;
+  const StatusBadge = ({ status }: { status: string }) => (
+    <span className={`rounded-md px-2 py-0.5 text-xs font-semibold ${statusColors[status] || "bg-surface-muted text-ink-soft"}`}>
+      {statusLabel(status)}
+    </span>
+  );
 
   return (
-    <main className="bg-background min-h-screen">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-maroon via-maroon-deep to-maroon py-10">
-        <div className="container">
+    <main className="min-h-screen">
+      <header className="border-b border-line bg-surface-muted/60">
+        <div className="container py-6 md:py-10">
           {user ? (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gold/70 text-sm font-serif italic">🙏 Namaste</p>
-                <h1 className="font-display text-3xl text-gold md:text-4xl">{userName}</h1>
-                <p className="mt-1 text-cream/70 text-sm">{user.email || user.phone || ""}</p>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h1 className="text-[22px] font-bold text-ink md:text-[28px]">{t("mo_title")}</h1>
+                <p className="mt-1 truncate text-[15px] text-ink-muted">
+                  {userName}
+                  {(user.email || user.phone) && <span className="text-ink-soft"> · {user.email || user.phone}</span>}
+                </p>
               </div>
-              <button onClick={handleLogout}
-                className="flex items-center gap-2 rounded-full border border-gold/50 px-4 py-2 text-sm text-gold hover:bg-gold/10 transition-colors">
-                <LogOut size={14} /> {t("mo_logout")}
+              <button onClick={handleLogout} className="btn-secondary min-h-[40px] shrink-0 px-4 text-sm">
+                <LogOut size={16} /> {t("mo_logout")}
               </button>
             </div>
           ) : (
-            <div>
-              <h1 className="font-display text-3xl text-gold md:text-4xl flex items-center gap-3">
-                <Package size={28} /> {t("mo_track_title")}
-              </h1>
-              <p className="mt-1 text-cream/70 font-serif italic">{t("mo_track_sub")}</p>
-            </div>
+            <>
+              <h1 className="text-[22px] font-bold text-ink md:text-[28px]">{t("mo_track_title")}</h1>
+              <p className="mt-1 text-[15px] text-ink-muted">{t("mo_track_sub")}</p>
+            </>
           )}
         </div>
-      </div>
+      </header>
 
-      <div className="container py-10">
-        {/* Phone lookup form for guests */}
+      <div className="container max-w-3xl py-6 md:py-10">
         {!user && (
-          <div className="mb-8 rounded-2xl border border-gold/40 bg-ivory p-6 md:p-8 shadow-soft">
-            <div className="flex items-start gap-3 mb-5">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-saffron/20 to-gold/20">
-                <Phone size={20} className="text-saffron" />
-              </div>
-              <div>
-                <h2 className="font-display text-xl text-maroon">{t("mo_lookup_title")}</h2>
-                <p className="text-sm text-brown/60 mt-0.5">{t("mo_lookup_sub")}</p>
-              </div>
-            </div>
-            <form onSubmit={handlePhoneLookup} className="flex gap-3 flex-col sm:flex-row">
-              <div className="flex-1 relative">
-                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-brown/30" />
+          <div className="mb-6 rounded-xl border border-line bg-surface p-4 md:p-6">
+            <h2 className="text-lg font-bold text-ink">{t("mo_lookup_title")}</h2>
+            <p className="mt-0.5 text-sm text-ink-muted">{t("mo_lookup_sub")}</p>
+            <form onSubmit={handlePhoneLookup} className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <label className="flex flex-1 items-center gap-2 rounded-[10px] border border-input bg-surface px-3 focus-within:border-saffron">
+                <Phone size={16} className="shrink-0 text-ink-soft" />
                 <input
                   type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   value={lookupPhone}
                   onChange={(e) => setLookupPhone(e.target.value)}
                   placeholder={t("co_ph_phone")}
-                  className="w-full rounded-xl border border-gold/50 bg-cream pl-11 pr-4 py-3.5 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20"
+                  aria-label={t("co_phone")}
+                  className="h-12 w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-soft/70"
                 />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="rounded-xl bg-gradient-to-r from-saffron to-maroon px-8 py-3.5 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-60 flex items-center justify-center gap-2 whitespace-nowrap"
-              >
+              </label>
+              <button type="submit" disabled={loading} className="btn-primary">
                 <Search size={16} /> {t("mo_lookup_btn")}
               </button>
             </form>
-            {lookupError && (
-              <p className="mt-3 text-sm text-red-600 animate-fadeIn">{lookupError}</p>
-            )}
-            <div className="mt-4 flex items-center gap-2 text-xs text-brown/50">
-              <span className="h-px flex-1 bg-gold/20" />
-              <span>{t("mo_or")}</span>
-              <span className="h-px flex-1 bg-gold/20" />
-            </div>
-            <div className="mt-3 text-center">
-              <Link to="/login" className="text-sm text-saffron font-semibold hover:text-maroon transition-colors">
+            {lookupError && <p className="mt-3 text-sm font-medium text-destructive">{lookupError}</p>}
+            <p className="mt-4 text-center text-sm text-ink-soft">
+              {t("mo_or")}{" "}
+              <Link to="/login" className="font-semibold text-saffron-dark hover:underline">
                 {t("mo_login_link")}
               </Link>
-            </div>
+            </p>
           </div>
         )}
 
-        {/* Logged-in user section header */}
-        {user && (
-          <h2 className="font-display text-2xl text-maroon mb-6 flex items-center gap-2">
-            <Package size={22} className="text-saffron" /> {t("mo_title")}
-          </h2>
-        )}
-
-        {/* Orders list */}
         {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => <div key={i} className="h-24 rounded-2xl bg-gold/10 animate-pulse" />)}
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 animate-pulse rounded-xl bg-surface-muted" />
+            ))}
           </div>
         ) : user && ordersFailed ? (
           <LoadError onRetry={() => setReloadKey((k) => k + 1)} />
         ) : lookupDone && orders.length === 0 ? (
-          <div className="rounded-2xl border border-gold/30 bg-ivory p-16 text-center">
-            <div className="mx-auto mb-4 grid h-20 w-20 place-items-center rounded-full bg-gold/10">
-              <ShoppingBag size={36} className="text-gold/50" />
-            </div>
-            <h3 className="font-display text-xl text-maroon">{t("mo_empty_title")}</h3>
-            <p className="mt-2 text-sm text-brown/60">{t("mo_empty_sub")}</p>
-            <Link to="/puja" className="mt-6 inline-block rounded-full bg-saffron px-6 py-3 text-sm font-semibold text-white hover:bg-maroon transition-colors">
+          <div className="rounded-xl border border-line bg-surface p-10 text-center">
+            <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-surface-muted text-maroon">
+              <ShoppingBag size={22} strokeWidth={1.75} />
+            </span>
+            <h3 className="mt-3 text-lg font-bold text-ink">{t("mo_empty_title")}</h3>
+            <p className="mt-1 text-sm text-ink-muted">{t("mo_empty_sub")}</p>
+            <Link to="/puja" className="btn-primary mt-5">
               {t("mo_browse")}
             </Link>
           </div>
         ) : lookupDone ? (
-          <div className="space-y-4">
+          <ul className="space-y-3">
             {orders.map((o) => (
-              <div key={o.id} className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-gold/30 bg-ivory p-5 shadow-soft transition-all hover:border-gold/60">
-                {/* Icon */}
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-saffron/20 to-gold/20 text-2xl">
-                  {o.status === "paid" ? "🪔" : o.status === "pending" ? "⏳" : "❌"}
-                </div>
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${statusColors[o.status] || "bg-gray-100 text-gray-500"}`}>
-                      {o.status.toUpperCase()}
+              <li key={o.id}>
+                <button
+                  onClick={() => setDetail(o)}
+                  className="flex w-full items-center gap-4 rounded-xl border border-line bg-surface p-4 text-left transition-colors hover:border-saffron/40"
+                >
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface-muted text-maroon">
+                    {o.status === "paid" ? <CircleCheck size={20} className="text-success" /> : o.status === "pending" ? <Clock size={20} /> : <CircleX size={20} />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <StatusBadge status={o.status} />
+                      <span className="text-xs text-ink-soft">
+                        {new Date(o.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      </span>
                     </span>
-                    <span className="text-xs text-brown/50">
-                      {new Date(o.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    <span className="mt-1 block truncate text-[15px] font-medium text-ink">
+                      {(o.items || []).map((item: any) => item.name).join(", ")}
                     </span>
-                  </div>
-                  <p className="text-sm text-brown/70 mt-1 truncate">
-                    {(o.items || []).map((item: any) => item.name).join(", ")}
-                  </p>
-                  {(o.items || []).map((item: any) => orderItemWhen(item)).filter(Boolean).map((when, idx) => (
-                    <p key={idx} className="text-xs text-maroon/70 mt-0.5 truncate">📅 {when}</p>
-                  ))}
-                </div>
-                {/* Price + View */}
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="font-bold text-saffron text-lg">₹{(o.amount / 100).toLocaleString("en-IN")}</span>
-                  <button onClick={() => setDetail(o)} className="grid h-9 w-9 place-items-center rounded-lg bg-gold/15 text-maroon hover:bg-gold/30 transition-colors">
-                    <Eye size={16} />
-                  </button>
-                </div>
-              </div>
+                    {(o.items || [])
+                      .map((item: any) => orderItemWhen(item))
+                      .filter(Boolean)
+                      .map((when, idx) => (
+                        <span key={idx} className="mt-0.5 flex items-center gap-1 truncate text-xs text-ink-soft">
+                          <CalendarDays size={12} /> {when}
+                        </span>
+                      ))}
+                  </span>
+                  <span className="tabular shrink-0 text-base font-bold text-ink">₹{(o.amount / 100).toLocaleString("en-IN")}</span>
+                  <ChevronRight size={18} className="shrink-0 text-ink-soft" />
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
         ) : null}
       </div>
 
-      {/* Order detail modal */}
-      {detail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDetail(null)} />
-          <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-2xl bg-ivory shadow-2xl p-6 animate-fadeIn">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-display text-lg text-maroon">{t("mo_details")}</h3>
-              <button onClick={() => { setDetail(null); setCheckedStillPending(false); }} className="text-brown/50 hover:text-maroon"><X size={20} /></button>
+      <BottomSheet
+        open={!!detail}
+        onClose={() => {
+          setDetail(null);
+          setCheckedStillPending(false);
+        }}
+        title={t("mo_details")}
+      >
+        {detail && (
+          <div className="space-y-4 p-5 text-sm">
+            <h3 className="pr-8 text-lg font-bold text-ink">{t("mo_details")}</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="mb-1 text-xs text-ink-soft">{t("mo_status")}</p>
+                <StatusBadge status={detail.status} />
+              </div>
+              <div>
+                <p className="mb-1 text-xs text-ink-soft">{t("mo_amount")}</p>
+                <p className="tabular font-bold text-ink">₹{(detail.amount / 100).toLocaleString("en-IN")}</p>
+              </div>
             </div>
-
-            <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-[11px] text-brown/50 uppercase">{t("mo_status")}</p>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${statusColors[detail.status]}`}>{detail.status}</span>
-                </div>
-                <div>
-                  <p className="text-[11px] text-brown/50 uppercase">{t("mo_amount")}</p>
-                  <p className="font-bold text-saffron">₹{(detail.amount / 100).toLocaleString("en-IN")}</p>
-                </div>
+            <div className="border-t border-line pt-3">
+              <p className="mb-1 text-xs text-ink-soft">{t("mo_date")}</p>
+              <p className="text-ink-muted">{new Date(detail.created_at).toLocaleString("en-IN")}</p>
+            </div>
+            {detail.razorpay_payment_id && (
+              <div className="border-t border-line pt-3">
+                <p className="mb-1 text-xs text-ink-soft">{t("mo_payment_id")}</p>
+                <p className="break-all font-mono text-xs text-ink-muted">{detail.razorpay_payment_id}</p>
               </div>
-
-              <div className="border-t border-gold/20 pt-3">
-                <p className="text-[11px] text-brown/50 uppercase mb-1">{t("mo_date")}</p>
-                <p className="text-brown/70">{new Date(detail.created_at).toLocaleString("en-IN")}</p>
-              </div>
-
-              {detail.razorpay_payment_id && (
-                <div className="border-t border-gold/20 pt-3">
-                  <p className="text-[11px] text-brown/50 uppercase mb-1">{t("mo_payment_id")}</p>
-                  <p className="font-mono text-xs text-brown/60">{detail.razorpay_payment_id}</p>
-                </div>
-              )}
-
-              <div className="border-t border-gold/20 pt-3">
-                <p className="text-[11px] text-brown/50 uppercase mb-2">{t("mo_items")}</p>
-                {(detail.items || []).map((item: any, i: number) => {
-                  const when = orderItemWhen(item);
-                  return (
-                    <div key={i} className="py-1.5 border-b border-gold/10 last:border-0">
-                      <div className="flex justify-between">
-                        <span className="text-maroon">{item.name} <span className="text-brown/40">×{item.quantity}</span></span>
-                        <span className="font-semibold text-saffron">₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
-                      </div>
-                      {when && <p className="text-xs text-maroon/70 mt-0.5">📅 {when}</p>}
+            )}
+            <div className="border-t border-line pt-3">
+              <p className="mb-2 text-xs text-ink-soft">{t("mo_items")}</p>
+              {(detail.items || []).map((item: any, i: number) => {
+                const when = orderItemWhen(item);
+                return (
+                  <div key={i} className="border-b border-line py-2 last:border-0">
+                    <div className="flex justify-between gap-3">
+                      <span className="text-ink">
+                        {item.name} <span className="text-ink-soft">x {item.quantity}</span>
+                      </span>
+                      <span className="tabular shrink-0 font-semibold text-ink">₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
                     </div>
-                  );
-                })}
-              </div>
-
-              <div className="border-t border-gold/20 pt-3 text-center">
-                {detail.status === "paid" && (
-                  <div className="rounded-xl bg-green-50 border border-green-200 p-3">
-                    <p className="text-sm text-green-700 font-medium">✅ Payment confirmed</p>
-                    <p className="text-xs text-green-600 mt-1">Your prasad will be delivered soon</p>
+                    {when && (
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-ink-soft">
+                        <CalendarDays size={12} /> {when}
+                      </p>
+                    )}
                   </div>
-                )}
-                {detail.status === "pending" && (
-                  <div className="rounded-xl bg-yellow-50 border border-yellow-200 p-3">
-                    <p className="text-sm text-yellow-700 font-medium">⏳ Payment pending</p>
-                    <p className="text-xs text-yellow-600 mt-1">
-                      {checkedStillPending ? t("mo_still_pending") : "Please contact support if you've already paid"}
-                    </p>
-                    <button
-                      onClick={() => handleCheckPayment(detail)}
-                      disabled={checking}
-                      className="mt-3 inline-flex items-center gap-2 rounded-full bg-saffron px-4 py-2 text-xs font-bold text-white hover:bg-maroon transition-colors disabled:opacity-60"
-                    >
-                      <RefreshCw size={12} className={checking ? "animate-spin" : ""} />
-                      {checking ? t("mo_checking") : t("mo_check_payment")}
-                    </button>
-                  </div>
-                )}
-              </div>
+                );
+              })}
             </div>
+            {detail.status === "paid" && (
+              <div className="rounded-[10px] bg-success/10 p-3">
+                <p className="flex items-center gap-1.5 font-semibold text-success">
+                  <CircleCheck size={16} /> {t("mo_paid_note_t")}
+                </p>
+                <p className="mt-1 text-xs text-ink-muted">{t("mo_paid_note")}</p>
+              </div>
+            )}
+            {detail.status === "pending" && (
+              <div className="rounded-[10px] bg-saffron-soft p-3">
+                <p className="flex items-center gap-1.5 font-semibold text-saffron-dark">
+                  <Clock size={16} /> {t("mo_pending_note_t")}
+                </p>
+                <p className="mt-1 text-xs text-ink-muted">{checkedStillPending ? t("mo_still_pending") : t("mo_pending_note")}</p>
+                <button onClick={() => handleCheckPayment(detail)} disabled={checking} className="btn-secondary mt-3 min-h-[40px] px-4 text-sm">
+                  <RefreshCw size={14} className={checking ? "animate-spin" : ""} />
+                  {checking ? t("mo_checking") : t("mo_check_payment")}
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </BottomSheet>
     </main>
   );
 };

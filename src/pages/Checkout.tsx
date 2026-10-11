@@ -11,7 +11,7 @@ import { isInAppBrowser, isIOS } from "@/lib/browserEnv";
 import { claimConfirmation, clearPendingPayment, loadPendingPayment, savePendingPayment } from "@/lib/pendingPayment";
 import { checkCartAgainstCatalog } from "@/lib/cartRefresh";
 import { isValidIndianMobile, normaliseIndianMobile } from "@/lib/phone";
-import { ShoppingBag, Shield, ArrowLeft, Loader2, MapPin, Users, Info, Gift, ChevronRight, Check, Calendar, User } from "lucide-react";
+import { ShoppingBag, Shield, ArrowLeft, Loader2, MapPin, Users, Info, Gift, ChevronRight, Check, Calendar, User, Lock, Video, Flower2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useLanguage } from "@/context/LanguageContext";
@@ -28,50 +28,43 @@ declare global {
 const toPhoneField = (raw: unknown) =>
   normaliseIndianMobile(raw) ?? (typeof raw === "string" ? raw.replace(/\D/g, "").slice(0, 10) : "");
 
-/* ── Progress Steps ── */
-const STEPS = [
-  { key: "review", label: "Review Booking", labelHi: "बुकिंग देखें" },
-  { key: "details", label: "Fill Details", labelHi: "विवरण भरें" },
-  { key: "payment", label: "Make Payment", labelHi: "भुगतान करें" },
-] as const;
+/* Progress steps */
+const STEPS = ["co_step_review", "co_step_details", "co_step_pay"] as const;
 
-const ProgressBar = ({ current, lang }: { current: "review" | "details"; lang: string }) => {
+const ProgressBar = ({ current }: { current: "review" | "details" }) => {
+  const { t } = useLanguage();
   const stepIndex = current === "review" ? 0 : 1;
   return (
-    <div className="flex items-center justify-center gap-1 sm:gap-2 px-4 py-4">
-      {STEPS.map((s, i) => {
+    <ol className="mt-4 flex items-center gap-2">
+      {STEPS.map((key, i) => {
         const done = i < stepIndex;
         const active = i === stepIndex;
         return (
-          <div key={s.key} className="flex items-center gap-1 sm:gap-2">
-            {i > 0 && <div className={`hidden xs:block w-6 sm:w-10 h-0.5 ${done || active ? "bg-saffron" : "bg-gold/30"}`} />}
-            <div className="flex items-center gap-1.5">
-              <div className={`shrink-0 grid h-6 w-6 sm:h-7 sm:w-7 place-items-center rounded-full text-xs font-bold transition-all ${
-                done ? "bg-green-500 text-white" : active ? "bg-saffron text-white shadow-md" : "bg-gold/20 text-brown/40"
-              }`}>
-                {done ? <Check size={13} /> : i + 1}
-              </div>
-              <span className={`text-[11px] sm:text-xs font-semibold whitespace-nowrap ${
-                active ? "text-maroon" : done ? "text-green-600" : "text-brown/40"
-              }`}>
-                {lang === "hi" ? s.labelHi : s.label}
-              </span>
-            </div>
-          </div>
+          <li key={key} className="flex min-w-0 items-center gap-2">
+            {i > 0 && <span className={`h-px w-4 shrink-0 sm:w-8 ${done || active ? "bg-saffron" : "bg-line"}`} />}
+            <span
+              className={`tabular grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                done ? "bg-success text-white" : active ? "bg-saffron text-white" : "bg-surface text-ink-soft ring-1 ring-line"
+              }`}
+            >
+              {done ? <Check size={13} strokeWidth={3} /> : i + 1}
+            </span>
+            <span className={`truncate text-[13px] font-medium ${active ? "text-ink" : "text-ink-soft"}`}>{t(key)}</span>
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 };
 
 const Checkout = () => {
-  usePageTitle("Checkout — Narayan Kripa");
   const nav = useNavigate();
   const { items, totalPrice: cartTotal, clearCart, removeItem, setItemPrice } = useCart();
   const { user } = useAuth();
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
+  usePageTitle(`${t("co_title")} | Narayan Kripa`);
 
-  /* ── Steps ── */
+  /* Steps */
   const [searchParams, setSearchParams] = useSearchParams();
   const checkoutStep = searchParams.get("step") === "details" ? "details" : "review";
   const setCheckoutStep = (step: "review" | "details") => {
@@ -83,7 +76,7 @@ const Checkout = () => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [checkoutStep]);
 
-  /* ── Form (no email) ── */
+  /* Form (no email) */
   const [form, setForm] = useState(() => {
     try {
       const lead = JSON.parse(localStorage.getItem("nk_lead") || "{}");
@@ -105,7 +98,7 @@ const Checkout = () => {
 
   const BLESSING_BOX_PRICE = 200;
 
-  /* ── Structured delivery address (only for the Blessing Box) ── */
+  /* Structured delivery address (only for the Blessing Box) */
   const [addr, setAddr] = useState({ pincode: "", flat: "", area: "", landmark: "", city: "", state: "" });
   const [pinLookup, setPinLookup] = useState<"idle" | "loading" | "ok" | "fail">("idle");
   const setAddrField = (field: keyof typeof addr) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -119,8 +112,8 @@ const Checkout = () => {
       addr.city.trim(),
       addr.state.trim(),
     ].filter(Boolean).join(", ") + (addr.pincode ? ` - ${addr.pincode}` : "");
-  const fieldCls = "mt-1 w-full rounded-xl border border-gold/50 bg-cream px-4 py-3 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20";
-  const fieldLabelCls = "text-[11px] font-semibold text-brown/60 uppercase tracking-wide";
+  const fieldCls = "mt-1 h-12 w-full rounded-[10px] border border-input bg-surface px-3 text-[15px] text-ink outline-none focus:border-saffron";
+  const fieldLabelCls = "text-[13px] font-semibold text-ink";
 
   // Detect member count from puja items in cart
   const pujaItem = items.find(i => i.category === "puja");
@@ -194,7 +187,7 @@ const Checkout = () => {
       else if (changes.reprice.length) toast.info(t("co_price_updated"));
     });
     return () => { cancelled = true; };
-    // Once per visit — not on every cart change this check itself makes.
+    // Once per visit: not on every cart change this check itself makes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -238,7 +231,7 @@ const Checkout = () => {
     if (memberCount === 0 && !form.name.trim()) { toast.error(t("co_err_name")); return false; }
     if (!isValidIndianMobile(form.phone)) { toast.error(t("co_err_phone_in")); return false; }
     if (memberCount > 0 && !syncedMemberNames[0].trim()) { toast.error(t("co_err_member")); return false; }
-    // Panditji recites the gotra in the sankalp — ask for it, or the "I don't know" tick (Kashyap).
+    // Panditji recites the gotra in the sankalp: ask for it, or the "I don't know" tick (Kashyap).
     if (memberCount > 0 && !gotraUnknown && !gotra.trim()) { toast.error(t("co_err_gotra")); return false; }
     if (wantBox) {
       if (!isValidPincode) { toast.error(t("co_err_pincode")); return false; }
@@ -332,7 +325,7 @@ const Checkout = () => {
       }
 
       // Fired once the order exists so the browser event can share its event id with
-      // the server-side InitiateCheckout sent by create-order — Meta counts the pair once.
+      // the server-side InitiateCheckout sent by create-order: Meta counts the pair once.
       trackInitiateCheckout({
         items: orderItems.map((i) => ({ id: i.id, quantity: i.quantity, price: i.price })),
         value: totalPrice,
@@ -411,7 +404,7 @@ const Checkout = () => {
         modal: {
           ondismiss: async () => {
             // On mobile UPI the customer can complete the payment in their UPI app and
-            // then close the popup — that is not a cancellation. Check before saying so.
+            // then close the popup: that is not a cancellation. Check before saying so.
             // (The pending-payment record stays: a UPI payment can still land a little later.)
             const status = await checkOrderPayment(dbOrderId);
             if (status?.status === "paid") {
@@ -440,7 +433,7 @@ const Checkout = () => {
     } catch (err: any) {
       toast.error(err.message || t("co_err_generic"));
       setLoading(false);
-      // Online booking failed (server down, network, payment script blocked) —
+      // Online booking failed (server down, network, payment script blocked);
       // don't lose the customer: offer a pre-filled WhatsApp booking.
       setBookingFallback(bookingWhatsappText());
     }
@@ -448,7 +441,7 @@ const Checkout = () => {
 
   const bookingWhatsappText = () => {
     const lines = [t("wa_msg_checkout")];
-    items.forEach((i) => lines.push(`• ${i.name}${i.quantity > 1 ? ` ×${i.quantity}` : ""}${i.description ? ` — ${i.description}` : ""}`));
+    items.forEach((i) => lines.push(`• ${i.name}${i.quantity > 1 ? ` ×${i.quantity}` : ""}${i.description ? `: ${i.description}` : ""}`));
     if (customerName) lines.push(`Name: ${customerName}`);
     if (form.phone.trim()) lines.push(`Phone: ${form.phone.trim()}`);
     lines.push(`Total: ₹${totalPrice.toLocaleString("en-IN")}`);
@@ -463,567 +456,482 @@ const Checkout = () => {
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => trackContact("whatsapp_checkout_failed")}
-          className={`items-center justify-center gap-2 rounded-full py-3 text-center text-sm font-bold text-white shadow-md ${className}`}
-          style={{ background: "linear-gradient(135deg, #25d366 0%, #128c7e 100%)" }}
+          className={`min-h-[44px] items-center justify-center gap-2 rounded-[10px] bg-[#25D366] text-center text-sm font-semibold text-white ${className}`}
         >
           {t("book_whatsapp")}
         </a>
         {/* In-app browsers block card / netbanking pages; a real browser usually works. */}
         {showHint && isInAppBrowser() && (
-          <p className="mb-2 text-center text-[11px] leading-snug text-brown/60">
+          <p className="mb-2 text-center text-xs leading-snug text-ink-soft">
             {t(isIOS() ? "co_inapp_hint_ios" : "co_inapp_hint_android")}
           </p>
         )}
       </>
     ) : null;
 
-  /* ── Empty cart ── */
+  /* Empty cart */
   if (items.length === 0) {
     return (
-      <main className="min-h-[60vh] bg-background flex items-center justify-center">
-        <div className="text-center px-4 py-20">
-          <div className="mx-auto mb-6 grid h-28 w-28 place-items-center rounded-full bg-gold/20">
-            <ShoppingBag size={48} className="text-saffron" />
-          </div>
-          <h1 className="font-display text-3xl text-maroon">{t("co_empty_title")}</h1>
-          <p className="mt-3 text-brown/60">{t("co_empty_sub")}</p>
-          <Link to="/puja" className="mt-6 inline-block rounded-full bg-saffron px-7 py-3 text-sm font-semibold text-white hover:bg-maroon transition-colors">
-            {t("co_browse")}
-          </Link>
-        </div>
+      <main className="container flex min-h-[60vh] max-w-lg flex-col items-center justify-center py-16 text-center">
+        <span className="grid h-14 w-14 place-items-center rounded-full bg-surface-muted text-maroon">
+          <ShoppingBag size={26} strokeWidth={1.75} />
+        </span>
+        <h1 className="mt-4 text-[22px] font-bold text-ink">{t("co_empty_title")}</h1>
+        <p className="mt-2 text-[15px] text-ink-muted">{t("co_empty_sub")}</p>
+        <Link to="/puja" className="btn-primary mt-6">
+          {t("co_browse")}
+        </Link>
       </main>
     );
   }
 
-  /* ── Order Summary Sidebar (shared between steps) ── */
+  const selectedOfferingList = pujaOfferings.filter((o) => selectedOfferings[o.id]);
+  const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+  const card = "rounded-xl border border-line bg-surface p-4 sm:p-5";
+  const sectionTitle = "text-base font-semibold text-ink";
+  const TrustBadges = () => (
+    <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2">
+      {[
+        { Icon: Lock, label: t("co_ssl") },
+        { Icon: Shield, label: t("co_razorpay") },
+        { Icon: Video, label: t("trust_video") },
+      ].map(({ Icon, label }) => (
+        <li key={label} className="flex items-center gap-1.5 text-[13px] font-medium text-ink-muted">
+          <Icon size={15} strokeWidth={1.75} className="text-success" /> {label}
+        </li>
+      ))}
+    </ul>
+  );
+
+  /* Order summary (both steps) */
   const OrderSummary = ({ showPayButton = false }: { showPayButton?: boolean }) => (
-    <div className="h-fit lg:sticky lg:top-32 rounded-2xl border border-gold/60 bg-gradient-to-b from-ivory to-cream p-4 sm:p-6 shadow-lg">
-      <h2 className="font-display text-xl text-maroon mb-5 flex items-center gap-2">
-        <ShoppingBag size={18} className="text-gold" /> {t("co_summary")}
-      </h2>
-      <div className="space-y-3 border-b border-gold/30 pb-5">
+    <aside className="h-fit rounded-xl border border-line bg-surface p-4 sm:p-5 lg:sticky lg:top-24">
+      <h2 className="text-lg font-bold text-ink">{t("co_summary")}</h2>
+      <ul className="mt-4 space-y-2.5 border-b border-line pb-4 text-sm">
         {items.map((item) => (
-          <div key={item.id} className="flex justify-between gap-3 text-[13px]">
-            <span className="text-brown/90 min-w-0 break-words">
-              {item.name} <span className="text-brown/50 ml-1">× {item.quantity}</span>
+          <li key={item.id} className="flex justify-between gap-3">
+            <span className="min-w-0 break-words text-ink-muted">
+              {item.name} {item.quantity > 1 && <span className="text-ink-soft">x {item.quantity}</span>}
             </span>
-            <span className="font-semibold text-maroon whitespace-nowrap shrink-0">
-              ₹{(item.price * item.quantity).toLocaleString("en-IN")}
-            </span>
-          </div>
+            <span className="tabular shrink-0 font-medium text-ink">{inr(item.price * item.quantity)}</span>
+          </li>
         ))}
-        {/* Selected offerings line items */}
-        {pujaOfferings.filter(o => selectedOfferings[o.id]).map(off => (
-          <div key={off.id} className="flex justify-between gap-3 text-[13px]">
-            <span className="text-brown/90 flex items-center gap-1.5">
-              🌺 {off.name}
-            </span>
-            <span className="font-semibold text-saffron whitespace-nowrap shrink-0">
-              ₹{off.price.toLocaleString("en-IN")}
-            </span>
-          </div>
+        {selectedOfferingList.map((off) => (
+          <li key={off.id} className="flex justify-between gap-3">
+            <span className="min-w-0 text-ink-muted">{off.name}</span>
+            <span className="tabular shrink-0 font-medium text-ink">{inr(off.price)}</span>
+          </li>
         ))}
-        {/* Blessing Box line item */}
         {wantBox && pujaItem && (
-          <div className="flex justify-between gap-3 text-[13px]">
-            <span className="text-brown/90 flex items-center gap-1.5">
-              <Gift size={12} className="text-saffron" /> Narayan Kripa Blessing Box
+          <li className="flex justify-between gap-3">
+            <span className="flex items-center gap-1.5 text-ink-muted">
+              <Gift size={14} className="text-saffron-dark" /> {t("co_box_name")}
             </span>
-            <span className="font-semibold text-saffron whitespace-nowrap shrink-0">
-              ₹{BLESSING_BOX_PRICE.toLocaleString("en-IN")}
-            </span>
-          </div>
+            <span className="tabular shrink-0 font-medium text-ink">{inr(BLESSING_BOX_PRICE)}</span>
+          </li>
         )}
-      </div>
-      <div className="flex justify-between items-center pt-5 mb-4">
-        <span className="font-display text-lg text-maroon">{t("co_total")}</span>
-        <span className="font-sans text-2xl font-bold text-saffron">₹{totalPrice.toLocaleString("en-IN")}</span>
+      </ul>
+      <div className="mt-4 flex items-center justify-between">
+        <span className="text-base font-semibold text-ink">{t("co_total")}</span>
+        <span className="tabular text-2xl font-bold text-saffron-dark">{inr(totalPrice)}</span>
       </div>
       {showPayButton && (
-        <>
-          <button onClick={handleCheckout} disabled={loading}
-            className="relative w-full overflow-hidden rounded-full bg-gradient-to-r from-saffron to-maroon py-4 text-center text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed group">
+        <div className="mt-5 hidden lg:block">
+          <button onClick={handleCheckout} disabled={loading} className="btn-primary w-full">
             {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <Loader2 size={18} className="animate-spin" />
-                {t("co_processing")}
-              </span>
+              <>
+                <Loader2 size={18} className="animate-spin" /> {t("co_processing")}
+              </>
             ) : (
-              <span className="flex items-center justify-center gap-2">
-                {t("co_pay")} ₹{totalPrice.toLocaleString("en-IN")}
-              </span>
+              <>
+                <Lock size={16} /> {t("co_pay")} {inr(totalPrice)}
+              </>
             )}
           </button>
-          <p className="mt-4 text-center text-[11px] text-brown/60 font-serif italic">{t("co_powered")}</p>
-        </>
+          <p className="mt-3 text-center text-xs text-ink-soft">{t("co_powered")}</p>
+        </div>
       )}
-    </div>
+    </aside>
   );
 
   return (
-    <main className="bg-background min-h-screen">
-      {/* ── Header ── */}
-      <div className="bg-gradient-to-r from-maroon via-maroon-deep to-maroon py-6 sm:py-8">
-        <div className="container">
+    <main className="min-h-screen">
+      <header className="border-b border-line bg-surface-muted/60">
+        <div className="container py-4 sm:py-6">
           <button
-            onClick={() => checkoutStep === "review" ? nav("/cart") : setCheckoutStep("review")}
-            className="inline-flex items-center gap-2 text-gold/80 hover:text-gold text-sm mb-2 transition-colors"
+            onClick={() => (checkoutStep === "review" ? nav("/cart") : setCheckoutStep("review"))}
+            className="mb-1 inline-flex items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-ink"
           >
-            <ArrowLeft size={14} /> {checkoutStep === "review" ? t("co_back") : "Back to Review"}
+            <ArrowLeft size={16} /> {checkoutStep === "review" ? t("co_back") : t("co_back_review")}
           </button>
-          <h1 className="font-display text-2xl sm:text-3xl text-gold md:text-4xl flex items-center gap-3">
-            <Shield size={24} /> {t("co_title")}
+          <h1 className="flex items-center gap-2 text-[22px] font-bold text-ink md:text-[28px]">
+            {t("co_title")} <Lock size={18} className="text-success" />
           </h1>
+          <ProgressBar current={checkoutStep} />
         </div>
-      </div>
+      </header>
 
-      {/* ── Progress Bar ── */}
-      <div className="bg-ivory border-b border-gold/20">
-        <div className="container">
-          <ProgressBar current={checkoutStep} lang={lang} />
-        </div>
-      </div>
-
-      <div className="container py-6 sm:py-10 pb-28 lg:pb-10">
-        <div className="grid gap-6 sm:gap-8 lg:grid-cols-[1fr_380px]">
-
-          {/* ════════════════════════════════════════════════════════════════ */}
-          {/* STEP 1: Review Booking                                         */}
-          {/* ════════════════════════════════════════════════════════════════ */}
+      <div className="container py-6 pb-32 sm:py-8 lg:pb-12">
+        <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:gap-8">
+          {/* Step 1: review */}
           {checkoutStep === "review" && (
-            <div className="space-y-6">
-
-              {/* ── Puja Booking Card ── */}
+            <div className="space-y-4">
               {pujaItem && (
-                <div className="rounded-2xl border border-gold/40 bg-ivory p-4 sm:p-6 shadow-soft">
+                <div className={card}>
                   <div className="flex items-start gap-4">
                     {pujaItem.image && (
-                      <StorageImage src={pujaItem.image} width={80} alt="" className="h-20 w-20 rounded-xl object-cover border border-gold/30 shrink-0" />
+                      <StorageImage src={pujaItem.image} width={80} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover sm:h-20 sm:w-20" />
                     )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-body text-base sm:text-lg font-bold text-maroon leading-snug">{pujaItem.name}</h3>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-[15px] font-semibold leading-snug text-ink sm:text-base">{pujaItem.name}</h3>
                       {pujaItem.description && (
-                        <p className="text-xs text-brown/60 mt-1 flex items-center gap-1.5">
-                          <Calendar size={12} className="text-gold shrink-0" /> {pujaItem.description}
+                        <p className="mt-1 flex items-center gap-1.5 text-[13px] text-ink-soft">
+                          <Calendar size={13} className="shrink-0" /> {pujaItem.description}
                         </p>
                       )}
-                      <p className="text-xl font-bold text-saffron mt-2">₹{pujaItem.price.toLocaleString("en-IN")}</p>
+                      <p className="tabular mt-2 text-lg font-bold text-saffron-dark">{inr(pujaItem.price)}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* ── Chadhava items (if any) ── */}
-              {items.filter(i => i.category === "chadhava").map(item => (
-                <div key={item.id} className="rounded-2xl border border-gold/40 bg-ivory p-4 sm:p-6 shadow-soft">
-                  <div className="flex items-start gap-4">
-                    {item.image && (
-                      <StorageImage src={item.image} width={80} alt="" className="h-20 w-20 rounded-xl object-cover border border-gold/30 shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-body text-base font-bold text-maroon">{item.name}</h3>
-                      {item.description && <p className="text-xs text-brown/60 mt-1">{item.description}</p>}
-                      <p className="text-xl font-bold text-saffron mt-2">₹{item.price.toLocaleString("en-IN")} <span className="text-xs text-brown/50 font-medium">× {item.quantity}</span></p>
+              {items
+                .filter((i) => i.category === "chadhava")
+                .map((item) => (
+                  <div key={item.id} className={card}>
+                    <div className="flex items-start gap-4">
+                      {item.image && (
+                        <StorageImage src={item.image} width={80} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover sm:h-20 sm:w-20" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-[15px] font-semibold text-ink sm:text-base">{item.name}</h3>
+                        {item.description && <p className="mt-1 text-[13px] text-ink-soft">{item.description}</p>}
+                        <p className="tabular mt-2 text-lg font-bold text-saffron-dark">
+                          {inr(item.price)} {item.quantity > 1 && <span className="text-sm font-medium text-ink-soft">x {item.quantity}</span>}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              {/* ── Add More Offerings ── */}
               {pujaItem && pujaOfferings.length > 0 && (
-                <div className="rounded-2xl border-2 border-gold/30 bg-gradient-to-b from-ivory to-cream p-4 sm:p-6">
-                  <div className="flex items-center gap-2 mb-5">
-                    <div className="shrink-0 grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-saffron to-maroon text-white shadow-md">
-                      🌺
-                    </div>
-                    <div>
-                      <h3 className="text-[15px] font-bold text-maroon leading-snug">Add More Offering Items</h3>
-                      <p className="text-xs text-brown/50">Enhance your puja with sacred offerings</p>
-                    </div>
-                  </div>
+                <div className={card}>
+                  <h3 className={sectionTitle}>{t("co_add_more_t")}</h3>
+                  <p className="mb-4 mt-0.5 text-sm text-ink-muted">{t("co_add_more_d")}</p>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    {pujaOfferings.map(off => {
+                    {pujaOfferings.map((off) => {
                       const isSelected = !!selectedOfferings[off.id];
                       return (
                         <button
                           key={off.id}
                           onClick={() => toggleOffering(off.id)}
-                          className={`flex items-start gap-3 rounded-xl border-2 p-3.5 text-left transition-all ${
-                            isSelected
-                              ? "border-saffron bg-saffron/5 shadow-md"
-                              : "border-gold/30 bg-ivory hover:border-saffron/40"
+                          aria-pressed={isSelected}
+                          className={`flex items-start gap-3 rounded-[10px] border-2 p-3 text-left transition-colors ${
+                            isSelected ? "border-saffron bg-saffron-soft" : "border-line bg-surface hover:border-saffron/40"
                           }`}
                         >
-                          <div className="h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-gold/10">
-                            {off.image_url
-                              ? <StorageImage src={off.image_url} width={48} alt={off.name} className="h-full w-full object-cover" />
-                              : <div className="h-full w-full grid place-items-center text-xl">🌺</div>}
+                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-muted">
+                            {off.image_url ? (
+                              <StorageImage src={off.image_url} width={48} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <span className="grid h-full w-full place-items-center text-ink-soft">
+                                <Flower2 size={20} />
+                              </span>
+                            )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-sm font-bold text-maroon truncate">{off.name}</p>
-                              <div className={`shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                                isSelected ? "border-saffron bg-saffron" : "border-gold/40 bg-white"
-                              }`}>
-                                {isSelected && <span className="text-white text-xs font-bold">✓</span>}
-                              </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm font-semibold text-ink">{off.name}</p>
+                              <span
+                                className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${
+                                  isSelected ? "border-saffron bg-saffron text-white" : "border-input bg-surface"
+                                }`}
+                              >
+                                {isSelected && <Check size={12} strokeWidth={3} />}
+                              </span>
                             </div>
-                            {off.description && <p className="text-[11px] text-brown/50 mt-0.5 line-clamp-2">{off.description}</p>}
-                            <p className="text-sm font-bold text-saffron mt-1">₹{off.price.toLocaleString("en-IN")}</p>
+                            {off.description && <p className="mt-0.5 line-clamp-2 text-xs text-ink-soft">{off.description}</p>}
+                            <p className="tabular mt-1 text-sm font-bold text-saffron-dark">{inr(off.price)}</p>
                           </div>
                         </button>
                       );
                     })}
                   </div>
                   {offeringsTotal > 0 && (
-                    <div className="mt-3 flex items-center justify-between rounded-lg bg-saffron/10 border border-saffron/20 px-4 py-2">
-                      <span className="text-xs font-semibold text-brown/60">
-                        {pujaOfferings.filter(o => selectedOfferings[o.id]).length} offering(s) selected
+                    <p className="mt-3 flex items-center justify-between rounded-[10px] bg-saffron-soft px-3.5 py-2 text-sm">
+                      <span className="font-medium text-ink-muted">
+                        {selectedOfferingList.length} {t("co_offerings_selected")}
                       </span>
-                      <span className="text-sm font-bold text-saffron">+₹{offeringsTotal.toLocaleString("en-IN")}</span>
+                      <span className="tabular font-bold text-saffron-dark">+{inr(offeringsTotal)}</span>
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className={card}>
+                <h3 className={`${sectionTitle} mb-3`}>{t("co_bill")}</h3>
+                <ul className="space-y-2.5 text-sm">
+                  {items.map((item) => (
+                    <li key={item.id} className="flex justify-between gap-3">
+                      <span className="text-ink-muted">{item.name}</span>
+                      <span className="tabular shrink-0 font-medium text-ink">{inr(item.price * item.quantity)}</span>
+                    </li>
+                  ))}
+                  {selectedOfferingList.map((off) => (
+                    <li key={off.id} className="flex justify-between gap-3">
+                      <span className="text-ink-muted">{off.name}</span>
+                      <span className="tabular shrink-0 font-medium text-ink">{inr(off.price)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
+                  <span className="text-base font-semibold text-ink">{t("co_total_amount")}</span>
+                  <span className="tabular text-xl font-bold text-saffron-dark">{inr(totalPrice)}</span>
+                </div>
+              </div>
+
+              <button onClick={() => setCheckoutStep("details")} className="btn-primary hidden w-full lg:flex">
+                {t("btn_continue")} <ChevronRight size={18} />
+              </button>
+              <TrustBadges />
+            </div>
+          )}
+
+          {/* Step 2: details */}
+          {checkoutStep === "details" && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold text-ink">{pujaItem ? t("co_details_puja") : t("co_details_generic")}</h2>
+
+              {memberCount === 0 && (
+                <div className={card}>
+                  <label htmlFor="co-name" className={`${sectionTitle} flex items-center gap-2`}>
+                    <User size={18} className="text-saffron-dark" /> {t("co_your_name")}
+                  </label>
+                  <p className="mb-3 mt-0.5 text-sm text-ink-muted">{t("co_your_name_sub")}</p>
+                  <input
+                    id="co-name"
+                    value={form.name}
+                    onChange={set("name")}
+                    type="text"
+                    autoComplete="name"
+                    placeholder={t("co_your_name_ph")}
+                    className={fieldCls}
+                  />
+                </div>
+              )}
+
+              <div className={card}>
+                <label htmlFor="co-phone" className={sectionTitle}>
+                  {t("co_wa_title")}
+                </label>
+                <p className="mb-3 mt-0.5 text-sm text-ink-muted">{t("co_wa_sub")}</p>
+                <div className="flex items-center gap-2 rounded-[10px] border border-input bg-surface px-3 focus-within:border-saffron">
+                  <span className="text-[15px] font-semibold text-ink-soft">+91</span>
+                  <input
+                    id="co-phone"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "") })}
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    maxLength={10}
+                    placeholder={t("co_wa_ph")}
+                    className="h-12 flex-1 bg-transparent text-[15px] font-medium text-ink outline-none placeholder:text-ink-soft/70"
+                  />
+                  {form.phone.length === 10 && <Check size={18} className="shrink-0 text-success" />}
+                </div>
+              </div>
+
+              {memberCount > 0 && (
+                <div className={card}>
+                  <h3 className={`${sectionTitle} flex items-center gap-2`}>
+                    <Users size={18} className="text-saffron-dark" /> {t("co_member_names")}
+                  </h3>
+                  <p className="mb-3 mt-0.5 text-sm text-ink-muted">{t("co_member_sub")}</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {syncedMemberNames.map((val, idx) => (
+                      <div key={idx}>
+                        <label htmlFor={`co-member-${idx}`} className={fieldLabelCls}>
+                          {`${t("co_member_ph")} ${idx + 1}`}
+                          {idx === 0 && " *"}
+                        </label>
+                        <input
+                          id={`co-member-${idx}`}
+                          value={val}
+                          onChange={(e) => {
+                            const updated = [...syncedMemberNames];
+                            updated[idx] = e.target.value;
+                            setMemberNames(updated);
+                          }}
+                          placeholder={`${t("co_member_ph")} ${idx + 1}`}
+                          className={fieldCls}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {memberCount > 0 && (
+                <div className={card}>
+                  <label htmlFor="co-gotra" className={`${sectionTitle} flex items-center gap-2`}>
+                    <Info size={18} className="text-saffron-dark" /> {t("co_gotra")}
+                  </label>
+                  <p className="mb-3 mt-0.5 text-sm text-ink-muted">{t("co_gotra_sub")}</p>
+                  <input
+                    id="co-gotra"
+                    value={gotraUnknown ? "Kashyap" : gotra}
+                    onChange={(e) => {
+                      if (!gotraUnknown) setGotra(e.target.value);
+                    }}
+                    disabled={gotraUnknown}
+                    placeholder={t("co_gotra_ph")}
+                    className={`${fieldCls} ${gotraUnknown ? "cursor-not-allowed bg-surface-muted text-ink-soft" : ""}`}
+                  />
+                  <label className="mt-3 flex cursor-pointer items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={gotraUnknown}
+                      onChange={(e) => handleGotraUnknown(e.target.checked)}
+                      className="h-5 w-5 rounded accent-saffron"
+                    />
+                    <span className="text-sm font-medium text-ink">{t("co_gotra_unknown")}</span>
+                  </label>
+                </div>
+              )}
+
+              {pujaItem && (
+                <div className={card}>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-saffron-soft text-saffron-dark">
+                        <Gift size={20} strokeWidth={1.75} />
+                      </span>
+                      <div>
+                        <h3 className={sectionTitle}>{t("co_box_q")}</h3>
+                        <p className="mt-1 text-sm leading-relaxed text-ink-muted">{t("co_box_d")}</p>
+                      </div>
+                    </div>
+                    <div className="grid shrink-0 grid-cols-2 overflow-hidden rounded-[10px] border border-line" role="radiogroup" aria-label={t("co_box_q")}>
+                      <button
+                        role="radio"
+                        aria-checked={wantBox}
+                        onClick={() => setWantBox(true)}
+                        className={`min-h-[44px] px-5 text-sm font-semibold transition-colors ${wantBox ? "bg-saffron text-white" : "bg-surface text-ink-muted hover:bg-surface-muted"}`}
+                      >
+                        {t("co_yes")}
+                      </button>
+                      <button
+                        role="radio"
+                        aria-checked={!wantBox}
+                        onClick={() => setWantBox(false)}
+                        className={`min-h-[44px] border-l border-line px-5 text-sm font-semibold transition-colors ${!wantBox ? "bg-ink text-white" : "bg-surface text-ink-muted hover:bg-surface-muted"}`}
+                      >
+                        {t("co_no")}
+                      </button>
+                    </div>
+                  </div>
+
+                  {wantBox && (
+                    <p className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-saffron-soft px-2.5 py-1 text-sm font-semibold text-saffron-dark">
+                      <Gift size={14} /> {inr(BLESSING_BOX_PRICE)} {t("co_box_added")}
+                    </p>
+                  )}
+
+                  {wantBox && (
+                    <div className="mt-4 border-t border-line pt-4">
+                      <p className="flex items-center gap-2 text-[15px] font-semibold text-ink">
+                        <MapPin size={16} className="text-saffron-dark" /> {t("co_addr_title")} *
+                      </p>
+                      <p className="mb-3 mt-0.5 text-sm text-ink-muted">{t("co_addr_sub")}</p>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="col-span-2 sm:col-span-1">
+                          <label htmlFor="co-pin" className={fieldLabelCls}>{t("co_pin")} *</label>
+                          <input
+                            id="co-pin"
+                            value={addr.pincode}
+                            onChange={(e) => setAddr((prev) => ({ ...prev, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
+                            inputMode="numeric"
+                            autoComplete="postal-code"
+                            maxLength={6}
+                            placeholder={t("co_pin_ph")}
+                            className={fieldCls}
+                          />
+                          {pinLookup === "loading" && <p className="mt-1 text-xs text-ink-soft">{t("co_pin_loading")}</p>}
+                          {pinLookup === "ok" && <p className="mt-1 text-xs font-medium text-success">{t("co_pin_ok")}</p>}
+                          {pinLookup === "fail" && addr.pincode.length === 6 && <p className="mt-1 text-xs font-medium text-destructive">{t("co_pin_fail")}</p>}
+                        </div>
+                        <div className="col-span-2 sm:col-span-1">
+                          <label htmlFor="co-flat" className={fieldLabelCls}>{t("co_flat")} *</label>
+                          <input id="co-flat" value={addr.flat} onChange={setAddrField("flat")} placeholder={t("co_flat_ph")} className={fieldCls} />
+                        </div>
+                        <div className="col-span-2">
+                          <label htmlFor="co-area" className={fieldLabelCls}>{t("co_area")} *</label>
+                          <input id="co-area" value={addr.area} onChange={setAddrField("area")} placeholder={t("co_area_ph")} className={fieldCls} />
+                        </div>
+                        <div className="col-span-2">
+                          <label htmlFor="co-landmark" className={fieldLabelCls}>
+                            {t("co_landmark")} <span className="font-normal text-ink-soft">({t("co_optional")})</span>
+                          </label>
+                          <input id="co-landmark" value={addr.landmark} onChange={setAddrField("landmark")} placeholder={t("co_landmark_ph")} className={fieldCls} />
+                        </div>
+                        <div className="col-span-2 sm:col-span-1">
+                          <label htmlFor="co-city" className={fieldLabelCls}>{t("co_city")} *</label>
+                          <input id="co-city" value={addr.city} onChange={setAddrField("city")} autoComplete="address-level2" className={fieldCls} />
+                        </div>
+                        <div className="col-span-2 sm:col-span-1">
+                          <label htmlFor="co-state" className={fieldLabelCls}>{t("co_state")} *</label>
+                          <input id="co-state" value={addr.state} onChange={setAddrField("state")} autoComplete="address-level1" className={fieldCls} />
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* ── Bill Details ── */}
-              <div className="rounded-2xl border border-gold/40 bg-ivory p-4 sm:p-6 shadow-soft">
-                <h3 className="text-base font-bold text-maroon mb-4">Bill Details</h3>
-                <div className="space-y-3">
-                  {items.map(item => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span className="text-brown/70">{item.name}</span>
-                      <span className="font-semibold text-maroon">₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
-                    </div>
-                  ))}
-                  {pujaOfferings.filter(o => selectedOfferings[o.id]).map(off => (
-                    <div key={off.id} className="flex justify-between text-sm">
-                      <span className="text-brown/70">🌺 {off.name}</span>
-                      <span className="font-semibold text-saffron">₹{off.price.toLocaleString("en-IN")}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 pt-4 border-t border-gold/30 flex justify-between items-center">
-                  <span className="text-base font-bold text-maroon">Total Amount</span>
-                  <span className="text-xl font-bold text-saffron">₹{totalPrice.toLocaleString("en-IN")}</span>
-                </div>
-              </div>
-
-              {/* ── Continue Button (desktop only — mobile uses sticky bar) ── */}
-              <button
-                onClick={() => setCheckoutStep("details")}
-                className="hidden lg:flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-saffron to-maroon py-4 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5"
-              >
-                Continue <ChevronRight size={18} />
+              <button onClick={handleCheckout} disabled={loading} className="btn-primary hidden w-full lg:flex">
+                {loading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" /> {t("co_processing")}
+                  </>
+                ) : (
+                  <>
+                    <Lock size={16} /> {t("co_pay")} {inr(totalPrice)} {t("co_pay_securely")}
+                  </>
+                )}
               </button>
-
-              {/* Trust badges */}
-              <div className="flex flex-wrap justify-center gap-2">
-                {[t("co_ssl"), t("co_razorpay"), t("co_prasad")].map((b) => (
-                  <span key={b} className="rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-[10px] sm:text-[11px] font-medium text-green-700 whitespace-nowrap">{b}</span>
-                ))}
-              </div>
+              <WhatsAppFallback className="hidden w-full lg:flex" />
+              <TrustBadges />
             </div>
           )}
 
-          {/* ════════════════════════════════════════════════════════════════ */}
-          {/* STEP 2: Fill Details                                            */}
-          {/* ════════════════════════════════════════════════════════════════ */}
-          {checkoutStep === "details" && (
-            <div className="rounded-2xl border border-gold/40 bg-ivory p-4 sm:p-6 md:p-8 shadow-soft">
-              <h2 className="font-display text-xl text-maroon mb-6">{pujaItem ? "Enter Details for Your Puja" : "Enter Your Details"}</h2>
-              <div className="space-y-6">
-
-                {/* ── Your Name (puja bookings use Member 1 instead) ── */}
-                {memberCount === 0 && (<>
-                <div>
-                  <h3 className="text-lg font-bold text-maroon mb-1 flex items-center gap-2">
-                    <User size={18} className="text-saffron" /> {lang === "hi" ? "आपका नाम" : "Your Name"}
-                  </h3>
-                  <p className="text-sm text-brown/50 mb-3 leading-snug">
-                    {lang === "hi" ? "कृपया अपना पूरा नाम दर्ज करें।" : "Please enter your full name for the booking."}
-                  </p>
-                  <input
-                    value={form.name}
-                    onChange={set("name")}
-                    type="text"
-                    placeholder={lang === "hi" ? "अपना पूरा नाम दर्ज करें" : "Enter your full name"}
-                    className="w-full rounded-xl border-2 border-gold/40 bg-cream px-4 py-3 text-sm font-semibold text-maroon outline-none placeholder:text-brown/30 focus:border-saffron focus:ring-2 focus:ring-saffron/20 transition-all"
-                  />
-                </div>
-
-                {/* Gold divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-                </>)}
-
-                {/* ── WhatsApp Number ── */}
-                <div>
-                  <h3 className="text-lg font-bold text-maroon mb-1">Your WhatsApp Number</h3>
-                  <p className="text-sm text-brown/50 mb-3 leading-snug">
-                    Your Puja booking updates like Photos, Videos and other details will be sent on WhatsApp on below number.
-                  </p>
-                  <div className="flex items-center gap-2 rounded-xl border-2 border-gold/40 bg-cream px-3 py-3 focus-within:border-saffron transition-all">
-                    <svg viewBox="0 0 32 32" className="h-5 w-5 shrink-0 fill-green-500" aria-hidden="true">
-                      <path d="M16.003 2C8.28 2 2 8.28 2 16.003c0 2.478.65 4.908 1.885 7.054L2 30l7.144-1.87A14.034 14.034 0 0 0 16.003 30C23.72 30 30 23.72 30 16.003 30 8.28 23.72 2 16.003 2zm0 25.6a11.62 11.62 0 0 1-5.923-1.62l-.425-.252-4.24 1.11 1.132-4.134-.277-.446A11.563 11.563 0 0 1 4.4 16.003c0-6.4 5.203-11.6 11.603-11.6s11.598 5.2 11.598 11.6-5.198 11.597-11.598 11.597zm6.36-8.68c-.348-.174-2.063-1.018-2.383-1.133-.32-.116-.552-.174-.786.174-.233.348-.902 1.133-1.107 1.366-.203.232-.407.26-.755.086-.348-.174-1.47-.543-2.8-1.727-1.034-.922-1.73-2.06-1.934-2.407-.203-.348-.022-.535.152-.707.157-.155.348-.406.523-.61.174-.202.232-.347.348-.578.116-.232.058-.435-.03-.61-.086-.173-.785-1.892-1.075-2.59-.284-.682-.573-.59-.785-.6l-.67-.012c-.232 0-.61.087-.928.435-.32.347-1.22 1.192-1.22 2.91s1.25 3.378 1.422 3.61c.174.232 2.46 3.757 5.96 5.27.834.36 1.483.575 1.99.736.836.267 1.598.23 2.2.14.672-.1 2.063-.843 2.353-1.658.29-.812.29-1.51.203-1.658-.087-.145-.32-.23-.67-.406z"/>
-                    </svg>
-                    <span className="text-sm font-bold text-brown/50 shrink-0">+91</span>
-                    <input
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "") })}
-                      type="tel"
-                      inputMode="numeric"
-                      maxLength={10}
-                      placeholder="Enter 10-digit number"
-                      className="flex-1 bg-transparent text-sm font-semibold text-maroon outline-none placeholder:text-brown/30"
-                    />
-                    {form.phone.length === 10 && (
-                      <Check size={16} className="text-green-500 shrink-0" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Gold divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-
-                {/* ── Member Names ── */}
-                {memberCount > 0 && (
-                  <div>
-                    <h3 className="text-lg font-bold text-maroon mb-1 flex items-center gap-2">
-                      <Users size={18} className="text-saffron" /> Name of Members Participating in Puja
-                    </h3>
-                    <p className="text-sm text-brown/50 mb-3">
-                      Panditji will take these names along with gotra during the puja.
-                    </p>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {syncedMemberNames.map((val, idx) => (
-                        <div key={idx}>
-                          <label className="mb-1 block text-[11px] font-semibold text-maroon/70 uppercase tracking-wide">
-                            {`${t("co_member_ph")} ${idx + 1}`}{idx === 0 && " *"}
-                          </label>
-                          <input
-                            value={val}
-                            onChange={(e) => {
-                              const updated = [...syncedMemberNames];
-                              updated[idx] = e.target.value;
-                              setMemberNames(updated);
-                            }}
-                            placeholder={`${t("co_member_ph")} ${idx + 1}`}
-                            className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron focus:ring-2 focus:ring-saffron/20"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Gold divider */}
-                {memberCount > 0 && <div className="h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />}
-
-                {/* ── Gotra ── */}
-                {memberCount > 0 && (
-                  <div>
-                    <h3 className="text-base font-bold text-maroon mb-1 flex items-center gap-2">
-                      <Info size={16} className="text-gold" /> Fill Participant's Gotra
-                    </h3>
-                    <p className="text-xs text-brown/50 mb-3">
-                      {t("co_gotra_sub")}
-                    </p>
-                    <input
-                      value={gotraUnknown ? "Kashyap" : gotra}
-                      onChange={(e) => { if (!gotraUnknown) setGotra(e.target.value); }}
-                      disabled={gotraUnknown}
-                      placeholder={t("co_gotra_ph")}
-                      className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors ${
-                        gotraUnknown
-                          ? "border-gold/30 bg-gold/10 text-brown/50 cursor-not-allowed"
-                          : "border-gold/50 bg-cream focus:border-saffron focus:ring-2 focus:ring-saffron/20"
-                      }`}
-                    />
-                    <label className="mt-2.5 flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={gotraUnknown}
-                        onChange={(e) => handleGotraUnknown(e.target.checked)}
-                        className="h-4 w-4 rounded border-gold/50 accent-saffron"
-                      />
-                      <span className="text-[13px] text-brown/70 font-medium">{t("co_gotra_unknown")}</span>
-                    </label>
-                  </div>
-                )}
-
-                {/* Gold divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-
-                {/* ── Narayan Kripa Blessing Box ── */}
-                {pujaItem && (
-                  <div>
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <div className="shrink-0 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-saffron to-maroon text-white shadow-md">
-                          <Gift size={20} />
-                        </div>
-                        <div>
-                          <h3 className="text-[15px] font-bold text-maroon leading-snug">
-                            Would you like to receive the Narayan Kripa Blessing Box?
-                          </h3>
-                          <p className="text-xs text-brown/60 mt-1 leading-relaxed">
-                            Receive sacred blessed items from the puja — delivered straight to your doorstep. Contents may include Prasad, holy water, sacred threads, and more.
-                          </p>
-                        </div>
-                      </div>
-                      {/* Yes / No toggle */}
-                      <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
-                        <button
-                          onClick={() => setWantBox(true)}
-                          className={`px-5 py-2.5 sm:px-4 sm:py-2 rounded-lg text-sm font-bold transition-all min-h-[44px] sm:min-h-0 ${
-                            wantBox
-                              ? "bg-saffron text-white shadow-md"
-                              : "bg-cream border border-gold/40 text-brown/50 hover:border-saffron/50"
-                          }`}
-                        >
-                          Yes
-                        </button>
-                        <button
-                          onClick={() => setWantBox(false)}
-                          className={`px-5 py-2.5 sm:px-4 sm:py-2 rounded-lg text-sm font-bold transition-all min-h-[44px] sm:min-h-0 ${
-                            !wantBox
-                              ? "bg-maroon text-white shadow-md"
-                              : "bg-cream border border-gold/40 text-brown/50 hover:border-saffron/50"
-                          }`}
-                        >
-                          No
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Price badge (when Yes) */}
-                    {wantBox && (
-                      <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-saffron/10 border border-saffron/30 px-3 py-1.5 text-xs font-bold text-saffron">
-                        <Gift size={12} /> ₹{BLESSING_BOX_PRICE} — will be added to your total
-                      </div>
-                    )}
-
-                    {/* ── Delivery Address (only when Blessing Box = Yes) ── */}
-                    {wantBox && (
-                      <div className="mt-5 rounded-xl border border-gold/30 bg-saffron/5 p-4">
-                        <label className="flex items-center gap-2 text-sm font-bold text-maroon">
-                          <MapPin size={14} className="text-saffron" /> Delivery Address *
-                        </label>
-                        <p className="text-xs text-brown/50 mt-1 mb-3">
-                          Your Blessing Box will be couriered here — please fill each field for accurate delivery.
-                        </p>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          {/* Pincode */}
-                          <div className="col-span-2 sm:col-span-1">
-                            <label className={fieldLabelCls}>Pincode *</label>
-                            <input
-                              value={addr.pincode}
-                              onChange={(e) => setAddr((prev) => ({ ...prev, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
-                              inputMode="numeric"
-                              maxLength={6}
-                              placeholder="6-digit PIN"
-                              className={fieldCls}
-                            />
-                            {pinLookup === "loading" && <p className="mt-1 text-[11px] text-brown/50">🔍 Looking up your area…</p>}
-                            {pinLookup === "ok"      && <p className="mt-1 text-[11px] text-green-600">✓ Area detected — check city & state below</p>}
-                            {pinLookup === "fail" && addr.pincode.length === 6 && <p className="mt-1 text-[11px] text-red-500">Couldn't verify this PIN — please fill city & state manually.</p>}
-                          </div>
-
-                          {/* Flat / House / Building */}
-                          <div className="col-span-2 sm:col-span-1">
-                            <label className={fieldLabelCls}>Flat / House / Building *</label>
-                            <input value={addr.flat} onChange={setAddrField("flat")} placeholder="e.g. 12A, Shanti Apartments" className={fieldCls} />
-                          </div>
-
-                          {/* Area / Street / Locality */}
-                          <div className="col-span-2">
-                            <label className={fieldLabelCls}>Area / Street / Locality *</label>
-                            <input value={addr.area} onChange={setAddrField("area")} placeholder="e.g. MG Road, Andheri West" className={fieldCls} />
-                          </div>
-
-                          {/* Landmark */}
-                          <div className="col-span-2">
-                            <label className={fieldLabelCls}>Landmark (optional)</label>
-                            <input value={addr.landmark} onChange={setAddrField("landmark")} placeholder="e.g. Near Hanuman Mandir" className={fieldCls} />
-                          </div>
-
-                          {/* City */}
-                          <div className="col-span-2 sm:col-span-1">
-                            <label className={fieldLabelCls}>City / Town *</label>
-                            <input value={addr.city} onChange={setAddrField("city")} placeholder="City" className={fieldCls} />
-                          </div>
-
-                          {/* State */}
-                          <div className="col-span-2 sm:col-span-1">
-                            <label className={fieldLabelCls}>State *</label>
-                            <input value={addr.state} onChange={setAddrField("state")} placeholder="State" className={fieldCls} />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* ── Proceed to Pay (desktop only — mobile uses sticky bar) ── */}
-                <button onClick={handleCheckout} disabled={loading}
-                  className="hidden lg:block w-full overflow-hidden rounded-full bg-gradient-to-r from-saffron to-maroon py-4 text-center text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed">
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 size={18} className="animate-spin" />
-                      {t("co_processing")}
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      Proceed to Book — ₹{totalPrice.toLocaleString("en-IN")}
-                    </span>
-                  )}
-                </button>
-                <WhatsAppFallback className="hidden lg:flex w-full" />
-
-                {/* Trust badges */}
-                <div className="flex flex-wrap justify-center gap-2">
-                  {[t("co_ssl"), t("co_razorpay"), t("co_prasad")].map((b) => (
-                    <span key={b} className="rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-[10px] sm:text-[11px] font-medium text-green-700 whitespace-nowrap">{b}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Order Summary Sidebar (both steps) ── */}
           <OrderSummary showPayButton={checkoutStep === "details"} />
         </div>
       </div>
 
-      {/* ── Sticky bottom CTA bar (mobile only) ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-ivory/95 backdrop-blur-md border-t border-gold/30 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3">
+      {/* Sticky bottom bar (phones) */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface px-4 py-2.5 shadow-raised lg:hidden" style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}>
         {checkoutStep === "details" && <WhatsAppFallback className="mb-2 flex w-full" showHint />}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex flex-col">
-            <span className="text-[11px] text-brown/50 font-medium">{t("co_total")}</span>
-            <span className="text-lg font-bold text-saffron">₹{totalPrice.toLocaleString("en-IN")}</span>
+          <div>
+            <span className="block text-xs text-ink-soft">{t("co_total")}</span>
+            <span className="tabular block text-lg font-bold text-ink">{inr(totalPrice)}</span>
           </div>
           {checkoutStep === "review" ? (
-            <button
-              onClick={() => setCheckoutStep("details")}
-              className="flex-1 max-w-[240px] flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-saffron to-maroon py-3.5 text-[15px] font-bold text-white shadow-md transition-all active:scale-[0.97]"
-            >
-              Continue <ChevronRight size={18} />
+            <button onClick={() => setCheckoutStep("details")} className="btn-primary flex-1 sm:max-w-[260px]">
+              {t("btn_continue")} <ChevronRight size={18} />
             </button>
           ) : (
-            <button
-              onClick={handleCheckout}
-              disabled={loading}
-              className="flex-1 max-w-[240px] flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-saffron to-maroon py-3.5 text-[15px] font-bold text-white shadow-md transition-all active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
-            >
+            <button onClick={handleCheckout} disabled={loading} className="btn-primary flex-1 sm:max-w-[260px]">
               {loading ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" />
-                  {t("co_processing")}
+                  <Loader2 size={18} className="animate-spin" /> {t("co_processing")}
                 </>
               ) : (
-                <>Proceed to Book</>
+                <>
+                  <Lock size={16} /> {t("co_proceed_book")}
+                </>
               )}
             </button>
           )}

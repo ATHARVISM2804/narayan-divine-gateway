@@ -1,66 +1,49 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
+import { cn } from "@/lib/utils";
 
-interface Section { id: string; labelKey: string; }
+export interface NavSection { id: string; labelKey: string }
 
-const SECTIONS: Section[] = [
-  { id: "aboutPuja", labelKey: "pd_about" },
-  { id: "pujaBenefits", labelKey: "pd_benefits" },
-  { id: "pujaProcess", labelKey: "pd_process" },
-  { id: "templeDetails", labelKey: "pd_temple" },
-  { id: "packages", labelKey: "pd_packages" },
-  { id: "faqSection", labelKey: "pd_faqs" },
-];
-
-const PujaSectionNav = ({ visibleSections }: { visibleSections: string[] }) => {
+/** Sticky tabs under the header with scroll-spy. Sits right below the 64px header. */
+const PujaSectionNav = ({ sections }: { sections: NavSection[] }) => {
   const { t } = useLanguage();
   const [activeId, setActiveId] = useState("");
-
-  const filtered = SECTIONS.filter(s => visibleSections.includes(s.id));
+  const ids = useMemo(() => sections.map((s) => s.id).join(","), [sections]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        const visible = entries.filter(e => e.isIntersecting);
+        const visible = entries.filter((e) => e.isIntersecting);
         if (visible.length > 0) setActiveId(visible[0].target.id);
       },
-      { rootMargin: "-80px 0px -60% 0px", threshold: 0.1 }
+      { rootMargin: "-120px 0px -60% 0px", threshold: 0 },
     );
-    filtered.forEach(s => {
-      const el = document.getElementById(s.id);
+    ids.split(",").forEach((id) => {
+      const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
     return () => observer.disconnect();
-  }, [filtered]);
+  }, [ids]);
 
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  if (filtered.length < 2) return null;
+  if (sections.length < 2) return null;
 
   return (
-    <div className="sticky top-[64px] z-30 bg-ivory/95 backdrop-blur-md border-b border-gold/30 shadow-sm">
-      <nav className="container px-0 sm:px-4">
-        <ul className="flex items-stretch overflow-x-auto scrollbar-hide">
-          {filtered.map(s => {
-            const isActive = activeId === s.id;
+    <div className="sticky top-16 z-30 border-b border-line bg-surface">
+      <nav className="container px-0 sm:px-4" aria-label="Sections">
+        <ul className="flex overflow-x-auto scrollbar-hide">
+          {sections.map((s) => {
+            const active = activeId === s.id;
             return (
               <li key={s.id} className="shrink-0 md:flex-1">
                 <button
-                  onClick={() => scrollTo(s.id)}
-                  className={`relative w-full min-w-[90px] px-3 py-3 text-[12px] md:text-sm font-bold text-center whitespace-nowrap transition-colors ${
-                    isActive
-                      ? "text-saffron"
-                      : "text-brown/55 hover:text-maroon"
-                  }`}
+                  onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  className={cn(
+                    "relative w-full whitespace-nowrap px-4 py-3 text-sm font-medium transition-colors",
+                    active ? "text-saffron-dark" : "text-ink-soft hover:text-ink",
+                  )}
                 >
                   {t(s.labelKey)}
-                  {/* Active underline accent */}
-                  {isActive && (
-                    <span className="absolute inset-x-2 bottom-0 h-[3px] rounded-full bg-gradient-to-r from-saffron to-gold" />
-                  )}
+                  {active && <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-saffron" />}
                 </button>
               </li>
             );

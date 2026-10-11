@@ -42,7 +42,7 @@ const saveCart = (items: CartItem[]) => {
   try {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   } catch {
-    // storage full or unavailable — silently ignore
+    // storage full or unavailable; silently ignore
   }
 };
 

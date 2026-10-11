@@ -1,123 +1,80 @@
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { supabase, type Chadhava as CType } from "@/lib/supabase";
-import PageHero from "@/components/PageHero";
-import FitImage from "@/components/FitImage";
-import SectionHeading from "@/components/SectionHeading";
-import heroChadhava from "@/assets/hero-chadhava-page.webp";
 import { useLanguage } from "@/context/LanguageContext";
-import { ChevronRight, MapPin, Calendar } from "lucide-react";
 import { parseDate } from "@/lib/parseDate";
 import { useCatalog } from "@/lib/catalog";
-import { CHADHAVA_CARD_COLUMNS, chadhavaListFromSnapshot, minOfferingPrices, type ChadhavaList } from "@/lib/catalogQueries";
+import { chadhavaListFetcher, chadhavaListFromSnapshot, type ChadhavaList } from "@/lib/catalogQueries";
+import { useReviews, useSiteStats } from "@/lib/proof";
 import { DegradedBanner, LoadError } from "@/components/LoadError";
-
+import ListingHeader from "@/components/shared/ListingHeader";
+import TrustRow from "@/components/shared/TrustRow";
+import { CardSkeleton, ChadhavaCard } from "@/components/cards/PujaCard";
+import ReviewsSection from "@/components/proof/ReviewsSection";
+import SectionHeading from "@/components/SectionHeading";
 
 const Chadhava = () => {
-  usePageTitle("Offer Chadhava — Narayan Kripa");
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
+  usePageTitle(`${t("chadhava_hero_title")} | Narayan Kripa`);
   const { data, loading, degraded, failed, retry } = useCatalog<ChadhavaList>(
     "chadhavas:active",
-    async (signal) => {
-      const [ch, off] = await Promise.all([
-        supabase.from("chadhavas").select(CHADHAVA_CARD_COLUMNS).eq("status", "active").retry(false).abortSignal(signal).returns<CType[]>(),
-        supabase.from("chadhava_offerings").select("chadhava_id, price").eq("status", "active").retry(false).abortSignal(signal)
-          .returns<{ chadhava_id: string; price: number }[]>(),
-      ]);
-      // Starting prices are a nice-to-have; only the chadhavas themselves decide success.
-      if (ch.error) return { data: null, error: ch.error };
-      return { data: { chadhavas: ch.data ?? [], minPrices: minOfferingPrices(off.data ?? []) }, error: null };
-    },
+    chadhavaListFetcher,
     chadhavaListFromSnapshot,
   );
+  const { data: stats } = useSiteStats();
+  const { data: reviews } = useReviews();
+
   const chadhavas = useMemo(
     () => [...(data?.chadhavas ?? [])].sort((a, b) => parseDate(a.date, a.countdown_datetime) - parseDate(b.date, b.countdown_datetime)),
     [data],
   );
   const minPrices = data?.minPrices ?? {};
 
-  const Skeleton = () => (
-    <div className="rounded-2xl border border-gold/30 bg-ivory overflow-hidden animate-pulse">
-      <div className="h-44 bg-gold/10" />
-      <div className="p-5 space-y-3">
-        <div className="h-5 w-3/4 bg-gold/10 rounded" />
-        <div className="h-3 w-1/2 bg-gold/10 rounded" />
-        <div className="h-10 bg-gold/10 rounded-full mt-4" />
-      </div>
-    </div>
-  );
-
   return (
     <main>
-      <PageHero title={t("chadhava_hero_title")} subtitle={t("chadhava_hero_sub")} variant="saffron" breadcrumb={t("breadcrumb_chadhava")} bgImage={heroChadhava} />
+      <ListingHeader title={t("chadhava_hero_title")} subtitle={t("chadhava_hero_sub")} crumb={t("breadcrumb_chadhava")} />
 
-      <section className="bg-cream py-12">
+      <section className="py-6 md:py-10">
         <div className="container">
-          <SectionHeading title={t("chadhava_section_title")} subtitle={t("chadhava_section_sub")} />
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {degraded && <DegradedBanner />}
+          <TrustRow className="mb-6" />
+          {degraded && <DegradedBanner className="mb-4" />}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {loading ? (
-              <><Skeleton /><Skeleton /><Skeleton /><Skeleton /><Skeleton /><Skeleton /></>
+              <>
+                <CardSkeleton />
+                <CardSkeleton />
+                <CardSkeleton />
+              </>
             ) : failed ? (
-              <LoadError onRetry={retry} />
+              <LoadError onRetry={retry} className="col-span-full" />
             ) : chadhavas.length === 0 ? (
-              <p className="col-span-full py-12 text-center text-brown/60">{t("chadhava_empty")}</p>
-            ) : chadhavas.map((c) => {
-              const dItem = (lang === "hi" && c.item_hi) ? c.item_hi : c.item;
-              const dTemple = (lang === "hi" && c.temple_hi) ? c.temple_hi : c.temple;
-              const dDesc = (lang === "hi" && c.description_hi) ? c.description_hi : c.description;
-              const startPrice = minPrices[c.id] || c.price;
-              return (
-                <Link to={`/chadhava/${c.id}`} key={c.id}
-                  className="group overflow-hidden rounded-2xl border border-gold/50 bg-ivory transition-all duration-500 hover:-translate-y-1.5 hover:border-saffron hover:shadow-sacred flex flex-col h-full shadow-soft">
-                  {/* Image */}
-                  <div className="relative w-full overflow-hidden bg-gradient-to-br from-sacred/15 via-gold/15 to-transparent border-b border-gold/30" style={{aspectRatio: '1483/1061'}}>
-                    {c.image_url ? (
-                      <FitImage src={c.image_url} alt={c.item} className="transition-transform duration-700 group-hover:scale-105" />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-5xl">🪔</div>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex flex-col flex-1 p-5 bg-gradient-to-b from-ivory to-cream/30">
-                    {/* Chadhava Name — primary */}
-                    <h3 className="font-body text-[17px] font-bold text-maroon leading-snug mb-1">{dItem}</h3>
-
-                    {/* Benefit/description — colored */}
-                    {dDesc && (
-                      <p className="text-xs text-saffron font-semibold line-clamp-2 mb-1">{dDesc}</p>
-                    )}
-
-                    {/* Date */}
-                    {c.date && (
-                      <p className="flex items-center gap-1.5 text-xs text-brown/70 font-semibold mb-2">
-                        <span className="w-4 flex items-center justify-center shrink-0"><Calendar size={13} className="text-saffron" /></span> {c.date}
-                      </p>
-                    )}
-
-                    {/* Temple name — secondary */}
-                    <div className="flex items-center gap-1.5 text-brown/70 mb-3">
-                      <span className="w-4 flex items-center justify-center shrink-0 text-sm leading-none">🛕</span>
-                      <p className="text-xs font-semibold truncate">{dTemple}</p>
-                    </div>
-
-                    <div className="flex-1" />
-
-                    {/* CTA */}
-                    <div className="border-t border-gold/30 pt-3 mt-1">
-                      <span className="flex items-center justify-center gap-1.5 rounded-full bg-saffron group-hover:bg-maroon w-full py-2.5 text-sm font-bold text-white transition-colors">
-                        {t("btn_participate")} <ChevronRight size={14} />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
+              <p className="col-span-full rounded-xl border border-line bg-surface p-8 text-center text-ink-muted">{t("chadhava_empty")}</p>
+            ) : (
+              chadhavas.map((c, i) => (
+                <ChadhavaCard key={c.id} chadhava={c} minPrice={minPrices[c.id]} booked={stats?.by_item?.[c.id]} priority={i === 0} />
+              ))
+            )}
           </div>
         </div>
       </section>
+
+      <section className="border-t border-line bg-surface-muted/60 py-12 md:py-16">
+        <div className="container">
+          <SectionHeading title={t("ch_how_title")} />
+          <ol className="grid gap-3 md:grid-cols-3">
+            {[1, 2, 3].map((n) => (
+              <li key={n} className="flex gap-4 rounded-xl border border-line bg-surface p-4 md:p-5">
+                <span className="tabular grid h-8 w-8 shrink-0 place-items-center rounded-full bg-saffron text-sm font-bold text-white">{n}</span>
+                <div>
+                  <h3 className="text-base font-semibold text-ink">{t(`ch_how_s${n}_title`)}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-ink-muted">{t(`ch_how_s${n}_desc`)}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <ReviewsSection reviews={reviews ?? []} limit={3} />
     </main>
   );
 };

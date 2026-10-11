@@ -10,14 +10,14 @@ const Logo = () => {
   };
 
   return (
-    <Link to="/" onClick={handleClick} className="flex items-center gap-1.5 sm:gap-3 group min-w-0">
+    <Link to="/" onClick={handleClick} className="flex min-w-0 items-center gap-1.5 sm:gap-2">
       <img
         src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712834/favicon-removebg-preview_kx4s41.png"
         alt="Narayan Kripa Logo Icon"
         width={64}
         height={64}
         fetchPriority="high"
-        className="h-11 xs:h-12 sm:h-16 w-auto object-contain transition-transform group-hover:scale-105 shrink-0"
+        className="h-10 w-auto shrink-0 object-contain sm:h-11"
       />
       <img
         src="https://res.cloudinary.com/dmhabztbf/image/upload/v1777712826/Screenshot_2026-05-02_143432-removebg-preview_vqcmpo.png"
@@ -25,7 +25,7 @@ const Logo = () => {
         width={120}
         height={48}
         fetchPriority="high"
-        className="h-8 xs:h-9 sm:h-12 w-auto object-contain -ml-1 min-w-0 shrink"
+        className="-ml-1 h-7 w-auto min-w-0 shrink object-contain sm:h-8"
       />
     </Link>
   );

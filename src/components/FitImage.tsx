@@ -2,7 +2,7 @@ import { useState } from "react";
 import { imageSrcSet, optimizedImage } from "@/lib/imageUrl";
 
 /**
- * Shows the COMPLETE image inside a box of any shape — never cropped.
+ * Shows the COMPLETE image inside a box of any shape, never cropped.
  *
  * Uploaded artwork comes in several shapes (7:5 posters, 16:9 photos, square
  * package art), so a fixed box with object-cover cuts parts of it off. Here the

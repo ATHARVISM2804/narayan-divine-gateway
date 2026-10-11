@@ -8,7 +8,7 @@ import { claimConfirmation, loadPendingPayment } from "@/lib/pendingPayment";
 /**
  * When a customer returns from their UPI app (or reopens the site) after starting a
  * payment, ask the server whether it went through. If it did, finish the booking:
- * report the Purchase, empty the cart and show the success page — instead of leaving
+ * report the Purchase, empty the cart and show the success page, instead of leaving
  * them on a checkout page that looks like nothing happened (and invites paying twice).
  */
 export function usePendingPaymentRecovery() {

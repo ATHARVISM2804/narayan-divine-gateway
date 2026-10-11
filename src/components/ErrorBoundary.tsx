@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import i18n from "@/i18n";
 
 interface Props { children: ReactNode; }
 interface State { hasError: boolean; }
@@ -20,27 +21,17 @@ class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-[60vh] flex items-center justify-center bg-background px-4">
-          <div className="text-center max-w-md">
-            <div className="mx-auto mb-6 grid h-24 w-24 place-items-center rounded-full bg-gold/20">
-              <span className="text-5xl">🙏</span>
-            </div>
-            <h2 className="font-display text-2xl text-maroon mb-3">Something went wrong</h2>
-            <p className="text-brown/60 text-sm mb-6">
-              We apologize for the inconvenience. Please try again or return to the home page.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                onClick={() => this.setState({ hasError: false })}
-                className="rounded-full bg-saffron px-6 py-3 text-sm font-semibold text-white hover:bg-maroon transition-colors"
-              >
-                Try Again
+        <div className="flex min-h-[60vh] items-center justify-center px-4">
+          <div className="max-w-md text-center">
+            <h2 className="mb-2 text-xl font-bold text-ink">{i18n.t("co_err_generic")}</h2>
+            <p className="mb-6 text-[15px] text-ink-muted">{i18n.t("contact_err_generic")}</p>
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <button onClick={() => this.setState({ hasError: false })} className="btn-primary">
+                {i18n.t("btn_retry")}
               </button>
-              <a
-                href="/"
-                className="rounded-full border border-gold px-6 py-3 text-sm font-semibold text-maroon hover:bg-gold/10 transition-colors"
-              >
-                Go Home
+              {/* A full reload on purpose: it clears whatever state broke the page. */}
+              <a href="/" className="btn-secondary">
+                {i18n.t("nf_back")}
               </a>
             </div>
           </div>

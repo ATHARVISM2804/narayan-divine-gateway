@@ -2,19 +2,19 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import PageHero from "@/components/PageHero";
 
 const Privacy = () => {
-  usePageTitle("Privacy Policy — Narayan Kripa");
+  usePageTitle("Privacy Policy | Narayan Kripa");
 
   return (
     <main>
       <PageHero title="Privacy Policy" breadcrumb="Privacy Policy" />
-      <section className="container py-16 md:py-24 max-w-4xl">
-        <p className="text-sm text-brown/50 mb-8 italic">Last updated: 11 May 2026</p>
+      <section className="container max-w-3xl py-8 md:py-12">
+        <p className="text-sm mb-6 text-ink-soft">Last updated: 11 May 2026</p>
 
-        <div className="space-y-10 text-brown/80 leading-relaxed text-[15px]">
+        <div className="space-y-10 text-ink-muted leading-relaxed text-[15px]">
 
           {/* 1 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">1. Introduction</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">1. Introduction</h2>
             <p>
               Narayan Kripa ("we", "our", or "us") operates the website <strong>narayankripa.com</strong> and
               associated services including online puja booking, chadhava offerings, pandit consultation, and
@@ -26,9 +26,9 @@ const Privacy = () => {
 
           {/* 2 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">2. Information We Collect</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">2. Information We Collect</h2>
             <p className="mb-3">We may collect the following categories of information:</p>
-            <h3 className="font-bold text-maroon mt-4 mb-2">2.1 Personal Information</h3>
+            <h3 className="font-semibold text-ink mt-4 mb-2">2.1 Personal Information</h3>
             <ul className="list-disc pl-6 space-y-1">
               <li>Full name</li>
               <li>Email address</li>
@@ -37,7 +37,7 @@ const Privacy = () => {
               <li>Name, gotra, and nakshatra (for sankalp during pujas)</li>
             </ul>
 
-            <h3 className="font-bold text-maroon mt-4 mb-2">2.2 Payment Information</h3>
+            <h3 className="font-semibold text-ink mt-4 mb-2">2.2 Payment Information</h3>
             <p>
               Payment transactions are processed through <strong>Razorpay</strong>, a PCI-DSS compliant payment
               gateway. We do <strong>not</strong> store your credit/debit card numbers, CVV, or bank account
@@ -45,7 +45,7 @@ const Privacy = () => {
               privacy policy.
             </p>
 
-            <h3 className="font-bold text-maroon mt-4 mb-2">2.3 Automatically Collected Information</h3>
+            <h3 className="font-semibold text-ink mt-4 mb-2">2.3 Automatically Collected Information</h3>
             <ul className="list-disc pl-6 space-y-1">
               <li>IP address and browser type</li>
               <li>Device information (operating system, screen resolution)</li>
@@ -56,7 +56,7 @@ const Privacy = () => {
 
           {/* 3 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">3. How We Use Your Information</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">3. How We Use Your Information</h2>
             <p className="mb-3">We use the collected information for the following purposes:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>To process and fulfil your puja bookings and chadhava offerings</li>
@@ -72,7 +72,7 @@ const Privacy = () => {
 
           {/* 4 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">4. Information Sharing & Disclosure</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">4. Information Sharing & Disclosure</h2>
             <p className="mb-3">
               We do <strong>not</strong> sell, trade, or rent your personal information to third parties. We may
               share your information only in the following circumstances:
@@ -99,7 +99,7 @@ const Privacy = () => {
 
           {/* 5 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">5. Data Security</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">5. Data Security</h2>
             <p>
               We implement industry-standard security measures to protect your personal information, including:
             </p>
@@ -118,7 +118,7 @@ const Privacy = () => {
 
           {/* 6 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">6. Cookies & Tracking Technologies</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">6. Cookies & Tracking Technologies</h2>
             <p>
               Our website uses cookies and similar technologies to enhance your browsing experience. Cookies are
               small text files stored on your device that help us:
@@ -137,7 +137,7 @@ const Privacy = () => {
 
           {/* 7 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">7. Your Rights</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">7. Your Rights</h2>
             <p className="mb-3">Under applicable Indian data protection laws, you have the right to:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Access the personal information we hold about you</li>
@@ -148,7 +148,7 @@ const Privacy = () => {
             </ul>
             <p className="mt-3">
               To exercise any of these rights, please contact us at{" "}
-              <a href="mailto:Asknarayankripa@gmail.com" className="text-saffron hover:text-maroon font-semibold">
+              <a href="mailto:Asknarayankripa@gmail.com" className="text-saffron-dark hover:underline font-semibold">
                 Asknarayankripa@gmail.com
               </a>
               .
@@ -157,7 +157,7 @@ const Privacy = () => {
 
           {/* 8 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">8. Third-Party Links</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">8. Third-Party Links</h2>
             <p>
               Our website may contain links to third-party websites or services (such as Razorpay's payment
               page). We are not responsible for the privacy practices of such third parties. We encourage you to
@@ -167,7 +167,7 @@ const Privacy = () => {
 
           {/* 9 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">9. Children's Privacy</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">9. Children's Privacy</h2>
             <p>
               Our services are not directed at individuals under the age of 18. We do not knowingly collect
               personal information from children. If we become aware that a child under 18 has provided us with
@@ -177,7 +177,7 @@ const Privacy = () => {
 
           {/* 10 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">10. Changes to This Policy</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">10. Changes to This Policy</h2>
             <p>
               We may update this Privacy Policy from time to time. Any changes will be posted on this page with
               a revised "Last updated" date. We encourage you to review this page periodically. Continued use
@@ -187,13 +187,13 @@ const Privacy = () => {
 
           {/* 11 */}
           <div>
-            <h2 className="text-2xl font-display text-maroon mb-4">11. Contact Us</h2>
+            <h2 className="text-xl font-bold text-ink mb-4">11. Contact Us</h2>
             <p>If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us:</p>
-            <div className="mt-4 bg-ivory p-6 rounded-xl border border-gold/30 space-y-1">
-              <p className="font-bold text-maroon">Narayan Kripa</p>
+            <div className="mt-4 bg-surface p-6 rounded-xl border border-line space-y-1">
+              <p className="font-semibold text-ink">Narayan Kripa</p>
               <p>Lanka, Varanasi, Uttar Pradesh 221005, India</p>
-              <p>Email: <a href="mailto:Asknarayankripa@gmail.com" className="text-saffron hover:text-maroon font-semibold">Asknarayankripa@gmail.com</a></p>
-              <p>Phone: <a href="tel:+919286345941" className="text-saffron hover:text-maroon font-semibold">+91 92863 45941</a></p>
+              <p>Email: <a href="mailto:Asknarayankripa@gmail.com" className="text-saffron-dark hover:underline font-semibold">Asknarayankripa@gmail.com</a></p>
+              <p>Phone: <a href="tel:+919286345941" className="text-saffron-dark hover:underline font-semibold">+91 92863 45941</a></p>
               <p>Support Hours: Mon–Sat, 9:00 AM – 7:00 PM IST</p>
             </div>
           </div>

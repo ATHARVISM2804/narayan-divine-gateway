@@ -1,96 +1,78 @@
-/* ── Google Fonts loaded via HTML <link> with preload/media-swap pattern ──
-   See index.html for the non-blocking font loading.
-   Fallback system fonts declared below ensure text is visible during load.
-*/
+/* Google Fonts are loaded from index.html (non-blocking). System fonts show
+   until they arrive. */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Narayan Kripa — Premium Hindu Religious Services Design System
-   All colors MUST be HSL.
-*/
+/* Narayan Kripa design system.
+   Cream and maroon brand, one saffron accent, Noto Sans for English and Hindi.
+   All colors are HSL. Keep decoration out: no gradients, glows or shimmer. */
 
 @layer base {
   :root {
-    /* Brand palette (HSL) */
-    --saffron: 32 78% 47%;          /* #D4891A */
-    --gold: 44 53% 54%;             /* #C9A84C */
-    --gold-light: 43 70% 69%;       /* #E8C97A */
-    --maroon: 0 56% 23%;            /* #5C1A1A */
-    --maroon-deep: 0 49% 12%;       /* #2C0F0F */
-    --cream: 42 67% 93%;            /* #FAF3E0 */
-    --ivory: 38 100% 97%;           /* #FFF8EE */
-    --brown: 28 71% 14%;            /* #3B1F0A */
+    /* Text and surfaces */
+    --ink: 13 25% 11%;              /* #231815 headings */
+    --ink-muted: 23 13% 31%;        /* #5A4D45 body */
+    --ink-soft: 25 11% 49%;         /* #8A7B70 captions */
+    --line: 36 44% 86%;             /* #EADFCF borders */
+    --surface: 0 0% 100%;           /* cards */
+    --surface-muted: 38 71% 94%;    /* #FBF3E6 section bands */
+    --success: 152 60% 32%;         /* #217A52 */
+
+    /* Brand */
+    --saffron: 26 82% 47%;          /* #D97316 the single accent and CTA */
+    --saffron-dark: 26 85% 39%;     /* #B85A0F hover */
+    --saffron-soft: 30 89% 95%;     /* #FEF3E7 tinted backgrounds */
+    --gold: 44 53% 54%;             /* #C9A84C hairline dividers only */
+    --gold-light: 43 70% 69%;
+    --maroon: 0 55% 27%;            /* #6B1F1F brand */
+    --maroon-deep: 0 53% 15%;       /* #3A1212 footer */
+    --cream: 38 71% 94%;            /* same as surface-muted */
+    --ivory: 36 100% 99%;           /* #FFFDF9 */
+    --brown: 13 25% 11%;            /* legacy alias of ink */
 
     /* Shadcn semantic mappings */
-    --background: var(--cream);
-    --foreground: var(--brown);
+    --background: 36 100% 98%;      /* #FFFAF3 page */
+    --foreground: var(--ink);
 
-    --card: var(--ivory);
-    --card-foreground: var(--brown);
+    --card: var(--surface);
+    --card-foreground: var(--ink);
 
-    --popover: var(--ivory);
-    --popover-foreground: var(--brown);
+    --popover: var(--surface);
+    --popover-foreground: var(--ink);
 
     --primary: var(--saffron);
     --primary-foreground: 0 0% 100%;
 
-    --secondary: var(--gold);
+    --secondary: var(--surface-muted);
     --secondary-foreground: var(--maroon);
 
-    --muted: 42 50% 88%;
-    --muted-foreground: 28 30% 30%;
+    --muted: var(--surface-muted);
+    --muted-foreground: var(--ink-muted);
 
-    --accent: var(--gold-light);
+    --accent: var(--saffron-soft);
     --accent-foreground: var(--maroon);
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 46%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 44 53% 70%;
-    --input: 44 53% 70%;
+    --border: var(--line);
+    --input: 33 30% 80%;
     --ring: var(--saffron);
 
     --radius: 0.75rem;
 
-    --sidebar-background: var(--ivory);
-    --sidebar-foreground: var(--brown);
+    --sidebar-background: var(--surface);
+    --sidebar-foreground: var(--ink);
     --sidebar-primary: var(--saffron);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: var(--cream);
+    --sidebar-accent: var(--surface-muted);
     --sidebar-accent-foreground: var(--maroon);
-    --sidebar-border: var(--gold);
+    --sidebar-border: var(--line);
     --sidebar-ring: var(--saffron);
 
-    /* Rich gradients & shadows */
-    --gradient-sacred: linear-gradient(135deg, hsl(var(--saffron)) 0%, hsl(var(--maroon)) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(var(--gold-light)) 0%, hsl(var(--gold)) 50%, hsl(var(--saffron)) 100%);
-    --gradient-twilight: linear-gradient(180deg, hsl(var(--maroon-deep)) 0%, hsl(var(--maroon)) 60%, hsl(28 60% 25%) 100%);
-    --gradient-dawn: linear-gradient(180deg, hsl(42 67% 93%) 0%, hsl(38 100% 97%) 100%);
-    --shadow-sacred: 0 20px 60px -15px hsl(var(--maroon) / 0.45);
-    --shadow-gold-glow: 0 0 40px hsl(var(--gold) / 0.5);
-    --shadow-soft: 0 8px 30px -8px hsl(28 71% 14% / 0.18);
-  }
-
-  .dark {
-    --background: var(--maroon-deep);
-    --foreground: var(--cream);
-    --card: var(--maroon);
-    --card-foreground: var(--cream);
-    --popover: var(--maroon);
-    --popover-foreground: var(--cream);
-    --primary: var(--saffron);
-    --primary-foreground: 0 0% 100%;
-    --secondary: var(--gold);
-    --secondary-foreground: var(--maroon);
-    --muted: 0 30% 20%;
-    --muted-foreground: 42 40% 80%;
-    --accent: var(--gold);
-    --accent-foreground: var(--maroon);
-    --border: 44 30% 35%;
-    --input: 44 30% 35%;
-    --ring: var(--saffron);
+    --shadow-soft: 0 1px 2px hsl(var(--ink) / 0.04), 0 4px 16px -8px hsl(var(--ink) / 0.10);
   }
 }
 
@@ -100,123 +82,78 @@
   }
 
   a, button, input, select, textarea, [tabindex]:not([tabindex="-1"]) {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/80 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
-  /* Prevent horizontal overflow from negative-offset decorative elements */
   html {
     overflow-x: hidden;
     scroll-behavior: smooth;
-    -webkit-tap-highlight-color: transparent; /* No blue flash on mobile taps */
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Eliminate 300ms tap delay on interactive elements */
   a, button {
     touch-action: manipulation;
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-background text-ink-muted font-sans;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
     overflow-x: hidden;
+    line-height: 1.6;
   }
 
+  /* Devanagari has tall matras; give it a little more room. */
+  :lang(hi) body { line-height: 1.7; }
+
   h1, h2, h3, h4, h5 {
-    font-family: 'Playfair Display', serif;
-    color: hsl(var(--maroon));
+    @apply text-ink font-sans;
+    line-height: 1.3;
+    text-wrap: balance;
   }
+
+  p { text-wrap: pretty; }
+
+  .tabular { font-variant-numeric: tabular-nums; }
 }
 
 @layer components {
-  .font-display { font-family: 'Playfair Display', serif; }
-  .font-serif-italic { font-family: 'Cormorant Garamond', serif; }
-  .font-body { font-family: 'Inter', system-ui, sans-serif; }
+  .font-serif-italic { font-family: inherit; }
 
+  /* Buttons. Saffron is reserved for the action that moves a booking forward. */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-saffron px-6 py-3 font-medium text-white shadow-md transition-all duration-300 hover:bg-maroon hover:shadow-lg;
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[10px] bg-saffron px-6 text-[15px] font-semibold text-white transition-colors duration-200 hover:bg-saffron-dark active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-gold bg-transparent px-6 py-3 font-medium text-saffron transition-all duration-300 hover:bg-saffron hover:text-white;
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[10px] border border-maroon/30 bg-white px-6 text-[15px] font-semibold text-maroon transition-colors duration-200 hover:border-maroon hover:bg-surface-muted active:scale-[0.98];
   }
 
   .section-heading {
-    @apply font-display text-3xl md:text-4xl text-maroon text-center;
+    @apply text-xl md:text-2xl font-bold text-ink;
   }
 
+  /* Hairline divider; the old ornamental version is retired. */
   .gold-divider {
-    @apply mx-auto my-4 h-[2px] w-24 bg-gradient-to-r from-transparent via-gold to-transparent relative;
-  }
-  .gold-divider::after {
-    content: '❁';
-    @apply absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-gold text-base bg-background px-2;
+    @apply my-3 h-px w-12 bg-gold/60;
   }
 
   .card-hover {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+    @apply transition-colors duration-200 hover:border-saffron/40;
   }
 
-  /* Rich sacred utilities */
-  .bg-sacred { background-image: var(--gradient-sacred); }
-  .bg-gold-grad { background-image: var(--gradient-gold); }
-  .bg-twilight { background-image: var(--gradient-twilight); }
-  .bg-dawn { background-image: var(--gradient-dawn); }
-
-  .shadow-sacred { box-shadow: var(--shadow-sacred); }
-  .shadow-gold-glow { box-shadow: var(--shadow-gold-glow); }
-  .shadow-soft { box-shadow: var(--shadow-soft); }
-
-  /* Ornate gold border with double line */
-  .border-ornate {
-    border: 1px solid hsl(var(--gold));
-    box-shadow: inset 0 0 0 4px hsl(var(--ivory)), inset 0 0 0 5px hsl(var(--gold) / 0.5);
-  }
-
-  /* Gold text shimmer */
-  .text-gold-shimmer {
-    background: linear-gradient(90deg, hsl(var(--gold)) 0%, hsl(var(--gold-light)) 25%, hsl(var(--saffron)) 50%, hsl(var(--gold-light)) 75%, hsl(var(--gold)) 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: shimmer 4s linear infinite;
-  }
-
-  /* Subtle paper / parchment texture */
-  .texture-parchment {
-    background-color: hsl(var(--ivory));
-    background-image:
-      radial-gradient(hsl(var(--gold) / 0.08) 1px, transparent 1px),
-      radial-gradient(hsl(var(--saffron) / 0.05) 1px, transparent 1px);
-    background-size: 24px 24px, 40px 40px;
-    background-position: 0 0, 12px 12px;
-  }
-
-  /* Glow ring around sacred icons */
-  .ring-sacred {
-    box-shadow: 0 0 0 1px hsl(var(--gold)), 0 0 0 6px hsl(var(--gold) / 0.15), 0 0 30px hsl(var(--saffron) / 0.3);
-  }
-
-  /* Diya flame flicker */
-  .flicker { animation: flicker 2.5s ease-in-out infinite; }
-}
-
-@keyframes flicker {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  45% { opacity: 0.85; transform: scale(0.97); }
-  55% { opacity: 1; transform: scale(1.03); }
-}
-
-@keyframes drift {
-  0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
-  10% { opacity: 0.8; }
-  90% { opacity: 0.6; }
-  100% { transform: translateY(-120px) translateX(20px) rotate(180deg); opacity: 0; }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  /* Legacy decorative utilities, flattened to plain surfaces so any leftover
+     usage stays calm. New code should use the plain color utilities. */
+  .bg-sacred { background-color: hsl(var(--maroon)); }
+  .bg-gold-grad { background-color: hsl(var(--saffron)); }
+  .bg-twilight { background-color: hsl(var(--maroon-deep)); }
+  .bg-dawn { background-color: hsl(var(--background)); }
+  .shadow-sacred, .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-gold-glow { box-shadow: none; }
+  .border-ornate { border: 1px solid hsl(var(--line)); }
+  .text-gold-shimmer { color: hsl(var(--saffron)); }
+  .texture-parchment { background-color: hsl(var(--surface-muted)); }
+  .ring-sacred { box-shadow: none; }
+  .flicker { animation: none; }
 }
 
 @keyframes marquee {
@@ -224,13 +161,24 @@
   100% { transform: translateX(-50%); }
 }
 
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-sheet-up { animation: sheet-up 0.25s cubic-bezier(0.32, 0.72, 0, 1); }
+.animate-fade-in { animation: fade-in 0.2s ease-out; }
+
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: hsl(var(--cream)); }
-::-webkit-scrollbar-thumb { background: hsl(var(--gold)); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(var(--saffron)); }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--line)); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--ink-soft)); }
 
-/* Marquee groups — GPU-composited */
+/* Marquee groups, GPU-composited */
 .marquee-track { display: flex; width: max-content; animation: marquee 25s linear infinite; will-change: transform; }
 .marquee-track-reverse { display: flex; width: max-content; animation: marquee 30s linear infinite reverse; will-change: transform; }
 
@@ -240,7 +188,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Accessibility: Reduced motion ── */
+/* Accessibility: reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -256,7 +204,7 @@
   }
 }
 
-/* ── Prevent iOS Safari auto-zoom on input focus ── */
+/* Prevent iOS Safari auto-zoom on input focus */
 @media screen and (max-width: 767px) {
   input[type="text"],
   input[type="email"],
@@ -273,7 +221,7 @@
   }
 }
 
-/* ── Safe-area padding for notched phones ── */
+/* Safe-area padding for notched phones */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }

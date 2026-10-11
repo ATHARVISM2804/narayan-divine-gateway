@@ -41,8 +41,12 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const { t } = useTranslation();
   const [lang, setLangState] = useState<Lang>(readInitialLang);
 
-  /* On first load, make everything agree with the resolved language — this
+  /* On first load, make everything agree with the resolved language. This
      matters when a shared ?lang= link differs from the visitor's saved value. */
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   useEffect(() => {
     localStorage.setItem("nk_lang", lang);
     if (i18n.language !== lang) i18n.changeLanguage(lang);

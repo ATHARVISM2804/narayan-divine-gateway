@@ -1,160 +1,111 @@
-import { Link } from "react-router-dom";
+import { BriefcaseBusiness, Check, Hash, HeartHandshake, Home, MessageCircle, Phone, ScrollText, Stethoscope } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
-import PageHero from "@/components/PageHero";
-import SectionHeading from "@/components/SectionHeading";
-import heroAstrology from "@/assets/hero-astrology-page.webp";
 import { useLanguage } from "@/context/LanguageContext";
+import { whatsappLink } from "@/lib/whatsapp";
+import { trackContact } from "@/lib/metaPixel";
+import ListingHeader from "@/components/shared/ListingHeader";
+import SectionHeading from "@/components/SectionHeading";
 
+/** "Talk to a Pandit": what you can ask, how it works, and two ways to reach us.
+    There is no online booking for consultations; WhatsApp is the front door. */
 const Astrology = () => {
-  usePageTitle("Vedic Astrology & Pandit Consultation — Narayan Kripa");
   const { t } = useLanguage();
+  usePageTitle(`${t("ast_hero")} | Narayan Kripa`);
 
-  const services = [
-    { name: t("ast_s1"), desc: t("ast_s1_desc"), icon: "📜" },
-    { name: t("ast_s2"), desc: t("ast_s2_desc"), icon: "💑" },
-    { name: t("ast_s3"), desc: t("ast_s3_desc"), icon: "💼" },
-    { name: t("ast_s4"), desc: t("ast_s4_desc"), icon: "🏠" },
-    { name: t("ast_s5"), desc: t("ast_s5_desc"), icon: "🔢" },
-    { name: t("ast_s6"), desc: t("ast_s6_desc"), icon: "🃏" },
+  const topics = [
+    { Icon: ScrollText, title: t("ast_s1"), desc: t("ast_s1_desc") },
+    { Icon: HeartHandshake, title: t("ast_s2"), desc: t("ast_s2_desc") },
+    { Icon: BriefcaseBusiness, title: t("ast_s3"), desc: t("ast_s3_desc") },
+    { Icon: Home, title: t("ast_s4"), desc: t("ast_s4_desc") },
+    { Icon: Hash, title: t("ast_s5"), desc: t("ast_s5_desc") },
+    { Icon: Stethoscope, title: t("ast_s6"), desc: t("ast_s6_desc") },
   ];
-
   const steps = [
-    { icon: "📞", title: t("ast_step1"), desc: t("ast_step1_desc") },
-    { icon: "🗓️", title: t("ast_step2"), desc: t("ast_step2_desc") },
-    { icon: "🔮", title: t("ast_step3"), desc: t("ast_step3_desc") },
+    { title: t("ast_step1"), desc: t("ast_step1_desc") },
+    { title: t("ast_step2"), desc: t("ast_step2_desc") },
+    { title: t("ast_step3"), desc: t("ast_step3_desc") },
   ];
+  const promises = [t("ast_trust1"), t("ast_trust2"), t("ast_trust3"), t("ast_trust4")];
+  const ask = (topic?: string) => whatsappLink(`${t("ast_wa_msg")} ${topic ?? ""}`.trim());
 
-  const trustBadges = [
-    { icon: "✅", text: t("ast_trust1") },
-    { icon: "🎓", text: t("ast_trust2") },
-    { icon: "🔒", text: t("ast_trust3") },
-    { icon: "⭐", text: t("ast_trust4") },
-  ];
+  const Actions = () => (
+    <div className="grid gap-3 sm:flex">
+      <a href={ask()} target="_blank" rel="noopener noreferrer" onClick={() => trackContact("whatsapp_pandit")} className="btn-primary">
+        <MessageCircle size={18} /> {t("ast_cta_btn")}
+      </a>
+      <a href="tel:+919286345941" onClick={() => trackContact("call_pandit")} className="btn-secondary">
+        <Phone size={18} /> {t("ast_call")}
+      </a>
+    </div>
+  );
 
   return (
     <main>
-      <PageHero
-        title={t("ast_hero")}
-        subtitle={t("ast_hero_sub")}
-        variant="brown"
-        breadcrumb={t("ast_breadcrumb")}
-        bgImage={heroAstrology}
-      />
+      <ListingHeader title={t("ast_hero")} subtitle={t("ast_hero_sub")} crumb={t("ast_breadcrumb")} />
 
-      {/* ── Astrology Services ── */}
-      <section className="bg-background py-16">
+      <section className="py-8 md:py-12">
+        <div className="container">
+          <Actions />
+          <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
+            {promises.map((p) => (
+              <li key={p} className="flex items-center gap-1.5 text-sm font-medium text-ink">
+                <Check size={16} strokeWidth={2.5} className="text-success" /> {p}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-sm text-ink-soft">{t("ast_no_card")}</p>
+        </div>
+      </section>
+
+      <section className="border-t border-line bg-surface-muted/60 py-10 md:py-14">
         <div className="container">
           <SectionHeading title={t("ast_section_title")} subtitle={t("ast_section_sub")} />
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((s) => (
-              <article
-                key={s.name}
-                className="rounded-2xl border border-gold/50 bg-ivory p-6 transition-all hover:-translate-y-1 hover:border-saffron hover:shadow-lg"
-              >
-                <div className="text-4xl">{s.icon}</div>
-                <h3 className="mt-3 font-display text-maroon">{s.name}</h3>
-                <p className="text-sm text-brown/70">{s.desc}</p>
-                <Link to="/contact" className="mt-4 inline-block text-sm font-semibold text-saffron hover:text-maroon">
-                  {t("ast_consult")}
-                </Link>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Speak to a Certified Pandit ── */}
-      <section className="relative overflow-hidden bg-cream py-16">
-        {/* Decorative mandala watermarks */}
-        <svg viewBox="0 0 200 200" className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 text-gold/[0.06]" fill="none" stroke="currentColor" strokeWidth="0.4">
-          <circle cx="100" cy="100" r="95" /><circle cx="100" cy="100" r="70" /><circle cx="100" cy="100" r="45" />
-          {Array.from({ length: 12 }).map((_, i) => (
-            <line key={i} x1="100" y1="5" x2="100" y2="195" transform={`rotate(${i * 15} 100 100)`} />
-          ))}
-        </svg>
-        <svg viewBox="0 0 200 200" className="pointer-events-none absolute -left-20 bottom-20 h-64 w-64 text-saffron/[0.04]" fill="none" stroke="currentColor" strokeWidth="0.4">
-          <circle cx="100" cy="100" r="95" /><circle cx="100" cy="100" r="60" />
-          {Array.from({ length: 8 }).map((_, i) => (
-            <line key={i} x1="100" y1="5" x2="100" y2="195" transform={`rotate(${i * 22.5} 100 100)`} />
-          ))}
-        </svg>
-
-        <div className="container relative z-10">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <span className="inline-flex items-center gap-2 rounded-full bg-saffron/10 border border-saffron/30 px-4 py-1.5 text-xs font-bold text-saffron uppercase tracking-wider mb-4">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-              </span>
-              {t("ast_available")}
-            </span>
-            <h2 className="font-display text-3xl md:text-4xl text-maroon">
-              {t("ast_speak_pre")} <span className="text-gold-shimmer">{t("ast_speak_accent")}</span>
-            </h2>
-            <p className="mt-3 font-serif italic text-brown/60 max-w-xl mx-auto text-base">
-              {t("ast_speak_sub")}
-            </p>
-          </div>
-
-          {/* Trust badges */}
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
-            {trustBadges.map((b) => (
-              <span key={b.text} className="flex items-center gap-2 rounded-full bg-ivory border border-gold/40 px-4 py-2 text-sm font-semibold text-maroon shadow-soft">
-                <span>{b.icon}</span> {b.text}
-              </span>
-            ))}
-          </div>
-
-          {/* How it works card */}
-          <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-ivory via-cream to-ivory p-6 md:p-10 shadow-soft">
-            <h3 className="font-display text-2xl text-maroon text-center mb-8">{t("ast_how_it_works")}</h3>
-            <div className="grid gap-8 sm:grid-cols-3">
-              {steps.map((s, i) => (
-                <div key={s.title} className="flex flex-col items-center text-center gap-3">
-                  <div className="relative">
-                    <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-saffron to-maroon text-2xl shadow-md ring-4 ring-gold/20">
-                      {s.icon}
-                    </div>
-                    <span className="absolute -top-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full bg-gold text-[11px] font-bold text-maroon shadow">
-                      {i + 1}
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {topics.map(({ Icon, title, desc }) => (
+              <li key={title}>
+                <a
+                  href={ask(title)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackContact("whatsapp_pandit_topic")}
+                  className="flex h-full gap-4 rounded-xl border border-line bg-surface p-4 transition-colors hover:border-saffron/40 md:p-5"
+                >
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-saffron-soft text-saffron-dark">
+                    <Icon size={20} strokeWidth={1.75} />
+                  </span>
+                  <span>
+                    <span className="block text-base font-semibold text-ink">{title}</span>
+                    <span className="mt-0.5 block text-sm text-ink-muted">{desc}</span>
+                    <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-saffron-dark">
+                      <MessageCircle size={14} /> {t("ast_consult")}
                     </span>
-                  </div>
-                  <div>
-                    <p className="font-bold text-maroon text-sm">{s.title}</p>
-                    <p className="text-xs text-brown/60 mt-1 leading-relaxed">{s.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA */}
-            <div className="mt-10 text-center">
-              <Link
-                to="/contact"
-                className="inline-flex items-center gap-2.5 rounded-full bg-gradient-to-r from-saffron to-maroon px-8 py-4 text-sm font-bold text-white shadow-md hover:shadow-gold-glow hover:-translate-y-0.5 transition-all"
-              >
-                {t("ast_book_free")}
-              </Link>
-              <p className="mt-3 text-xs text-brown/40 font-serif italic">
-                {t("ast_no_card")}
-              </p>
-            </div>
-          </div>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      {/* ── CTA Banner ── */}
-      <section className="bg-maroon py-16 text-cream">
-        <div className="container text-center">
-          <h2 className="font-display text-3xl text-gold md:text-4xl">{t("ast_cta_title")}</h2>
-          <p className="mx-auto mt-3 max-w-xl font-serif italic text-cream/80">{t("ast_cta_sub")}</p>
-          <Link
-            to="/contact"
-            className="mt-6 inline-block rounded-full bg-saffron px-8 py-3 font-semibold text-white hover:bg-gold hover:text-maroon transition-colors"
-          >
-            {t("ast_cta_btn")}
-          </Link>
+      <section className="border-t border-line py-10 md:py-14">
+        <div className="container max-w-3xl">
+          <SectionHeading title={t("ast_how_it_works")} />
+          <ol className="relative space-y-5 border-l border-dashed border-saffron/40 pl-7">
+            {steps.map((s, i) => (
+              <li key={s.title} className="relative">
+                <span className="tabular absolute -left-[42px] top-0 grid h-7 w-7 place-items-center rounded-full bg-saffron text-sm font-bold text-white">
+                  {i + 1}
+                </span>
+                <p className="text-base font-semibold text-ink">{s.title}</p>
+                <p className="mt-1 text-[15px] text-ink-muted">{s.desc}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-8 rounded-xl border border-line bg-surface p-5">
+            <h2 className="text-lg font-bold text-ink">{t("ast_cta_title")}</h2>
+            <p className="mb-4 mt-1 text-[15px] text-ink-muted">{t("ast_cta_sub")}</p>
+            <Actions />
+          </div>
         </div>
       </section>
     </main>

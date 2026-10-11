@@ -1,28 +1,38 @@
-import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { CalendarDays, Check, ChevronRight, ShoppingCart, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
-import { supabase, type Puja } from "@/lib/supabase";
-import { trackViewContent } from "@/lib/metaPixel";
-import { Calendar, ShoppingCart, Check, Loader2, ChevronRight } from "lucide-react";
-import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+import type { Puja } from "@/lib/supabase";
+import { trackViewContent } from "@/lib/metaPixel";
+import { useCatalog } from "@/lib/catalog";
+import { pujaCacheKey, pujaFetcher, pujaFromSnapshot } from "@/lib/catalogQueries";
+import { bookingDeadline, useCountdown } from "@/lib/countdown";
+import { MIN_PROOF_COUNT, reviewsFor, useReviews, useSiteStats } from "@/lib/proof";
 import PujaGallery from "@/components/puja/PujaGallery";
-import PujaSectionNav from "@/components/puja/PujaSectionNav";
+import PujaSectionNav, { type NavSection } from "@/components/puja/PujaSectionNav";
 import PujaSections from "@/components/puja/PujaSections";
-import PujaPackageModal from "@/components/puja/PujaPackageModal";
 import LeadCaptureModal from "@/components/puja/LeadCaptureModal";
+import Countdown from "@/components/shared/Countdown";
+import StickyActionBar from "@/components/shared/StickyActionBar";
+import TrustRow from "@/components/shared/TrustRow";
+import FaqList, { type Faq } from "@/components/shared/FaqList";
+import SectionHeading from "@/components/SectionHeading";
+import RatingSummary from "@/components/proof/RatingSummary";
+import ReviewsSection from "@/components/proof/ReviewsSection";
+import { DegradedBanner, LoadError } from "@/components/LoadError";
+import { Eyebrow, Highlight, formatInr } from "@/components/ui/typography";
+import { TempleIcon } from "@/components/icons";
+import { cn } from "@/lib/utils";
 
 import pkgSingle from "@/assets/pkg-single.webp";
 import pkgCouple from "@/assets/pkg-couple.webp";
 import pkgFamily4 from "@/assets/pkg-family4.webp";
 import pkgFamily6 from "@/assets/pkg-family6.webp";
-import StorageImage from "@/components/StorageImage";
-import { DegradedBanner, LoadError } from "@/components/LoadError";
-import { useCatalog } from "@/lib/catalog";
-import { pujaFromSnapshot } from "@/lib/catalogQueries";
 
-const getTierImage = (label: string): string => {
+const tierImage = (label: string): string => {
   const l = label.toLowerCase();
   if (l.includes("6") || l.includes("joint")) return pkgFamily6;
   if (l.includes("4") || l.includes("family")) return pkgFamily4;
@@ -30,36 +40,22 @@ const getTierImage = (label: string): string => {
   return pkgSingle;
 };
 
+const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
-const parsePujaDate = (dateStr: string, countdownDatetime?: string | null): Date => {
-  // If an exact ISO datetime is provided (e.g. "2026-07-12T16:00:00+05:30"), use it directly
-  if (countdownDatetime) {
-    const exact = new Date(countdownDatetime);
-    if (!isNaN(exact.getTime())) return exact;
-  }
-  // Fallback: parse the display date string with end-of-day time
-  const year = new Date().getFullYear();
-  const hasYear = /\d{4}/.test(dateStr);
-  const fullStr = hasYear ? dateStr : `${dateStr} ${year}`;
-  const d = new Date(`${fullStr} 23:59:59`);
-  if (isNaN(d.getTime()) || d < new Date()) {
-    const next = new Date(`${dateStr} ${year + 1} 23:59:59`);
-    return isNaN(next.getTime()) ? d : next;
-  }
-  return d;
-};
-
-const getTimeLeft = (target: Date) => {
-  const diff = target.getTime() - Date.now();
-  if (diff <= 0) return { days: 0, hours: 0, mins: 0, secs: 0, expired: true };
-  return {
-    days: Math.floor(diff / 86400000),
-    hours: Math.floor((diff % 86400000) / 3600000),
-    mins: Math.floor((diff % 3600000) / 60000),
-    secs: Math.floor((diff % 60000) / 1000),
-    expired: false,
-  };
-};
+const DetailSkeleton = () => (
+  <main className="container animate-pulse py-6 md:py-10">
+    <div className="grid gap-6 md:grid-cols-[1.15fr_1fr] lg:gap-10">
+      <div className="aspect-[1483/1061] rounded-xl bg-surface-muted" />
+      <div className="space-y-4">
+        <div className="h-3 w-32 rounded bg-surface-muted" />
+        <div className="h-7 w-full rounded bg-surface-muted" />
+        <div className="h-5 w-2/3 rounded bg-surface-muted" />
+        <div className="h-4 w-1/2 rounded bg-surface-muted" />
+        <div className="h-12 w-full rounded-[10px] bg-surface-muted" />
+      </div>
+    </div>
+  </main>
+);
 
 const PujaDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -68,355 +64,256 @@ const PujaDetail = () => {
   const { t, lang } = useLanguage();
 
   const { data: puja, loading, degraded, failed, notFound, retry } = useCatalog<Puja>(
-    id ? `puja:${id}` : null,
-    (signal) => supabase.from("pujas").select("*").eq("id", id!).eq("status", "active").retry(false).abortSignal(signal).maybeSingle<Puja>(),
+    id ? pujaCacheKey(id) : null,
+    pujaFetcher(id ?? ""),
     id ? pujaFromSnapshot(id) : undefined,
   );
-  const [showModal, setShowModal] = useState(false);
-  const [selectedTier, setSelectedTier] = useState<{ label: string; price: number } | null>(null);
-  const [addedId,      setAddedId]      = useState<string | null>(null);
-  const [showLead,     setShowLead]     = useState(false);
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0, expired: false });
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { data: allReviews } = useReviews();
+  const { data: stats } = useSiteStats();
 
-  usePageTitle(puja ? `${puja.name} — Narayan Kripa` : "Loading…");
+  const [selected, setSelected] = useState<{ label: string; price: number } | null>(null);
+  const [showLead, setShowLead] = useState(false);
 
-  // Leave only when the puja really doesn't exist (or was unpublished) — a failed
-  // request shows an error with Retry instead of bouncing the visitor to the list.
+  const deadline = useMemo(() => (puja ? bookingDeadline(puja.date, puja.countdown_datetime) : null), [puja]);
+  const left = useCountdown(deadline);
+
+  usePageTitle(puja ? `${lang === "hi" && puja.name_hi ? puja.name_hi : puja.name} | Narayan Kripa` : "Narayan Kripa");
+
+  // Leave only when the puja really does not exist (or was unpublished). A failed
+  // request shows an error with Retry instead of bouncing the visitor.
   useEffect(() => {
     if (notFound) nav("/puja", { replace: true });
   }, [notFound, nav]);
 
-  // ViewContent — once per puja. The ref guard keeps React StrictMode's
-  // double-invoked effects from sending the event twice in dev.
+  // ViewContent once per puja (the ref guards StrictMode's double effects).
   const viewTracked = useRef<string | null>(null);
   useEffect(() => {
     if (!puja || viewTracked.current === puja.id) return;
     viewTracked.current = puja.id;
     const cheapest = (puja.prices || []).reduce<number | undefined>(
       (min, tier) => (min === undefined || tier.price < min ? tier.price : min),
-      undefined
+      undefined,
     );
     trackViewContent({ id: puja.id, name: puja.name, value: cheapest, category: "puja" });
   }, [puja]);
 
   useEffect(() => {
-    if (!puja?.date) return;
-    const target = parsePujaDate(puja.date, puja.countdown_datetime);
-    setTimeLeft(getTimeLeft(target));
-    timerRef.current = setInterval(() => setTimeLeft(getTimeLeft(target)), 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [puja?.date, puja?.countdown_datetime]);
-
-  // Scroll to #packages on page load if hash is present
-  useEffect(() => {
-    if (!loading && window.location.hash === "#packages") {
-      setTimeout(() => {
-        document.getElementById("packages")?.scrollIntoView({ behavior: "smooth" });
-      }, 300);
-    }
+    if (!loading && window.location.hash === "#packages") setTimeout(() => scrollToId("packages"), 300);
   }, [loading]);
 
-  const handleAdd = (goToCheckout = false) => {
-    if (!puja || !selectedTier) return;
-    const itemId = `puja-${puja.id}-${selectedTier.label}`;
-    if (goToCheckout) {
-      // Show lead capture first
-      setShowLead(true);
-    } else {
-      addItem({ id: itemId, name: `${puja.name} (${selectedTier.label})`, description: `${puja.date} • ${puja.location}`, price: selectedTier.price, category: "puja", image: puja.image_url || undefined });
-      setAddedId(itemId);
-      toast.success(`${puja.name} (${selectedTier.label}) ${t("toast_added_to_cart")}`);
-      setTimeout(() => setAddedId(null), 1500);
-    }
+  if (loading) return <DetailSkeleton />;
+  if (failed)
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center px-4 py-12">
+        <LoadError onRetry={retry} className="w-full max-w-lg" />
+      </main>
+    );
+  if (!puja) return null;
+
+  const hi = lang === "hi";
+  const name = hi && puja.name_hi ? puja.name_hi : puja.name;
+  const location = hi && puja.location_hi ? puja.location_hi : puja.location;
+  const benefit = hi && puja.benefit_hi ? puja.benefit_hi : puja.benefit;
+  const occasion = hi && puja.occasion_hi ? puja.occasion_hi : puja.occasion;
+  const includes = hi && puja.includes_hi?.length ? puja.includes_hi : puja.includes;
+  const dbFaqs = (hi && puja.faqs_hi?.length ? puja.faqs_hi : puja.faqs) ?? [];
+  const standardFaqs: Faq[] = [1, 2, 3, 4, 5].map((n) => ({ question: t(`faq_home_q${n}`), answer: t(`faq_home_a${n}`) }));
+  const faqs = [...dbFaqs, ...standardFaqs.filter((f) => !dbFaqs.some((d) => d.question === f.question))];
+
+  const prices = puja.prices ?? [];
+  const minPrice = prices.length ? Math.min(...prices.map((p) => p.price)) : null;
+  const reviews = reviewsFor(allReviews, { pujaId: puja.id });
+  const bookedCount = stats?.by_item?.[puja.id];
+  const devotees = stats && stats.devotees >= MIN_PROOF_COUNT ? stats.devotees : null;
+
+  const sections: NavSection[] = [
+    ...(puja.about || puja.about_hi ? [{ id: "aboutPuja", labelKey: "pd_about" }] : []),
+    ...(puja.benefits?.length || puja.benefits_hi?.length ? [{ id: "pujaBenefits", labelKey: "pd_benefits" }] : []),
+    { id: "pujaProcess", labelKey: "pd_process" },
+    ...(puja.temple_name || puja.temple_image || puja.past_video_url ? [{ id: "templeDetails", labelKey: "pd_temple" }] : []),
+    { id: "packages", labelKey: "pd_tab_packages" },
+    ...(reviews.length ? [{ id: "reviews", labelKey: "pd_tab_reviews" }] : []),
+    { id: "faqSection", labelKey: "pd_faqs" },
+  ];
+
+  const itemFor = (tier: { label: string; price: number }) => ({
+    id: `puja-${puja.id}-${tier.label}`,
+    name: `${puja.name} (${tier.label})`,
+    description: `${puja.date} • ${puja.location}`,
+    price: tier.price,
+    category: "puja" as const,
+    image: puja.image_url || undefined,
+  });
+
+  const addToCart = () => {
+    if (!selected) return;
+    addItem(itemFor(selected));
+    toast.success(`${name} (${selected.label}) ${t("toast_added_to_cart")}`, {
+      action: { label: t("cart_view"), onClick: () => nav("/cart") },
+    });
   };
 
   const handleLeadConfirm = () => {
-    if (!puja || !selectedTier) return;
-    const itemId = `puja-${puja.id}-${selectedTier.label}`;
-    addItem({ id: itemId, name: `${puja.name} (${selectedTier.label})`, description: `${puja.date} • ${puja.location}`, price: selectedTier.price, category: "puja", image: puja.image_url || undefined });
+    if (!selected) return;
+    addItem(itemFor(selected));
     setShowLead(false);
-    toast.success(t("toast_proceed_payment"));
     nav("/checkout");
   };
 
-  if (loading) return (
-    <main className="min-h-[60vh] bg-background flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <Loader2 size={32} className="animate-spin text-saffron" />
-        <p className="text-brown/60 font-serif italic">Loading puja details…</p>
-      </div>
-    </main>
-  );
-
-  if (failed) return (
-    <main className="min-h-[60vh] bg-background flex items-center justify-center px-4 py-12">
-      <LoadError onRetry={retry} className="max-w-lg w-full" />
-    </main>
-  );
-
-  if (!puja) return null;
-
-  const displayName = (lang === "hi" && puja.name_hi) ? puja.name_hi : puja.name;
-  const displayLocation = (lang === "hi" && puja.location_hi) ? puja.location_hi : puja.location;
-  const displayBenefit = (lang === "hi" && puja.benefit_hi) ? puja.benefit_hi : puja.benefit;
-  const displayOccasion = (lang === "hi" && puja.occasion_hi) ? puja.occasion_hi : puja.occasion;
-  const includes = (lang === "hi" && puja.includes_hi?.length) ? puja.includes_hi : puja.includes;
-
-  // Determine which sections to show in the sticky nav
-  const visibleSections: string[] = [];
-  if (puja.about || puja.about_hi) visibleSections.push("aboutPuja");
-  if (puja.benefits?.length || puja.benefits_hi?.length) visibleSections.push("pujaBenefits");
-  if (puja.process_steps?.length || puja.process_steps_hi?.length) visibleSections.push("pujaProcess");
-  if (puja.temple_name || puja.temple_image) visibleSections.push("templeDetails");
-  visibleSections.push("packages");
-  if (puja.faqs?.length || puja.faqs_hi?.length) visibleSections.push("faqSection");
-
-  const galleryImages = puja.gallery?.length ? puja.gallery : [];
+  const onBarClick = () => (selected ? setShowLead(true) : scrollToId("packages"));
 
   return (
-    <main className="bg-background min-h-screen">
-      {degraded && <div className="container pt-3"><DegradedBanner /></div>}
+    <main className="pb-24">
+      {degraded && (
+        <div className="container pt-3">
+          <DegradedBanner />
+        </div>
+      )}
 
-      {/* ── Hero ── */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-maroon via-maroon-deep to-maroon">
-        {puja.image_url && (
-          <StorageImage src={puja.image_url} width={640} fixed alt="" fetchPriority="high" decoding="async" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-maroon/60 via-maroon-deep/80 to-maroon" />
+      {/* Summary: gallery + the facts a visitor needs before deciding */}
+      <section className="container pb-8 pt-4 md:pb-12 md:pt-6">
+        <nav aria-label="Breadcrumb" className="mb-4 hidden items-center gap-1.5 text-sm text-ink-soft md:flex">
+          <Link to="/" className="hover:text-ink">{t("breadcrumb_home")}</Link>
+          <ChevronRight size={14} />
+          <Link to="/puja" className="hover:text-ink">{t("nav_puja")}</Link>
+          <ChevronRight size={14} />
+          <span className="truncate text-ink">{name}</span>
+        </nav>
 
-        <div className="container relative py-10 md:py-14">
-          <div className="flex flex-col md:flex-row gap-8 items-start">
+        <div className="grid gap-5 md:grid-cols-[1.15fr_1fr] md:gap-8 lg:gap-12">
+          <PujaGallery images={puja.gallery?.length ? puja.gallery : []} fallbackUrl={puja.image_url} name={name} />
 
-            {/* Gallery */}
-            <div className="w-full md:w-[480px] lg:w-[560px] xl:w-[800px] shrink-0">
-              <PujaGallery images={galleryImages} fallbackUrl={puja.image_url} name={puja.name} />
+          <div className="flex flex-col">
+            {occasion && <Eyebrow className="mb-2">{occasion}</Eyebrow>}
+            <h1 className="text-[22px] font-bold leading-snug text-ink md:text-[28px]">{name}</h1>
+            {benefit && <p className="mt-2 text-base font-semibold leading-snug text-ink-muted md:text-lg">{benefit}</p>}
+
+            <ul className="mt-4 space-y-2 text-[15px] font-medium text-ink-muted">
+              {location && (
+                <li className="flex items-start gap-2.5">
+                  <TempleIcon size={18} className="mt-0.5 shrink-0 text-saffron" /> {location}
+                </li>
+              )}
+              {puja.date && (
+                <li className="flex items-start gap-2.5">
+                  <CalendarDays size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-saffron" /> {puja.date}
+                </li>
+              )}
+            </ul>
+
+            <div className="mt-5">
+              <Countdown left={left} label={t("timer_label")} expiredLabel={t("timer_expired")} />
             </div>
 
-            {/* Title + Info */}
-            <div className="flex-1">
-              {/* Special Occasion badge */}
-              {displayOccasion && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/20 border border-gold/40 px-3 py-1 text-[11px] sm:text-xs font-bold text-gold tracking-wide uppercase mb-3">
-                  ✦ {displayOccasion}
-                </span>
-              )}
-              <h1 className="font-body text-2xl md:text-3xl font-bold text-gold leading-snug">{displayName}</h1>
-
-              {displayBenefit && (
-                <div className="mt-3 rounded-xl bg-white/10 border border-gold/30 px-4 py-3">
-                  <p className="text-base font-bold text-gold leading-snug">✦ {displayBenefit}</p>
-                </div>
-              )}
-
-              <div className="mt-4 flex flex-col gap-2.5">
-                <span className="flex items-center gap-2.5 text-cream/90 text-lg font-semibold">
-                  <span className="w-6 flex items-center justify-center shrink-0"><Calendar size={20} className="text-gold" /></span> {puja.date}
-                </span>
-                <span className="flex items-center gap-2.5 text-cream/90 text-lg font-semibold">
-                  <span className="w-6 flex items-center justify-center shrink-0 text-xl leading-none">🛕</span> {displayLocation}
-                </span>
-              </div>
-
-              {/* Countdown */}
-              <div className="mt-5">
-                {timeLeft.expired ? (
-                  <div className="inline-flex items-center gap-2 rounded-xl bg-red-900/40 border border-red-500/30 px-4 py-2.5">
-                    <span className="text-red-300 font-bold text-sm">{t("timer_expired")}</span>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-cream/60 text-xs font-semibold uppercase tracking-wider mb-2">{t("timer_label")}</p>
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                      {[
-                        { val: timeLeft.days, label: t("timer_days") },
-                        { val: timeLeft.hours, label: t("timer_hours") },
-                        { val: timeLeft.mins, label: t("timer_mins") },
-                        { val: timeLeft.secs, label: t("timer_secs") },
-                      ].map(({ val, label }, i) => (
-                        <div key={label} className="flex items-center gap-2">
-                          <div className={`flex flex-col items-center justify-center rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 min-w-[44px] sm:min-w-[52px] border ${
-                            timeLeft.days === 0 ? "bg-red-900/50 border-red-500/40" : "bg-maroon-deep/60 border-gold/20"
-                          }`}>
-                            <span className={`font-bold text-lg sm:text-xl leading-none tabular-nums ${timeLeft.days === 0 ? "text-red-300" : "text-gold"}`}>
-                              {String(val).padStart(2, "0")}
-                            </span>
-                            <span className="text-[10px] font-semibold text-cream/50 mt-0.5">{label}</span>
-                          </div>
-                          {i < 3 && <span className="text-gold/60 font-bold text-lg mb-3">:</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            {(reviews.length > 0 || devotees) && (
+              <div className="mt-5 space-y-2.5">
+                <RatingSummary reviews={reviews} onClick={() => scrollToId("reviews")} />
+                {devotees && (
+                  <p className="text-[15px] text-ink-muted">
+                    <Highlight>{devotees.toLocaleString("en-IN")} {t("pd_devotees_word")}</Highlight> {t("pd_devotees_line_post")}
+                  </p>
                 )}
               </div>
+            )}
 
+            <button onClick={() => scrollToId("packages")} className="btn-primary mt-6 w-full md:max-w-sm">
+              {t("pd_select_btn")} <ArrowRight size={18} />
+            </button>
 
-
-              {/* Select Package CTA - opens modal */}
-              <button onClick={() => setShowModal(true)}
-                className="mt-6 flex items-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-gold px-6 py-3.5 text-[15px] font-bold text-white shadow-lg transition-all hover:shadow-gold-glow hover:-translate-y-0.5">
-                {t("pd_scroll_packages")}
-              </button>
-
-              {/* Trust badges on desktop */}
-              <div className="mt-6 hidden md:flex flex-wrap gap-2">
-                {[
-                  { icon: "🪔", text: t("trust_rituals") },
-                  { icon: "📦", text: t("trust_prasad_del") },
-                  { icon: "🔒", text: t("trust_secure") },
-                ].map(b => (
-                  <span key={b.text} className="flex items-center gap-1.5 rounded-full bg-white/10 border border-gold/20 px-3 py-1.5 text-xs font-semibold text-cream/80">
-                    {b.icon} {b.text}
-                  </span>
-                ))}
-              </div>
-            </div>
+            <TrustRow className="mt-5 border-t border-line pt-4" />
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── Sticky Section Nav ── */}
-      <PujaSectionNav visibleSections={visibleSections} />
+      <PujaSectionNav sections={sections} />
 
-      {/* ── Content Sections (About, Benefits, Process, Temple, FAQs) ── */}
-      <PujaSections puja={puja} />
+      <PujaSections puja={puja} bookedCount={bookedCount} />
 
-      {/* ── Package Selection ── */}
-      <section id="packages" className="scroll-mt-32 bg-cream border-b border-gold/20 py-10">
-        <div className="container">
-          <h2 className="font-body text-xl md:text-2xl font-bold text-maroon mb-1">{t("pd_packages")}</h2>
-          <p className="text-sm text-brown/60 font-semibold mb-6">{t("select_package_sub")}</p>
+      {/* Packages: inline, selectable, with what every package includes */}
+      <section id="packages" className="scroll-mt-32 border-b border-line py-10 md:py-12">
+        <div className="container max-w-4xl">
+          <SectionHeading title={t("pd_packages")} subtitle={t("select_package_sub")} />
 
-          {/* Includes */}
-          <div className="mb-6 rounded-xl border border-gold/30 bg-ivory p-5 shadow-soft">
-            <h3 className="text-sm font-bold text-maroon mb-3">{t("pd_includes")}</h3>
-            <ul className="space-y-2">
-              {(includes && includes.length > 0 ? includes : [t("rcv1"), t("rcv2"), t("rcv3"), t("rcv4"), t("rcv5")]).map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm font-medium text-brown/80">
-                  <Check size={14} className="text-green-500 shrink-0 mt-0.5" /> {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Package Cards */}
-          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            {(puja.prices || []).map((tier) => {
-              const isSelected = selectedTier?.label === tier.label;
-              const itemId = `puja-${puja.id}-${tier.label}`;
-              const justAdded = addedId === itemId;
+          <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={t("pd_packages")}>
+            {prices.map((tier) => {
+              const isSel = selected?.label === tier.label;
               return (
-                <button key={tier.label} onClick={() => setSelectedTier(isSelected ? null : tier)}
-                  className={`relative group rounded-2xl overflow-hidden border-2 text-left transition-all duration-300 shadow-soft hover:-translate-y-1 hover:shadow-lg ${
-                    isSelected ? "border-saffron shadow-lg -translate-y-1" : justAdded ? "border-green-500" : "border-gold/30 hover:border-saffron/60"
-                  }`}>
-                  <div className="relative h-36 md:h-44 overflow-hidden bg-gradient-to-br from-saffron/20 via-gold/15 to-maroon/10">
-                    <img src={getTierImage(tier.label)} alt={tier.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    {isSelected && <div className="absolute inset-0 bg-saffron/20" />}
-                    {isSelected && <div className="absolute top-2 right-2 h-7 w-7 rounded-full bg-saffron flex items-center justify-center shadow-md"><Check size={14} className="text-white" strokeWidth={3} /></div>}
-                  </div>
-                  <div className={`p-3 md:p-4 transition-colors ${isSelected ? "bg-saffron/5" : "bg-ivory"}`}>
-                    <p className="font-bold text-maroon text-sm md:text-base leading-snug">{tier.label}</p>
-                    <p className="font-bold text-lg md:text-xl mt-1 text-saffron">₹{tier.price.toLocaleString("en-IN")}</p>
-                  </div>
+                <button
+                  key={tier.label}
+                  role="radio"
+                  aria-checked={isSel}
+                  onClick={() => setSelected(isSel ? null : tier)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl border-2 bg-surface p-3 text-left transition-colors",
+                    isSel ? "border-saffron bg-saffron-soft" : "border-line hover:border-saffron/50",
+                  )}
+                >
+                  <img src={tierImage(tier.label)} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" loading="lazy" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-semibold leading-snug text-ink">{tier.label}</span>
+                    <span className="tabular mt-0.5 block text-lg font-bold text-saffron-dark">{formatInr(tier.price)}</span>
+                  </span>
+                  <span
+                    className={cn(
+                      "grid h-6 w-6 shrink-0 place-items-center rounded-full border-2",
+                      isSel ? "border-saffron bg-saffron text-white" : "border-input",
+                    )}
+                  >
+                    {isSel && <Check size={14} strokeWidth={3} />}
+                  </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Action Buttons */}
-          {selectedTier ? (
-            <div className="mt-6 rounded-2xl border-2 border-saffron/30 bg-ivory p-5 shadow-soft animate-fadeIn">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm text-brown/60 font-semibold">{t("selected_package")}</p>
-                  <p className="font-bold text-maroon text-lg mt-0.5">{selectedTier.label}</p>
-                  <p className="font-bold text-saffron text-2xl">₹{selectedTier.price.toLocaleString("en-IN")}</p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 sm:shrink-0">
-                  <button onClick={() => handleAdd(true)} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-maroon px-6 py-4 text-[15px] font-bold text-white shadow-md transition-all hover:shadow-gold-glow hover:-translate-y-0.5">
-                    Proceed Now <ChevronRight size={18} />
-                  </button>
-                  <button onClick={() => handleAdd(false)} className="flex items-center justify-center gap-2 rounded-xl border-2 border-gold/50 bg-cream px-6 py-4 text-[14px] font-bold text-maroon transition-all hover:bg-gold/10 hover:border-saffron">
-                    <ShoppingCart size={16} className="text-saffron" /> {t("btn_add_cart")}
-                  </button>
-                </div>
-              </div>
-              <p className="mt-3 text-center text-xs text-brown/40 font-serif italic">{t("secure_pay")}</p>
-            </div>
-          ) : (
-            <p className="mt-5 text-center text-sm text-brown/50 font-semibold">{t("tap_to_select")}</p>
+          {selected && (
+            <button onClick={addToCart} className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-ink-muted hover:text-ink">
+              <ShoppingCart size={16} /> {t("btn_add_cart")}
+            </button>
           )}
 
-          {/* Trust row */}
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {[{ icon: "🪔", text: t("trust_rituals") }, { icon: "🧑‍🦳", text: t("trust_pandits") }, { icon: "📦", text: t("trust_prasad_del") }, { icon: "📞", text: t("trust_support") }].map((b) => (
-              <span key={b.text} className="flex items-center gap-2 rounded-xl bg-ivory border border-gold/30 px-4 py-2.5 text-sm font-semibold text-maroon shadow-soft">
-                <span className="text-lg">{b.icon}</span> {b.text}
-              </span>
-            ))}
+          <div className="mt-6 rounded-xl border border-line bg-surface-muted/60 p-4 md:p-5">
+            <h3 className="mb-3 text-[15px] font-semibold text-ink">{t("pd_includes")}</h3>
+            <ul className="space-y-2.5">
+              {(includes && includes.length > 0 ? includes : [t("rcv1"), t("rcv2"), t("rcv4"), t("rcv3"), t("rcv5")]).map((item, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-[15px] text-ink-muted">
+                  <Check size={16} strokeWidth={2.5} className="mt-0.5 shrink-0 text-success" /> {item}
+                </li>
+              ))}
+            </ul>
           </div>
+
+          <TrustRow className="mt-5" />
         </div>
       </section>
 
-      {/* Package Modal */}
-      {showModal && puja && (
-        <PujaPackageModal puja={puja} onClose={() => setShowModal(false)} />
+      <ReviewsSection id="reviews" reviews={reviews} className="scroll-mt-32 border-b border-line py-10 md:py-12" />
+
+      <section id="faqSection" className="scroll-mt-32 py-10 md:py-12">
+        <div className="container max-w-4xl">
+          <SectionHeading title={t("pd_faqs")} />
+          <FaqList faqs={faqs} />
+        </div>
+      </section>
+
+      {prices.length > 0 && (
+        <StickyActionBar
+          title={selected ? formatInr(selected.price) : minPrice != null ? `${t("pd_from")} ${formatInr(minPrice)}` : name}
+          subtitle={selected ? selected.label : t("pd_select_hint")}
+          cta={selected ? t("btn_continue") : t("pd_tab_packages")}
+          onClick={onBarClick}
+        />
       )}
 
-      {/* Lead Capture Modal (from inline Proceed Now) */}
-      {showLead && puja && selectedTier && (
+      {showLead && selected && (
         <LeadCaptureModal
           pujaName={puja.name}
-          packageLabel={selectedTier.label}
-          price={selectedTier.price}
+          packageLabel={selected.label}
+          price={selected.price}
           onConfirm={handleLeadConfirm}
           onClose={() => setShowLead(false)}
         />
       )}
-
-      {/* ── How It Works (fallback) ── */}
-      {(!puja.process_steps || puja.process_steps.length === 0) && (
-        <div className="container py-10">
-          <h2 className="font-body text-xl md:text-2xl font-bold text-maroon mb-6">{t("how_works")}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {[
-              { step: "1", title: t("step1t"), desc: t("step1d") },
-              { step: "2", title: t("step2t"), desc: t("step2d") },
-              { step: "3", title: t("step3t"), desc: t("step3d") },
-            ].map((s) => (
-              <div key={s.step} className="rounded-2xl bg-ivory border border-gold/30 p-5 shadow-soft hover:shadow-md hover:-translate-y-0.5 transition-all">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="shrink-0 grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-saffron to-maroon text-white font-bold text-base shadow-md">
-                    {s.step}
-                  </div>
-                </div>
-                <p className="font-bold text-maroon text-sm md:text-[15px]">{s.title}</p>
-                <p className="text-xs text-brown/60 mt-1.5 leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Sticky Mobile CTA Bar ── */}
-      {puja.prices && puja.prices.length > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-40 md:hidden border-t border-gold/30 bg-ivory/95 backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.1)]"
-             style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-          <div className="px-4 py-3">
-            <button
-              onClick={() => setShowModal(true)}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-gold px-5 py-3.5 text-base font-bold text-white shadow-lg transition-all active:scale-[0.98]"
-            >
-              {t("pd_scroll_packages")} <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Spacer to prevent content from being hidden behind sticky bar on mobile */}
-      <div className="h-20 md:hidden" />
     </main>
   );
 };
