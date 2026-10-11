@@ -124,11 +124,6 @@ const ReviewManager = ({ pujas, chadhavas }: Props) => {
           <Plus size={16} /> New review
         </button>
       </div>
-      <p className="rounded-xl border border-gold/30 bg-ivory px-4 py-3 text-xs text-brown/70">
-        Only add real feedback from customers (WhatsApp, Google, calls), with their permission. Live reviews appear on the
-        home page, listing pages and the puja/chadhava they are linked to. The average rating shown on puja pages is
-        calculated from live reviews.
-      </p>
 
       {loading ? (
         <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-20 animate-pulse rounded-2xl bg-gold/10" />)}</div>
