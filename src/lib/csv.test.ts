@@ -103,60 +103,26 @@ const base: ExportableOrder = {
 describe("orderToCsvRow", () => {
   const row = (o: ExportableOrder) => Object.fromEntries(ORDER_CSV_HEADERS.map((h, i) => [h, orderToCsvRow(o)[i]]));
 
-  it("has one value per header", () => {
-    expect(orderToCsvRow(base)).toHaveLength(ORDER_CSV_HEADERS.length);
+  it("exports only the name and the gotra", () => {
+    expect(ORDER_CSV_HEADERS).toEqual(["Name", "Gotra"]);
+    expect(orderToCsvRow(base)).toHaveLength(2);
   });
 
-  it("exports the sankalp and the booked puja in their own columns", () => {
-    const r = row(base);
-    expect(r["Member Names"]).toBe("Uttam Singh Bhauryal, Mrs Parvati Devi Bhauryal");
-    expect(r["No. of Members"]).toBe(2);
-    expect(r["Gotra"]).toBe("Not provided");
-    expect(r["Puja / Seva"]).toBe("PITRA SHANTI AND PITRA DOSH NIVARAN POOJA");
-    expect(r["Puja Date"]).toBe("26 September 2026");
-    expect(r["Location"]).toBe("BRAHMA KAPAAL, BADRINATH");
-    expect(r["Package"]).toBe("Couple");
-  });
-
-  it("separates add-ons and the blessing box with its address", () => {
-    const r = row(base);
-    expect(r["Add-on Offerings"]).toBe("Brahman bhoj ×2 @₹101");
-    expect(r["Blessing Box"]).toBe("Yes");
-    expect(r["Delivery Address"]).toBe("12A Shanti Apts, MG Road, Mumbai - 400001");
-    expect(r["Amount (₹)"]).toBe(1751);
-    expect(r["Paid At (IST)"]).toBe("2026-09-26 13:20");
-    expect(r["Order Ref"]).toBe("31BC3067");
-  });
-
-  it("shows a gotra that was given and leaves sankalp columns blank for non-puja orders", () => {
+  it("lists the sankalp members, and says when the gotra was left blank", () => {
+    expect(row(base)).toEqual({ Name: "Uttam Singh Bhauryal, Mrs Parvati Devi Bhauryal", Gotra: "Not provided" });
     expect(row({ ...base, puja_details: { gotra: " Kashyap ", member_names: ["A"] } })["Gotra"]).toBe("Kashyap");
+  });
+
+  it("falls back to the customer's name when no members were given", () => {
+    expect(row({ ...base, puja_details: { gotra: "Bharadwaj", member_names: [" ", ""] } })["Name"]).toBe("Uttam Singh Bhauryal");
+  });
+
+  it("leaves the gotra blank for orders without sankalp details (chadhava)", () => {
     const chadhava = row({
       ...base,
       puja_details: null,
       items: [{ id: "chadhava-x", name: "Shani Shanti Mala Thali", price: 501, quantity: 1, category: "chadhava", chadhava_date: "3 October 2026", chadhava_temple: "Shani Dham" }],
     });
-    expect(chadhava["Gotra"]).toBe("");
-    expect(chadhava["No. of Members"]).toBe("");
-    expect(chadhava["Puja / Seva"]).toBe("Shani Shanti Mala Thali");
-    expect(chadhava["Puja Date"]).toBe("3 October 2026");
-    expect(chadhava["Blessing Box"]).toBe("No");
-    expect(chadhava["Delivery Address"]).toBe("");
-  });
-
-  it("shows how the order was paid, with manual payment details or the cancel reason", () => {
-    expect(row(base)["Payment Method"]).toBe("Razorpay");
-    const manual = row({
-      ...base, payment_method: "upi", razorpay_payment_id: null, amount: 110000,
-      manual_payment: { reference: "426912345678", amount_received: 110000, original_amount: 155100, note: "converted on call", marked_by: "admin@x.in" },
-    });
-    expect(manual["Payment Method"]).toBe("UPI (manual)");
-    expect(manual["Payment / Status Details"]).toBe("Ref 426912345678 · Order total ₹1,551 · converted on call · marked by admin@x.in");
-    const cancelled = row({ ...base, status: "cancelled", manual_payment: { cancel_reason: "Duplicate — paid in 7B5B8A57" } });
-    expect(cancelled["Payment Method"]).toBe("");
-    expect(cancelled["Payment / Status Details"]).toBe("Cancelled: Duplicate — paid in 7B5B8A57");
-  });
-
-  it("does not show a paid time for unpaid orders", () => {
-    expect(row({ ...base, status: "pending", paid_at: null })["Paid At (IST)"]).toBe("");
+    expect(chadhava).toEqual({ Name: "Uttam Singh Bhauryal", Gotra: "" });
   });
 });
