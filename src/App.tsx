@@ -105,9 +105,11 @@ const PageLoader = () => (
 /* Guards the /admin route: redirects before rendering AdminPanel at all */
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
   const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
   if (loading) return <PageLoader />;
-  if (!user) return <Navigate to="/admin/login" replace />;
+  // Remember the tab (/admin/orders…) so signing in returns to it.
+  if (!user) return <Navigate to="/admin/login" replace state={{ from: location.pathname + location.search }} />;
   if (!ADMIN_EMAIL || user.email !== ADMIN_EMAIL) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
@@ -146,7 +148,8 @@ const App = () => (
           <Routes>
             {/* Admin routes (standalone, no Navbar/Footer) */}
             <Route path="/admin/login" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><AdminLogin /></Suspense></ErrorBoundary>} />
-            <Route path="/admin" element={<ProtectedAdminRoute><ErrorBoundary><Suspense fallback={<PageLoader />}><AdminPanel /></Suspense></ErrorBoundary></ProtectedAdminRoute>} />
+            {/* :section is the open tab (/admin/orders…), so a reload stays on it */}
+            <Route path="/admin/:section?" element={<ProtectedAdminRoute><ErrorBoundary><Suspense fallback={<PageLoader />}><AdminPanel /></Suspense></ErrorBoundary></ProtectedAdminRoute>} />
 
             {/* Public routes */}
             <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />

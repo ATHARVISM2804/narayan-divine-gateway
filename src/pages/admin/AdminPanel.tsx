@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { supabase, type Puja, type Chadhava, type Temple } from "@/lib/supabase";
+import { adminPath, sectionFromParam, type AdminSection } from "@/lib/adminSections";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { LayoutDashboard, Flame, Flower2, ShoppingBag, LogOut, Menu, X, ChevronRight, Users, Landmark, MessageSquareQuote, CircleCheck, FilePen } from "lucide-react";
 import PujaManager from "./PujaManager";
 import ChadhavaManager from "./ChadhavaManager";
@@ -9,9 +11,9 @@ import LeadManager from "./LeadManager";
 import TempleManager from "./TempleManager";
 import ReviewManager from "./ReviewManager";
 
-type Section = "dashboard" | "pujas" | "chadhavas" | "temples" | "reviews" | "orders" | "leads";
+type Section = AdminSection;
 
-const NAV = [
+const NAV: { id: Section; label: string; Icon: typeof LayoutDashboard }[] = [
   { id: "dashboard" as const, label: "Dashboard", Icon: LayoutDashboard },
   { id: "pujas"     as const, label: "Pujas",     Icon: Flame },
   { id: "chadhavas" as const, label: "Chadhavas", Icon: Flower2 },
@@ -25,8 +27,11 @@ const NAV = [
 
 const AdminPanel = () => {
   const nav = useNavigate();
+  const location = useLocation();
+  // The open tab comes from the URL (/admin/orders…), not memory, so a reload keeps it.
+  const section = sectionFromParam(useParams().section);
+  const setSection = (s: Section) => { if (s !== section) nav(adminPath(s)); };
   const [loading, setLoading] = useState(true);
-  const [section, setSection] = useState<Section>("dashboard");
   const [mobileNav, setMobileNav] = useState(false);
   const [pujas, setPujas] = useState<Puja[]>([]);
   const [chadhavas, setChadhavas] = useState<Chadhava[]>([]);
@@ -38,7 +43,7 @@ const AdminPanel = () => {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
-        nav("/admin/login");
+        nav("/admin/login", { replace: true, state: { from: location.pathname + location.search } });
       } else if (!ADMIN_EMAIL || data.user.email !== ADMIN_EMAIL) {
         // No admin email configured, or user is not the admin — deny access
         nav("/");
@@ -46,6 +51,7 @@ const AdminPanel = () => {
         setLoading(false);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- check once on open, not per tab
   }, [nav, ADMIN_EMAIL]);
 
   /* Fetch data */
@@ -70,6 +76,9 @@ const AdminPanel = () => {
     await supabase.auth.signOut();
     nav("/admin/login");
   };
+
+  // Unknown tab in the URL (/admin/typo): go to the dashboard.
+  if (!section) return <Navigate to="/admin" replace />;
 
   if (loading) return (
     <div className="flex min-h-screen items-center justify-center bg-cream">
@@ -138,6 +147,9 @@ const AdminPanel = () => {
 
         {/* Content */}
         <main className="flex-1 p-4 lg:p-6">
+          {/* Per tab: now that a reload reopens the same tab, a crash in one tab must
+              not hide the sidebar, or the admin could never leave it. */}
+          <ErrorBoundary resetKey={section}>
           {section === "dashboard" && (
             <Dashboard pujas={pujas} chadhavas={chadhavas} onNavigate={setSection} />
           )}
@@ -159,6 +171,7 @@ const AdminPanel = () => {
           {section === "leads" && (
             <LeadManager />
           )}
+          </ErrorBoundary>
         </main>
       </div>
     </div>

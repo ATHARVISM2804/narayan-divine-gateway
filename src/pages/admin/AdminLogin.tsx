@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { afterLoginPath } from "@/lib/adminSections";
 import { Flame, Eye, EyeOff, Loader2 } from "lucide-react";
 
 const AdminLogin = () => {
   const nav = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -20,7 +22,8 @@ const AdminLogin = () => {
     if (err) {
       setError(err.message === "Invalid login credentials" ? "Invalid email or password" : err.message);
     } else {
-      nav("/admin");
+      // Back to the tab that needed the login (e.g. /admin/orders), else the dashboard.
+      nav(afterLoginPath((location.state as { from?: unknown } | null)?.from), { replace: true });
     }
   };
 
