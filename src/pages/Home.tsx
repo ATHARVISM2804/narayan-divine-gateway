@@ -54,7 +54,7 @@ const Home = () => {
       <HomeHero pujas={heroPujas} stats={stats} />
       <TrustStrip stats={stats} />
       <FeaturedPujas pujas={pujas} loading={pujasQ.loading} failed={pujasQ.failed} retry={pujasQ.retry} stats={stats} />
-      <FeaturedChadhavas chadhavas={chadhavas} stats={stats} />
+      <FeaturedChadhavas chadhavas={chadhavas} minPrices={chadhavasQ.data?.minPrices ?? {}} stats={stats} />
       <HowItWorks className="border-t border-line bg-surface-muted/60" />
       <ReviewsSection reviews={reviews ?? []} className="border-t border-line py-12 md:py-16" />
       <WhyUs stats={stats} />
