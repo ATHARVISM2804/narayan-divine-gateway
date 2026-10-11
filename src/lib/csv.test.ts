@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { csvCell, formatDateTimeIST, formatPhoneForCsv, slugify, toCsv } from "./csv";
-import { PANDIT_LIST_HEADERS, orderToPanditRow, type ExportableOrder } from "./orderExport";
+import { PANDIT_LIST_HEADERS, buildPanditList, orderToPanditRow, type ExportableOrder } from "./orderExport";
 import { LEAD_CSV_HEADERS, leadToCsvRow } from "./leadExport";
 
 describe("leadToCsvRow", () => {
@@ -103,26 +103,44 @@ const base: ExportableOrder = {
 describe("orderToPanditRow", () => {
   const row = (o: ExportableOrder) => Object.fromEntries(PANDIT_LIST_HEADERS.map((h, i) => [h, orderToPanditRow(o)[i]]));
 
-  it("exports only the name, the members and the gotra", () => {
-    expect(PANDIT_LIST_HEADERS).toEqual(["Name", "Member Names", "Gotra"]);
-    expect(orderToPanditRow(base)).toHaveLength(3);
+  it("exports only the name, the members, the gotra and the address", () => {
+    expect(PANDIT_LIST_HEADERS).toEqual(["Name", "Member Names", "Gotra", "Address"]);
+    expect(orderToPanditRow(base)).toHaveLength(4);
   });
 
-  it("lists the customer, the sankalp members, and says when the gotra was left blank", () => {
+  it("lists the customer, the sankalp members, the address, and says when the gotra was left blank", () => {
     expect(row(base)).toEqual({
       Name: "Uttam Singh Bhauryal",
       "Member Names": "Uttam Singh Bhauryal, Mrs Parvati Devi Bhauryal",
       Gotra: "Not provided",
+      Address: "12A Shanti Apts, MG Road, Mumbai - 400001",
     });
     expect(row({ ...base, puja_details: { gotra: " Kashyap ", member_names: ["A"] } })["Gotra"]).toBe("Kashyap");
   });
 
-  it("leaves members and gotra blank for orders without sankalp details (chadhava)", () => {
+  it("leaves members, gotra and address blank when the order has none (chadhava)", () => {
     const chadhava = row({
       ...base,
       puja_details: null,
+      customer_address: null,
       items: [{ id: "chadhava-x", name: "Shani Shanti Mala Thali", price: 501, quantity: 1, category: "chadhava", chadhava_date: "3 October 2026", chadhava_temple: "Shani Dham" }],
     });
-    expect(chadhava).toEqual({ Name: "Uttam Singh Bhauryal", "Member Names": "", Gotra: "" });
+    expect(chadhava).toEqual({ Name: "Uttam Singh Bhauryal", "Member Names": "", Gotra: "", Address: "" });
+  });
+});
+
+describe("buildPanditList", () => {
+  const noAddress = { ...base, customer_address: "  " };
+
+  it("keeps the Address column when any order has an address", () => {
+    const list = buildPanditList([noAddress, base]);
+    expect(list.headers).toEqual(["Name", "Member Names", "Gotra", "Address"]);
+    expect(list.rows.map((r) => r[3])).toEqual(["", "12A Shanti Apts, MG Road, Mumbai - 400001"]);
+  });
+
+  it("drops the Address column when no order has one", () => {
+    const list = buildPanditList([noAddress, { ...base, customer_address: null }]);
+    expect(list.headers).toEqual(["Name", "Member Names", "Gotra"]);
+    expect(list.rows.every((r) => r.length === 3)).toBe(true);
   });
 });

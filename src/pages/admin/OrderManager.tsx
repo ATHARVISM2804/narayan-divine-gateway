@@ -11,7 +11,7 @@ import SevaFilter from "./SevaFilter";
 import OrderPaymentPanel, { type PaymentPanelOrder } from "./OrderPaymentPanel";
 import { findPaidDuplicates } from "@/lib/orderDuplicates";
 import { formatDateTimeIST, slugify } from "@/lib/csv";
-import { PANDIT_LIST_HEADERS, orderToPanditRow } from "@/lib/orderExport";
+import { buildPanditList } from "@/lib/orderExport";
 import { downloadPanditListPdf } from "@/lib/panditPdf";
 import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
@@ -284,8 +284,7 @@ const OrderManager = (_props: Props) => {
       await downloadPanditListPdf({
         title: "Narayan Kripa — Sankalp List",
         subtitle: [...scopeParts, `${filtered.length} booking${filtered.length === 1 ? "" : "s"}`, `Generated ${now} IST`].join(" • "),
-        headers: PANDIT_LIST_HEADERS,
-        rows: filtered.map(orderToPanditRow),
+        ...buildPanditList(filtered),
         filename: `narayan-kripa-sankalp-list${scope ? `-${scope}` : ""}-${now.slice(0, 10)}.pdf`,
       });
     } catch (err) {

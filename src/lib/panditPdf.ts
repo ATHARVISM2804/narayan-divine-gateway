@@ -17,7 +17,8 @@ const PAGE_W = 794; // A4 at 96 dpi
 const PAGE_H = 1123;
 const MARGIN = 40;
 const FONT = `"Segoe UI", "Nirmala UI", "Noto Sans Devanagari", "Noto Sans", Arial, sans-serif`;
-const COL_WIDTHS = ["7%", "28%", "45%", "20%"]; // S.No + the three list columns
+// Relative column widths by header; columns not listed share the default.
+const COL_WEIGHTS: Record<string, number> = { "S.No": 8, Name: 22, "Member Names": 36, Gotra: 15, Address: 30 };
 const CELL = "border:1px solid #c9b48a;padding:6px 9px 8px;line-height:1.5;text-align:left;vertical-align:top;word-break:break-word;";
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, style: string, text?: string) {
@@ -38,10 +39,13 @@ function titleBlock(title: string, subtitle: string) {
 
 function table(headers: string[], rows: string[][]) {
   const t = el("table", `width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;color:#2b1d14;`);
+  const cols = ["S.No", ...headers];
+  const weights = cols.map((c) => COL_WEIGHTS[c] ?? 20);
+  const total = weights.reduce((a, b) => a + b, 0);
   const colgroup = document.createElement("colgroup");
-  COL_WIDTHS.forEach((w) => colgroup.append(el("col", `width:${w};`)));
+  weights.forEach((w) => colgroup.append(el("col", `width:${((w / total) * 100).toFixed(2)}%;`)));
   const head = t.createTHead().insertRow();
-  ["S.No", ...headers].forEach((h) => head.append(el("th", `${CELL}background:#f3e3c3;font-weight:700;`, h)));
+  cols.forEach((h) => head.append(el("th", `${CELL}background:#f3e3c3;font-weight:700;`, h)));
   const body = t.createTBody();
   rows.forEach((r) => {
     const tr = body.insertRow();
