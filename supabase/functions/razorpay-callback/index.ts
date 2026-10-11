@@ -17,7 +17,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { markOrderPaid, toPaymentError, verifyPaymentSignature } from "../_shared/razorpay.ts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const DEFAULT_ORIGINS = "https://www.narayankripa.com,https://narayankripa.com";
+const DEFAULT_ORIGINS = "https://www.narayankripa.in,https://narayankripa.in";
 
 function siteOrigin(requested: string | null): string {
   const allowed = (Deno.env.get("SITE_ORIGINS") || DEFAULT_ORIGINS)
