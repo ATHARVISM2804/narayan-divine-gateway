@@ -293,7 +293,7 @@ const PujaDetail = () => {
           </section>
         </div>
 
-        <aside id="booking-panel" className="hidden scroll-mt-24 lg:sticky lg:top-16 lg:block lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto lg:py-6 lg:scrollbar-hide">
+        <aside id="booking-panel" className="hidden scroll-mt-24 lg:sticky lg:top-16 lg:block lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto lg:py-4 lg:scrollbar-hide">
           <BookingPanel
             occasion={occasion}
             name={name}

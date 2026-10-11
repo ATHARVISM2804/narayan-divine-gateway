@@ -110,7 +110,10 @@
     @apply bg-background text-ink-muted font-sans;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    overflow-x: hidden;
+    /* clip, not hidden: `hidden` on both html and body turns body into a scroll
+       container that never scrolls, and then nothing position: sticky sticks
+       (header, pooja tabs, booking panel). html's rule still stops sideways scroll. */
+    overflow-x: clip;
     line-height: 1.6;
   }
 

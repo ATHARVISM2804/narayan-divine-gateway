@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowRight, CalendarDays, Check, ChevronRight, Minus, Plus } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, ChevronRight, MessageCircle, Minus, Plus } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { trackViewContent } from "@/lib/metaPixel";
+import { trackContact, trackViewContent } from "@/lib/metaPixel";
+import { whatsappLink } from "@/lib/whatsapp";
 import { useCatalog } from "@/lib/catalog";
 import { chadhavaCacheKey, chadhavaFetcher, chadhavaFromSnapshot, type ChadhavaWithOfferings } from "@/lib/catalogQueries";
 import { bookingDeadline, useCountdown } from "@/lib/countdown";
@@ -311,12 +312,12 @@ const ChadhavaDetail = () => {
         </div>
 
         {/* Laptop order panel: facts, countdown, what is selected so far and the next step. */}
-        <aside className="hidden lg:sticky lg:top-16 lg:block lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto lg:py-6 lg:scrollbar-hide">
-          <div className="rounded-2xl border border-line bg-surface p-6 shadow-card">
+        <aside className="hidden lg:sticky lg:top-16 lg:block lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto lg:py-4 lg:scrollbar-hide">
+          <div className="rounded-2xl border border-line bg-surface p-6 shadow-card [@media(max-height:800px)]:p-5">
             {occasion && <Eyebrow className="mb-2">{occasion}</Eyebrow>}
-            <h1 className="text-[26px] font-bold leading-tight text-ink">{item}</h1>
-            {desc && <p className="mt-2 text-base font-semibold leading-snug text-ink-muted">{desc}</p>}
-            <ul className="mt-3 space-y-1.5 text-sm font-medium text-ink-muted">
+            <h1 title={item} className="text-[26px] font-bold leading-tight text-ink [@media(max-height:800px)]:line-clamp-2 [@media(max-height:800px)]:text-[22px]">{item}</h1>
+            {desc && <p className="mt-2 text-base font-semibold leading-snug text-ink-muted [@media(max-height:800px)]:mt-1 [@media(max-height:800px)]:text-[15px]">{desc}</p>}
+            <ul className="mt-3 space-y-1.5 text-sm font-medium text-ink-muted [@media(max-height:800px)]:mt-2 [@media(max-height:800px)]:flex [@media(max-height:800px)]:flex-wrap [@media(max-height:800px)]:gap-x-4 [@media(max-height:800px)]:gap-y-1 [@media(max-height:800px)]:space-y-0">
               {temple && (
                 <li className="flex items-start gap-2">
                   <TempleIcon size={16} className="mt-0.5 shrink-0 text-saffron" /> {temple}
@@ -328,11 +329,11 @@ const ChadhavaDetail = () => {
                 </li>
               )}
             </ul>
-            <div className="mt-4">
+            <div className="mt-4 [@media(max-height:800px)]:mt-3">
               <Countdown left={left} label={t("timer_label_chadhava")} expiredLabel={t("timer_expired_chadhava")} compact />
             </div>
             {(reviews.length > 0 || (bookedCount ?? 0) >= MIN_PROOF_COUNT) && (
-              <div className="mt-4 space-y-1.5">
+              <div className="mt-4 space-y-1.5 [@media(max-height:960px)]:hidden">
                 <RatingSummary reviews={reviews} onClick={() => scrollToId("reviews")} />
                 {bookedCount != null && bookedCount >= MIN_PROOF_COUNT && (
                   <p className="text-sm text-ink-muted">
@@ -342,7 +343,7 @@ const ChadhavaDetail = () => {
               </div>
             )}
 
-            <div className="mt-5 border-t border-line pt-5">
+            <div className="mt-5 border-t border-line pt-5 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:pt-4">
               {selectedCount > 0 ? (
                 <>
                   <ul className="space-y-1.5 text-sm text-ink-muted">
@@ -377,7 +378,16 @@ const ChadhavaDetail = () => {
               </button>
             </div>
 
-            <TrustRow className="mt-5 border-t border-line pt-4 sm:gap-x-4" />
+            <TrustRow className="mt-5 border-t border-line pt-4 sm:gap-x-4 [@media(max-height:800px)]:hidden" />
+            <a
+              href={whatsappLink(t("wa_msg_book"))}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackContact("whatsapp_panel")}
+              className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-ink-muted hover:text-saffron-dark"
+            >
+              <MessageCircle size={16} className="text-success" /> {t("book_whatsapp")}
+            </a>
           </div>
         </aside>
       </div>
