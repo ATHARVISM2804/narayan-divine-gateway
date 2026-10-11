@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
+import { fetchAllRows } from "@/lib/fetchAll";
 import { downloadCsv, formatDateTimeIST, toCsv } from "@/lib/csv";
 import { LEAD_CSV_HEADERS, leadToCsvRow } from "@/lib/leadExport";
 import { RefreshCw, Download, Search, Calendar, X } from "lucide-react";
@@ -74,11 +75,15 @@ const LeadManager = () => {
 
   const fetchLeads = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (data) setLeads(data as Lead[]);
+    const { data, error } = await fetchAllRows<Lead>((from, to) =>
+      supabase
+        .from("leads")
+        .select("id, name, phone, puja_name, package_label, price, source, created_at")
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(from, to),
+    );
+    if (!error) setLeads(data);
     setLoading(false);
   };
 

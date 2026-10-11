@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
+import { fetchAllRows } from "@/lib/fetchAll";
 import { checkOrderPayment } from "@/lib/orderStatus";
 import {
   formatOrderItemLine, orderItemPujaId, orderItemTier, orderItemWhen, type OrderItem,
@@ -156,11 +157,15 @@ const OrderManager = (_props: Props) => {
 
   const fetchOrders = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (data) setOrders(data as Order[]);
+    const { data, error } = await fetchAllRows<Order>((from, to) =>
+      supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(from, to),
+    );
+    if (!error) setOrders(data);
     setLoading(false);
   };
 
