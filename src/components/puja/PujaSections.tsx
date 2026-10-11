@@ -5,6 +5,8 @@ import type { Puja } from "@/lib/supabase";
 import FitImage from "@/components/FitImage";
 import SectionHeading from "@/components/SectionHeading";
 import LiteYouTube from "@/components/proof/LiteYouTube";
+import RichText from "@/components/shared/RichText";
+import ReadMore from "@/components/shared/ReadMore";
 import { Highlight } from "@/components/ui/typography";
 import { MIN_PROOF_COUNT } from "@/lib/proof";
 
@@ -20,7 +22,6 @@ const Section = ({ id, muted, children }: { id: string; muted?: boolean; childre
     for it; process falls back to the standard three steps. */
 const PujaSections = ({ puja, bookedCount }: { puja: Puja; bookedCount?: number }) => {
   const { t, lang } = useLanguage();
-  const [aboutExpanded, setAboutExpanded] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
 
   const pick = <T,>(hi: T | null | undefined, en: T | null | undefined, hasHi = Boolean(hi)) => (lang === "hi" && hasHi ? hi : en);
@@ -30,10 +31,6 @@ const PujaSections = ({ puja, bookedCount }: { puja: Puja; bookedCount?: number 
   const templeName = pick(puja.temple_name_hi, puja.temple_name);
   const templeDesc = pick(puja.temple_description_hi, puja.temple_description);
   const location = pick(puja.location_hi, puja.location);
-
-  const ABOUT_LIMIT = 280;
-  const isLongAbout = (about?.length || 0) > ABOUT_LIMIT;
-  const shownAbout = about ? (isLongAbout && !aboutExpanded ? `${about.slice(0, ABOUT_LIMIT).trimEnd()}…` : about) : null;
 
   const processSteps =
     steps && steps.length > 0
@@ -51,15 +48,9 @@ const PujaSections = ({ puja, bookedCount }: { puja: Puja; bookedCount?: number 
       {about && (
         <Section id="aboutPuja">
           <SectionHeading title={t("pd_about")} className="mb-4" />
-          <p className="whitespace-pre-line text-[15px] leading-[1.75] text-ink-muted md:text-base">{shownAbout}</p>
-          {isLongAbout && (
-            <button
-              onClick={() => setAboutExpanded(!aboutExpanded)}
-              className="mt-3 text-[15px] font-semibold text-saffron-dark underline-offset-4 hover:underline"
-            >
-              {aboutExpanded ? t("btn_read_less") : t("btn_read_more")}
-            </button>
-          )}
+          <ReadMore length={about.length} threshold={400} collapsedClass="max-h-[12rem]" className="lg:max-w-3xl">
+            <RichText text={about} />
+          </ReadMore>
         </Section>
       )}
 
@@ -97,37 +88,48 @@ const PujaSections = ({ puja, bookedCount }: { puja: Puja; bookedCount?: number 
       {(templeName || templeDesc || puja.temple_image || pastVideo) && (
         <Section id="templeDetails" muted>
           <SectionHeading title={t("pd_where")} className="mb-5" />
+          {/* Photo on top at every width: beside a long story it used to stretch into
+              a tall, mostly blurred column. Then the facts, then the story. */}
           <div className="overflow-hidden rounded-xl border border-line bg-surface">
-            <div className={puja.temple_image ? "grid grid-cols-1 md:grid-cols-2" : ""}>
-              {puja.temple_image && (
-                <div className="relative aspect-[4/3] overflow-hidden md:aspect-auto md:min-h-[260px]">
-                  <FitImage src={puja.temple_image} alt={templeName || location || ""} width={640} />
+            {puja.temple_image && (
+              <div className="relative aspect-[16/9] overflow-hidden bg-surface-muted">
+                <FitImage
+                  src={puja.temple_image}
+                  alt={templeName || location || ""}
+                  width={640}
+                  sizes="(min-width: 1024px) 900px, 100vw"
+                />
+              </div>
+            )}
+            <div className="p-5 md:p-6 lg:p-8">
+              {templeName && <h3 className="text-lg font-bold text-ink lg:text-xl">{templeName}</h3>}
+              {location && (
+                <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-ink-soft">
+                  <MapPin size={15} /> {location}
+                </p>
+              )}
+              {((bookedCount != null && bookedCount >= MIN_PROOF_COUNT) || (pastVideo && !showVideo)) && (
+                <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+                  {bookedCount != null && bookedCount >= MIN_PROOF_COUNT && (
+                    <p className="text-[15px] text-ink-muted">
+                      <Highlight>{bookedCount.toLocaleString("en-IN")}</Highlight> {t("pd_booked_here")}
+                    </p>
+                  )}
+                  {pastVideo && !showVideo && (
+                    <button
+                      onClick={() => setShowVideo(true)}
+                      className="inline-flex items-center gap-2 text-[15px] font-semibold text-saffron-dark hover:underline"
+                    >
+                      <PlayCircle size={20} /> {t("pd_watch_video")}
+                    </button>
+                  )}
                 </div>
               )}
-              <div className="p-5 md:p-6">
-                {templeName && <h3 className="text-lg font-bold text-ink">{templeName}</h3>}
-                {location && (
-                  <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-ink-soft">
-                    <MapPin size={15} /> {location}
-                  </p>
-                )}
-                {bookedCount != null && bookedCount >= MIN_PROOF_COUNT && (
-                  <p className="mt-3 text-[15px] text-ink-muted">
-                    <Highlight>{bookedCount.toLocaleString("en-IN")}</Highlight> {t("pd_booked_here")}
-                  </p>
-                )}
-                {templeDesc && (
-                  <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-ink-muted">{templeDesc}</p>
-                )}
-                {pastVideo && !showVideo && (
-                  <button
-                    onClick={() => setShowVideo(true)}
-                    className="mt-4 inline-flex items-center gap-2 text-[15px] font-semibold text-saffron-dark hover:underline"
-                  >
-                    <PlayCircle size={20} /> {t("pd_watch_video")}
-                  </button>
-                )}
-              </div>
+              {templeDesc && (
+                <ReadMore length={templeDesc.length} className="mt-5 border-t border-line pt-5 lg:max-w-3xl">
+                  <RichText text={templeDesc} />
+                </ReadMore>
+              )}
             </div>
             {pastVideo && showVideo && (
               <div className="border-t border-line p-4">

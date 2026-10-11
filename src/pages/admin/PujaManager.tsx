@@ -368,6 +368,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                 <label className="mb-1 block text-xs font-semibold text-maroon mt-3">हिंदी</label>
                 <textarea value={editing.about_hi || ""} onChange={(e) => setEditing({ ...editing, about_hi: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-y min-h-[100px]" placeholder="विस्तृत विवरण..." />
+                <p className="mt-1 text-xs text-ink-soft">Tip: a short line on its own (like “Location:”) shows as a heading on the site, and “Label: text” shows the label in bold.</p>
               </Section>
 
               <Section title="✨ Benefits">
@@ -393,6 +394,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-y min-h-[80px]" placeholder="Temple description (EN)" />
                 <textarea value={editing.temple_description_hi || ""} onChange={(e) => setEditing({ ...editing, temple_description_hi: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-y min-h-[80px]" placeholder="मंदिर विवरण (HI)" />
+                <p className="mt-1 text-xs text-ink-soft">Tip: a short line on its own (like “Location:”) shows as a heading on the site, and “Label: text” shows the label in bold.</p>
                 <label className="mb-1 block text-xs font-semibold text-maroon">Temple Image</label>
                 <ImageUpload value={editing.temple_image || null} onChange={(url) => setEditing({ ...editing, temple_image: url })} />
                 <label className="mb-1 mt-3 block text-xs font-semibold text-maroon">Past pooja video (YouTube link, optional)</label>

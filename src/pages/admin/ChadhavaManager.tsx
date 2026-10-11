@@ -463,6 +463,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">मंदिर के बारे में (HI)</label>
                     <textarea value={editing.about_hi || ""} onChange={(e) => setEditing({ ...editing, about_hi: e.target.value })}
                       rows={6} className={inputCls + " resize-none"} placeholder="इस मंदिर के बारे में हिंदी में लिखें…" />
+                    <p className="mt-1 text-xs text-ink-soft">Tip: a short line on its own (like “Location:”) shows as a heading on the site, and “Label: text” shows the label in bold.</p>
                   </div>
                 </>
               )}

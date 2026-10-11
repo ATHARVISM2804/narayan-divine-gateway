@@ -14,6 +14,8 @@ import PujaGallery from "@/components/puja/PujaGallery";
 import PujaSectionNav, { type NavSection } from "@/components/puja/PujaSectionNav";
 import FitImage from "@/components/FitImage";
 import Countdown from "@/components/shared/Countdown";
+import RichText from "@/components/shared/RichText";
+import ReadMore from "@/components/shared/ReadMore";
 import StickyActionBar from "@/components/shared/StickyActionBar";
 import TrustRow from "@/components/shared/TrustRow";
 import FaqList, { type Faq } from "@/components/shared/FaqList";
@@ -274,7 +276,9 @@ const ChadhavaDetail = () => {
             <section id="aboutChadhava" className="scroll-mt-32 border-b border-line bg-surface-muted/60 py-10 md:py-12 lg:bg-transparent">
               <div className="container max-w-4xl lg:max-w-none lg:px-0">
                 <SectionHeading title={t("ch_about_temple")} className="mb-4" />
-                <p className="whitespace-pre-line text-[15px] leading-[1.75] text-ink-muted md:text-base">{about}</p>
+                <ReadMore length={about.length} className="lg:max-w-3xl">
+                  <RichText text={about} />
+                </ReadMore>
               </div>
             </section>
           )}
