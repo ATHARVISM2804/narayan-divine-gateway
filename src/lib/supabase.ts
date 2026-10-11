@@ -5,7 +5,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-/* ── Type definitions for database tables ── */
+/* Type definitions for database tables */
 
 export interface Puja {
   id: string;
@@ -41,6 +41,8 @@ export interface Puja {
   faqs_hi?: { question: string; answer: string }[];
   includes?: string[];
   includes_hi?: string[];
+  /** YouTube link to a past performance of this puja (docs/sql/reviews-and-proof.sql). */
+  past_video_url?: string | null;
   created_at: string;
   updated_at: string;
 }

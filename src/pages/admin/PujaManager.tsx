@@ -217,6 +217,9 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
       temple_image: editing.temple_image?.trim() || null,
       faqs: (editing.faqs || []).filter(f => f.question.trim()), faqs_hi: (editing.faqs_hi || []).filter(f => f.question.trim()),
       includes: (editing.includes || []).filter(i => i.trim()), includes_hi: (editing.includes_hi || []).filter(i => i.trim()),
+      // Sent only when the column exists (loaded rows carry the key) or a link was typed, so
+      // saving keeps working before docs/sql/reviews-and-proof.sql has been run.
+      ...("past_video_url" in editing ? { past_video_url: editing.past_video_url?.trim() || null } : {}),
     };
     let err;
     if (editing.id) {
@@ -392,6 +395,10 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-y min-h-[80px]" placeholder="मंदिर विवरण (HI)" />
                 <label className="mb-1 block text-xs font-semibold text-maroon">Temple Image</label>
                 <ImageUpload value={editing.temple_image || null} onChange={(url) => setEditing({ ...editing, temple_image: url })} />
+                <label className="mb-1 mt-3 block text-xs font-semibold text-maroon">Past puja video (YouTube link, optional)</label>
+                <input value={editing.past_video_url || ""} onChange={(e) => setEditing({ ...editing, past_video_url: e.target.value })}
+                  className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="https://youtu.be/..." />
+                <p className="text-[11px] text-brown/50">Shown as "Watch a past puja video" on the puja page. Use YouTube (unlisted is fine), not an upload.</p>
               </Section>
 
               <Section title="❓ FAQs">

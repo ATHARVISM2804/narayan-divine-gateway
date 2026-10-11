@@ -39,11 +39,20 @@ try {
     table(base, key, "chadhava_offerings?select=*&status=eq.active"),
     table(base, key, "temples?select=*&status=eq.active"),
   ]);
-  const snapshot = { generated_at: new Date().toISOString(), pujas, chadhavas, chadhava_offerings, temples };
+  // Proof data is optional: before docs/sql/reviews-and-proof.sql has run these
+  // objects do not exist, and the snapshot is still useful without them.
+  const optional = (path) => table(base, key, path).catch(() => null);
+  const [reviews, statsRows] = await Promise.all([
+    optional("reviews?select=*&status=eq.active&order=featured.desc,sort_order.asc,review_date.desc&limit=60"),
+    optional("public_site_stats?select=*"),
+  ]);
+  const site_stats = Array.isArray(statsRows) ? statsRows[0] ?? null : null;
+  const snapshot = { generated_at: new Date().toISOString(), pujas, chadhavas, chadhava_offerings, temples, reviews, site_stats };
   writeFileSync(OUT, JSON.stringify(snapshot));
   console.log(
     `catalog snapshot: ${pujas.length} pujas, ${chadhavas.length} chadhavas, ` +
-      `${chadhava_offerings.length} offerings, ${temples.length} temples`,
+      `${chadhava_offerings.length} offerings, ${temples.length} temples, ` +
+      `${reviews ? reviews.length : "no"} reviews, ${site_stats ? "with" : "no"} stats`,
   );
 } catch (e) {
   console.warn(`catalog snapshot skipped (${e instanceof Error ? e.message : e}); the build continues without it`);

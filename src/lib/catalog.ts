@@ -23,6 +23,8 @@ export interface Snapshot {
   chadhavas?: unknown[];
   chadhava_offerings?: unknown[];
   temples?: unknown[];
+  reviews?: unknown[] | null;
+  site_stats?: unknown;
 }
 
 interface QueryError { message: string; code?: string }

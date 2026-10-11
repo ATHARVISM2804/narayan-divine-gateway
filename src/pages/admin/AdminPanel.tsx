@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, type Puja, type Chadhava, type Temple } from "@/lib/supabase";
-import { LayoutDashboard, Flame, Flower2, ShoppingBag, LogOut, Menu, X, ChevronRight, Users, Landmark } from "lucide-react";
+import { LayoutDashboard, Flame, Flower2, ShoppingBag, LogOut, Menu, X, ChevronRight, Users, Landmark, MessageSquareQuote, CircleCheck, FilePen } from "lucide-react";
 import PujaManager from "./PujaManager";
 import ChadhavaManager from "./ChadhavaManager";
 import OrderManager from "./OrderManager";
 import LeadManager from "./LeadManager";
 import TempleManager from "./TempleManager";
+import ReviewManager from "./ReviewManager";
 
-type Section = "dashboard" | "pujas" | "chadhavas" | "temples" | "orders" | "leads";
+type Section = "dashboard" | "pujas" | "chadhavas" | "temples" | "reviews" | "orders" | "leads";
 
 const NAV = [
   { id: "dashboard" as const, label: "Dashboard", Icon: LayoutDashboard },
   { id: "pujas"     as const, label: "Pujas",     Icon: Flame },
   { id: "chadhavas" as const, label: "Chadhavas", Icon: Flower2 },
   { id: "temples"   as const, label: "Temples",   Icon: Landmark },
+  { id: "reviews"   as const, label: "Reviews",   Icon: MessageSquareQuote },
   { id: "orders"    as const, label: "Orders",    Icon: ShoppingBag },
   { id: "leads"     as const, label: "Leads",     Icon: Users },
 ];
@@ -148,6 +150,9 @@ const AdminPanel = () => {
           {section === "temples" && (
             <TempleManager temples={temples} onRefresh={fetchTemples} />
           )}
+          {section === "reviews" && (
+            <ReviewManager pujas={pujas} chadhavas={chadhavas} />
+          )}
           {section === "orders" && (
             <OrderManager />
           )}
@@ -168,10 +173,10 @@ const Dashboard = ({
   pujas: Puja[]; chadhavas: Chadhava[]; onNavigate: (s: Section) => void;
 }) => {
   const stats = [
-    { label: "Total Pujas", value: pujas.length, active: pujas.filter((p) => p.status === "active").length, color: "from-saffron to-maroon", icon: "🪔" },
-    { label: "Total Chadhavas", value: chadhavas.length, active: chadhavas.filter((c) => c.status === "active").length, color: "from-gold to-saffron", icon: "🌺" },
-    { label: "Active Products", value: pujas.filter((p) => p.status === "active").length + chadhavas.filter((c) => c.status === "active").length, active: null, color: "from-green-500 to-emerald-600", icon: "✅" },
-    { label: "Drafts", value: pujas.filter((p) => p.status === "draft").length + chadhavas.filter((c) => c.status === "draft").length, active: null, color: "from-gray-400 to-gray-500", icon: "📝" },
+    { label: "Total Pujas", value: pujas.length, active: pujas.filter((p) => p.status === "active").length, color: "from-saffron to-maroon", Icon: Flame },
+    { label: "Total Chadhavas", value: chadhavas.length, active: chadhavas.filter((c) => c.status === "active").length, color: "from-gold to-saffron", Icon: Flower2 },
+    { label: "Active Products", value: pujas.filter((p) => p.status === "active").length + chadhavas.filter((c) => c.status === "active").length, active: null, color: "from-green-500 to-emerald-600", Icon: CircleCheck },
+    { label: "Drafts", value: pujas.filter((p) => p.status === "draft").length + chadhavas.filter((c) => c.status === "draft").length, active: null, color: "from-gray-400 to-gray-500", Icon: FilePen },
   ];
 
   return (
@@ -180,7 +185,7 @@ const Dashboard = ({
         {stats.map((s) => (
           <div key={s.label} className="rounded-2xl border border-gold/40 bg-ivory p-5 shadow-soft">
             <div className="flex items-center justify-between">
-              <span className="text-2xl">{s.icon}</span>
+              <s.Icon size={22} className="text-maroon" />
               <span className={`rounded-full bg-gradient-to-r ${s.color} px-3 py-1 text-xs font-bold text-white`}>{s.value}</span>
             </div>
             <p className="mt-3 text-sm font-semibold text-maroon">{s.label}</p>
@@ -191,13 +196,13 @@ const Dashboard = ({
 
       <div className="grid gap-4 sm:grid-cols-2">
         {([
-          { label: "Manage Pujas", desc: "Add, edit or remove puja listings", sec: "pujas" as const, icon: "🪔" },
-          { label: "Manage Chadhavas", desc: "Add, edit or remove chadhava offerings", sec: "chadhavas" as const, icon: "🌺" },
+          { label: "Manage Pujas", desc: "Add, edit or remove puja listings", sec: "pujas" as const, Icon: Flame },
+          { label: "Manage Chadhavas", desc: "Add, edit or remove chadhava offerings", sec: "chadhavas" as const, Icon: Flower2 },
         ]).map((c) => (
           <button key={c.sec} onClick={() => onNavigate(c.sec)}
             className="flex items-center gap-4 rounded-2xl border border-gold/40 bg-ivory p-5 text-left shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-saffron/50"
           >
-            <span className="text-3xl">{c.icon}</span>
+            <c.Icon size={26} className="text-saffron" />
             <div className="flex-1">
               <p className="font-display text-maroon">{c.label}</p>
               <p className="text-xs text-brown/60">{c.desc}</p>
