@@ -30,7 +30,7 @@ const Slide = ({ puja, priority }: { puja: Puja; priority: boolean }) => {
     <article className="overflow-hidden rounded-xl border border-line bg-surface">
       <Link to={`/puja/${puja.id}`} {...prefetchProps("puja", puja.id)} className="relative block aspect-[1483/1061] overflow-hidden bg-surface-muted">
         {puja.image_url ? (
-          <FitImage src={puja.image_url} alt={name} width={640} sizes="(min-width: 1024px) 560px, 100vw" loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} />
+          <FitImage src={puja.image_url} alt={name} width={640} sizes="(min-width: 1280px) 440px, (min-width: 1024px) 400px, 100vw" loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} />
         ) : (
           <span className="grid h-full w-full place-items-center text-ink-soft"><TempleIcon size={40} /></span>
         )}
@@ -38,7 +38,7 @@ const Slide = ({ puja, priority }: { puja: Puja; priority: boolean }) => {
       <div className="p-4 md:p-5">
         {occasion && <Eyebrow className="mb-1.5">{occasion}</Eyebrow>}
         <h3 className="line-clamp-2 text-lg font-bold leading-snug text-ink">{name}</h3>
-        <ul className="mt-2 space-y-1 text-sm font-medium text-ink-muted">
+        <ul className="mt-2 space-y-1 text-sm font-medium text-ink-muted lg:flex lg:flex-wrap lg:gap-x-4 lg:gap-y-1 lg:space-y-0">
           {place && <li className="flex items-center gap-2"><TempleIcon size={16} className="shrink-0 text-saffron" /> <span className="line-clamp-1">{place}</span></li>}
           {puja.date && <li className="flex items-center gap-2"><CalendarDays size={16} strokeWidth={1.75} className="shrink-0 text-saffron" /> <span className="line-clamp-1">{puja.date}</span></li>}
         </ul>
@@ -79,12 +79,12 @@ const HomeHero = ({ pujas, stats }: { pujas: Puja[]; stats: SiteStats | null }) 
 
   return (
     <section className="border-b border-line bg-surface-muted/60">
-      <div className="container grid items-center gap-6 py-6 md:py-12 lg:grid-cols-[1fr_minmax(0,560px)] lg:gap-12">
+      <div className="container grid items-center gap-6 py-6 md:py-12 lg:grid-cols-[1fr_minmax(0,400px)] lg:gap-12 lg:py-6 xl:grid-cols-[1fr_minmax(0,440px)] xl:gap-16">
         <div>
-          <h1 className="text-[26px] font-bold leading-tight text-ink md:text-4xl">
+          <h1 className="text-[26px] font-bold leading-tight text-ink md:text-4xl lg:text-[42px] lg:leading-[1.15] xl:text-5xl">
             {t("hero_s1_title")} <span className="text-maroon">{t("hero_s1_accent")}</span>
           </h1>
-          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-muted md:text-lg">{t("hero_s1_sub")}</p>
+          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-muted md:text-lg lg:mt-4 lg:text-xl">{t("hero_s1_sub")}</p>
           <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
             {points.map((p) => (
               <li key={p} className="flex items-center gap-1.5 text-sm font-medium text-ink">

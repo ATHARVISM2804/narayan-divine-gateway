@@ -9,6 +9,7 @@ import SectionHeading from "@/components/SectionHeading";
 import FitImage from "@/components/FitImage";
 import FaqList from "@/components/shared/FaqList";
 import { CardSkeleton, ChadhavaCard, PujaCard } from "@/components/cards/PujaCard";
+import { cardGridClass, isWideGrid } from "@/components/cards/cardGrid";
 import { LoadError } from "@/components/LoadError";
 import { NamasteIcon, PrasadBoxIcon, SankalpIcon, TempleIcon } from "@/components/icons";
 
@@ -62,7 +63,7 @@ export const FeaturedPujas = ({
     <section className="py-10 md:py-14">
       <div className="container">
         <SectionHeading title={t("featured_title")} subtitle={t("featured_sub")} action={<SeeAll to="/puja" label={t("btn_see_all")} />} />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={loading || failed ? cardGridClass(3) : cardGridClass(Math.min(pujas.length, 6))}>
           {loading ? (
             <>
               <CardSkeleton />
@@ -72,7 +73,7 @@ export const FeaturedPujas = ({
           ) : failed ? (
             <LoadError onRetry={retry} />
           ) : (
-            pujas.slice(0, 6).map((p) => <PujaCard key={p.id} puja={p} booked={stats?.by_item?.[p.id]} />)
+            pujas.slice(0, 6).map((p) => <PujaCard key={p.id} puja={p} booked={stats?.by_item?.[p.id]} wide={isWideGrid(pujas.length)} />)
           )}
         </div>
       </div>
@@ -100,9 +101,9 @@ export const FeaturedChadhavas = ({
           subtitle={t("featured_ch_sub")}
           action={<SeeAll to="/chadhava" label={t("btn_see_all")} />}
         />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={cardGridClass(Math.min(chadhavas.length, 3))}>
           {chadhavas.slice(0, 3).map((c) => (
-            <ChadhavaCard key={c.id} chadhava={c} minPrice={minPrices[c.id]} booked={stats?.by_item?.[c.id]} />
+            <ChadhavaCard key={c.id} chadhava={c} minPrice={minPrices[c.id]} booked={stats?.by_item?.[c.id]} wide={isWideGrid(chadhavas.length)} />
           ))}
         </div>
       </div>
@@ -176,7 +177,7 @@ export const TemplePartners = ({ temples }: { temples: Temple[] }) => {
             const place = [tp.city, lang === "hi" && tp.state_hi ? tp.state_hi : tp.state].filter(Boolean).join(", ");
             return (
               <li key={tp.id}>
-                <Link to="/temples" className="group block overflow-hidden rounded-xl border border-line bg-surface">
+                <Link to="/temples" className="group block overflow-hidden rounded-xl border border-line bg-surface transition-[border-color,box-shadow,transform] duration-200 lg:hover:-translate-y-0.5 lg:hover:border-saffron/40 lg:hover:shadow-raised">
                   <div className="relative aspect-[4/3] overflow-hidden bg-surface-muted">
                     <FitImage src={templeImg(tp)} alt={name} width={256} />
                   </div>

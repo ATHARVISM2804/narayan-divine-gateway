@@ -33,12 +33,12 @@ const AppDownload = () => {
   return (
     <section className="border-t border-line py-12 md:py-16">
       <div className="container">
-        <div className="grid gap-6 rounded-2xl border border-line bg-surface p-5 md:grid-cols-[1.2fr_1fr] md:items-center md:p-10">
+        <div className="grid gap-6 rounded-2xl border border-line bg-surface p-5 md:grid-cols-[1.2fr_1fr] md:items-center md:p-10 lg:grid-cols-2 lg:gap-12 lg:p-12">
           <div>
             <p className="inline-flex items-center gap-1.5 rounded-md bg-surface-muted px-2.5 py-1 text-xs font-semibold text-maroon">
               <Smartphone size={14} /> {t("app_badge")} · {t("app_coming")}
             </p>
-            <h2 className="mt-3 text-xl font-bold text-ink md:text-2xl">{t("app_title")}</h2>
+            <h2 className="mt-3 text-xl font-bold text-ink md:text-2xl lg:text-[28px]">{t("app_title")}</h2>
             <p className="mt-2 max-w-md text-[15px] leading-relaxed text-ink-muted">{t("app_desc")}</p>
             <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5">
               {features.map(({ icon: Icon, label }) => (
@@ -76,7 +76,7 @@ const AppDownload = () => {
                       className="h-12 min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-soft/70"
                     />
                   </div>
-                  <button type="submit" disabled={state === "saving"} className="btn-secondary">
+                  <button type="submit" disabled={state === "saving"} className="btn-secondary lg:shrink-0 lg:whitespace-nowrap">
                     {state === "saving" ? <Loader2 size={18} className="animate-spin" /> : <Bell size={18} />} {t("app_notify")}
                   </button>
                 </div>
