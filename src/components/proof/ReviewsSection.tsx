@@ -22,6 +22,7 @@ const ReviewsSection = ({
   subtitle,
   limit = 6,
   className,
+  containerClassName = "container",
 }: {
   reviews: Review[];
   id?: string;
@@ -29,6 +30,7 @@ const ReviewsSection = ({
   subtitle?: string;
   limit?: number;
   className?: string;
+  containerClassName?: string;
 }) => {
   const { t, lang } = useLanguage();
   const [shown, setShown] = useState(limit);
@@ -38,7 +40,7 @@ const ReviewsSection = ({
 
   return (
     <section id={id} className={className ?? "scroll-mt-32 py-10 md:py-14"}>
-      <div className="container">
+      <div className={containerClassName}>
         <SectionHeading title={title ?? t("test_title")} subtitle={subtitle ?? t("test_sub")} />
 
         {videos.length > 0 && (

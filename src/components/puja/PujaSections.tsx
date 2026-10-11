@@ -9,8 +9,10 @@ import { Highlight } from "@/components/ui/typography";
 import { MIN_PROOF_COUNT } from "@/lib/proof";
 
 const Section = ({ id, muted, children }: { id: string; muted?: boolean; children: React.ReactNode }) => (
-  <section id={id} className={`scroll-mt-32 border-b border-line py-10 md:py-12 ${muted ? "bg-surface-muted/60" : ""}`}>
-    <div className="container max-w-4xl">{children}</div>
+  // From lg up the sections sit flush in the left column of the detail page, so the
+  // full-width colour bands and the narrow centred column give way to dividers.
+  <section id={id} className={`scroll-mt-32 border-b border-line py-10 md:py-12 ${muted ? "bg-surface-muted/60 lg:bg-transparent" : ""}`}>
+    <div className="container max-w-4xl lg:max-w-none lg:px-0">{children}</div>
   </section>
 );
 

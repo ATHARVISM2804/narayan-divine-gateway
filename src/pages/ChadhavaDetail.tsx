@@ -136,175 +136,258 @@ const ChadhavaDetail = () => {
   ];
 
   return (
-    <main className="pb-24">
+    <main className="pb-24 lg:pb-16">
       {degraded && (
         <div className="container pt-3">
           <DegradedBanner />
         </div>
       )}
 
-      <section className="container pb-8 pt-4 md:pb-12 md:pt-6">
-        <nav aria-label="Breadcrumb" className="mb-4 hidden items-center gap-1.5 text-sm text-ink-soft md:flex">
-          <Link to="/" className="hover:text-ink">{t("breadcrumb_home")}</Link>
-          <ChevronRight size={14} />
-          <Link to="/chadhava" className="hover:text-ink">{t("breadcrumb_chadhava")}</Link>
-          <ChevronRight size={14} />
-          <span className="truncate text-ink">{item}</span>
-        </nav>
+      {/* Laptops: content on the left, the order panel sticky on the right.
+          Below lg this wrapper adds nothing and the page stacks as before. */}
+      <div className="lg:container lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-10 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-14">
+        <div className="min-w-0">
+          <section className="container pb-8 pt-4 md:pb-12 md:pt-6 lg:px-0 lg:pb-8">
+            <nav aria-label="Breadcrumb" className="mb-4 hidden items-center gap-1.5 text-sm text-ink-soft md:flex">
+              <Link to="/" className="hover:text-ink">{t("breadcrumb_home")}</Link>
+              <ChevronRight size={14} />
+              <Link to="/chadhava" className="hover:text-ink">{t("breadcrumb_chadhava")}</Link>
+              <ChevronRight size={14} />
+              <span className="truncate text-ink">{item}</span>
+            </nav>
 
-        <div className="grid gap-5 md:grid-cols-[1.15fr_1fr] md:gap-8 lg:gap-12">
-          <PujaGallery images={chadhava.gallery?.length ? chadhava.gallery : []} fallbackUrl={chadhava.image_url} name={item} />
+            <div className="grid gap-5 md:grid-cols-[1.15fr_1fr] md:gap-8 lg:block">
+              <PujaGallery images={chadhava.gallery?.length ? chadhava.gallery : []} fallbackUrl={chadhava.image_url} name={item} />
 
-          <div className="flex flex-col">
+              <div className="flex flex-col lg:hidden">
+                {occasion && <Eyebrow className="mb-2">{occasion}</Eyebrow>}
+                <h1 className="text-[22px] font-bold leading-snug text-ink md:text-[28px]">{item}</h1>
+                {desc && <p className="mt-2 text-base font-semibold leading-snug text-ink-muted md:text-lg">{desc}</p>}
+
+                <ul className="mt-4 space-y-2 text-[15px] font-medium text-ink-muted">
+                  {temple && (
+                    <li className="flex items-start gap-2.5">
+                      <TempleIcon size={18} className="mt-0.5 shrink-0 text-saffron" /> {temple}
+                    </li>
+                  )}
+                  {chadhava.date && (
+                    <li className="flex items-start gap-2.5">
+                      <CalendarDays size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-saffron" /> {chadhava.date}
+                    </li>
+                  )}
+                </ul>
+
+                <div className="mt-5">
+                  <Countdown left={left} label={t("timer_label_chadhava")} expiredLabel={t("timer_expired_chadhava")} />
+                </div>
+
+                {(reviews.length > 0 || (bookedCount ?? 0) >= MIN_PROOF_COUNT) && (
+                  <div className="mt-5 space-y-2.5">
+                    <RatingSummary reviews={reviews} onClick={() => scrollToId("reviews")} />
+                    {bookedCount != null && bookedCount >= MIN_PROOF_COUNT && (
+                      <p className="text-[15px] text-ink-muted">
+                        <Highlight>{bookedCount.toLocaleString("en-IN")}</Highlight> {t("pd_booked_here")}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <button onClick={() => scrollToId("offerings")} className="btn-primary mt-6 w-full md:max-w-sm">
+                  {t("ch_choose_offering")} <ArrowRight size={18} />
+                </button>
+
+                <TrustRow className="mt-5 border-t border-line pt-4" />
+              </div>
+            </div>
+          </section>
+
+          <PujaSectionNav sections={sections} />
+
+          <section id="offerings" className="scroll-mt-32 border-b border-line py-10 md:py-12">
+            <div className="container max-w-4xl lg:max-w-none lg:px-0">
+              <SectionHeading title={t("ch_choose_offering")} subtitle={t("ch_choose_sub")} />
+
+              {offerings.length === 0 ? (
+                <p className="rounded-xl border border-line bg-surface p-8 text-center text-ink-muted">{t("ch_no_offerings")}</p>
+              ) : (
+                <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+                  {offerings.map((o) => {
+                    const qty = selected[o.id] || 0;
+                    const name = hi && o.name_hi ? o.name_hi : o.name;
+                    const odesc = hi && o.description_hi ? o.description_hi : o.description;
+                    return (
+                      <li key={o.id} className={cn("flex items-center gap-3 p-3 transition-colors md:p-4", qty > 0 && "bg-saffron-soft")}>
+                        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-surface-muted">
+                          {o.image_url ? (
+                            <FitImage src={o.image_url} alt={name} width={128} />
+                          ) : (
+                            <span className="grid h-full w-full place-items-center text-ink-soft">
+                              <TempleIcon size={22} />
+                            </span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[15px] font-semibold leading-snug text-ink">{name}</p>
+                          {odesc && <p className="mt-0.5 line-clamp-2 text-[13px] text-ink-soft">{odesc}</p>}
+                          <p className="tabular mt-1 text-base font-bold text-saffron-dark">{formatInr(o.price)}</p>
+                        </div>
+                        {qty === 0 ? (
+                          <button
+                            onClick={() => setQty(o.id, 1)}
+                            className="inline-flex h-10 shrink-0 items-center gap-1 rounded-[10px] border border-saffron px-4 text-sm font-semibold text-saffron-dark transition-colors hover:bg-saffron hover:text-white"
+                          >
+                            <Plus size={16} /> {t("ch_add")}
+                          </button>
+                        ) : (
+                          <div className="flex h-10 shrink-0 items-center overflow-hidden rounded-[10px] bg-saffron text-white">
+                            <button onClick={() => setQty(o.id, qty - 1)} className="grid h-full w-10 place-items-center hover:bg-saffron-dark" aria-label="Remove one">
+                              <Minus size={16} />
+                            </button>
+                            <span className="tabular w-6 text-center text-sm font-bold">{qty}</span>
+                            <button onClick={() => setQty(o.id, qty + 1)} className="grid h-full w-10 place-items-center hover:bg-saffron-dark" aria-label="Add one">
+                              <Plus size={16} />
+                            </button>
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              <div className="mt-6 rounded-xl border border-line bg-surface-muted/60 p-4 md:p-5">
+                <h3 className="mb-3 text-[15px] font-semibold text-ink">{t("whats_included")}</h3>
+                <ul className="space-y-2.5">
+                  {[t("inc1"), t("inc2"), t("inc4"), t("inc3"), t("inc5")].map((line) => (
+                    <li key={line} className="flex items-start gap-2.5 text-[15px] text-ink-muted">
+                      <Check size={16} strokeWidth={2.5} className="mt-0.5 shrink-0 text-success" /> {line}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <TrustRow className="mt-5" />
+            </div>
+          </section>
+
+          {about && (
+            <section id="aboutChadhava" className="scroll-mt-32 border-b border-line bg-surface-muted/60 py-10 md:py-12 lg:bg-transparent">
+              <div className="container max-w-4xl lg:max-w-none lg:px-0">
+                <SectionHeading title={t("ch_about_temple")} className="mb-4" />
+                <p className="whitespace-pre-line text-[15px] leading-[1.75] text-ink-muted md:text-base">{about}</p>
+              </div>
+            </section>
+          )}
+
+          <section id="howItWorks" className="scroll-mt-32 border-b border-line py-10 md:py-12">
+            <div className="container max-w-4xl lg:max-w-none lg:px-0">
+              <SectionHeading title={t("ch_how_title")} className="mb-5" />
+              <ol className="relative space-y-5 border-l border-dashed border-saffron/40 pl-7">
+                {[1, 2, 3].map((n) => (
+                  <li key={n} className="relative">
+                    <span className="tabular absolute -left-[42px] top-0 grid h-7 w-7 place-items-center rounded-full bg-saffron text-sm font-bold text-white">
+                      {n}
+                    </span>
+                    <p className="text-base font-semibold text-ink">{t(`ch_how_s${n}_title`)}</p>
+                    <p className="mt-1 text-[15px] leading-relaxed text-ink-muted">{t(`ch_how_s${n}_desc`)}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+
+          <ReviewsSection
+            id="reviews"
+            reviews={reviews}
+            className="scroll-mt-32 border-b border-line py-10 md:py-12"
+            containerClassName="container lg:px-0"
+          />
+
+          <section id="faqSection" className="scroll-mt-32 py-10 md:py-12 lg:pb-0">
+            <div className="container max-w-4xl lg:max-w-none lg:px-0">
+              <SectionHeading title={t("pd_faqs")} />
+              <FaqList faqs={faqs} />
+            </div>
+          </section>
+        </div>
+
+        {/* Laptop order panel: facts, countdown, what is selected so far and the next step. */}
+        <aside className="hidden lg:sticky lg:top-16 lg:block lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto lg:py-6 lg:scrollbar-hide">
+          <div className="rounded-2xl border border-line bg-surface p-6 shadow-card">
             {occasion && <Eyebrow className="mb-2">{occasion}</Eyebrow>}
-            <h1 className="text-[22px] font-bold leading-snug text-ink md:text-[28px]">{item}</h1>
-            {desc && <p className="mt-2 text-base font-semibold leading-snug text-ink-muted md:text-lg">{desc}</p>}
-
-            <ul className="mt-4 space-y-2 text-[15px] font-medium text-ink-muted">
+            <h1 className="text-[26px] font-bold leading-tight text-ink">{item}</h1>
+            {desc && <p className="mt-2 text-base font-semibold leading-snug text-ink-muted">{desc}</p>}
+            <ul className="mt-3 space-y-1.5 text-sm font-medium text-ink-muted">
               {temple && (
-                <li className="flex items-start gap-2.5">
-                  <TempleIcon size={18} className="mt-0.5 shrink-0 text-saffron" /> {temple}
+                <li className="flex items-start gap-2">
+                  <TempleIcon size={16} className="mt-0.5 shrink-0 text-saffron" /> {temple}
                 </li>
               )}
               {chadhava.date && (
-                <li className="flex items-start gap-2.5">
-                  <CalendarDays size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-saffron" /> {chadhava.date}
+                <li className="flex items-start gap-2">
+                  <CalendarDays size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-saffron" /> {chadhava.date}
                 </li>
               )}
             </ul>
-
-            <div className="mt-5">
-              <Countdown left={left} label={t("timer_label_chadhava")} expiredLabel={t("timer_expired_chadhava")} />
+            <div className="mt-4">
+              <Countdown left={left} label={t("timer_label_chadhava")} expiredLabel={t("timer_expired_chadhava")} compact />
             </div>
-
             {(reviews.length > 0 || (bookedCount ?? 0) >= MIN_PROOF_COUNT) && (
-              <div className="mt-5 space-y-2.5">
+              <div className="mt-4 space-y-1.5">
                 <RatingSummary reviews={reviews} onClick={() => scrollToId("reviews")} />
                 {bookedCount != null && bookedCount >= MIN_PROOF_COUNT && (
-                  <p className="text-[15px] text-ink-muted">
+                  <p className="text-sm text-ink-muted">
                     <Highlight>{bookedCount.toLocaleString("en-IN")}</Highlight> {t("pd_booked_here")}
                   </p>
                 )}
               </div>
             )}
 
-            <button onClick={() => scrollToId("offerings")} className="btn-primary mt-6 w-full md:max-w-sm">
-              {t("ch_choose_offering")} <ArrowRight size={18} />
-            </button>
+            <div className="mt-5 border-t border-line pt-5">
+              {selectedCount > 0 ? (
+                <>
+                  <ul className="space-y-1.5 text-sm text-ink-muted">
+                    {offerings
+                      .filter((o) => selected[o.id])
+                      .map((o) => (
+                        <li key={o.id} className="flex justify-between gap-3">
+                          <span className="min-w-0 truncate">
+                            {hi && o.name_hi ? o.name_hi : o.name} × {selected[o.id]}
+                          </span>
+                          <span className="tabular shrink-0">{formatInr(o.price * selected[o.id])}</span>
+                        </li>
+                      ))}
+                  </ul>
+                  <div className="mt-3 flex items-baseline justify-between border-t border-line pt-3">
+                    <span className="text-sm font-semibold text-ink">
+                      {selectedCount} {t("ch_items_selected")}
+                    </span>
+                    <span className="tabular text-xl font-bold text-saffron-dark">{formatInr(totalPrice)}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-sm text-ink-muted">{t("ch_select_hint")}</span>
+                  <span className="shrink-0 text-sm text-ink-muted">
+                    {t("pd_from")} <span className="tabular text-lg font-bold text-saffron-dark">{formatInr(minPrice)}</span>
+                  </span>
+                </div>
+              )}
+              <button onClick={handleProceed} className="btn-primary mt-4 w-full">
+                {selectedCount > 0 ? t("ch_proceed") : t("ch_choose_offering")} <ArrowRight size={18} />
+              </button>
+            </div>
 
-            <TrustRow className="mt-5 border-t border-line pt-4" />
+            <TrustRow className="mt-5 border-t border-line pt-4 sm:gap-x-4" />
           </div>
-        </div>
-      </section>
-
-      <PujaSectionNav sections={sections} />
-
-      <section id="offerings" className="scroll-mt-32 border-b border-line py-10 md:py-12">
-        <div className="container max-w-4xl">
-          <SectionHeading title={t("ch_choose_offering")} subtitle={t("ch_choose_sub")} />
-
-          {offerings.length === 0 ? (
-            <p className="rounded-xl border border-line bg-surface p-8 text-center text-ink-muted">{t("ch_no_offerings")}</p>
-          ) : (
-            <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
-              {offerings.map((o) => {
-                const qty = selected[o.id] || 0;
-                const name = hi && o.name_hi ? o.name_hi : o.name;
-                const odesc = hi && o.description_hi ? o.description_hi : o.description;
-                return (
-                  <li key={o.id} className={cn("flex items-center gap-3 p-3 transition-colors md:p-4", qty > 0 && "bg-saffron-soft")}>
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-surface-muted">
-                      {o.image_url ? (
-                        <FitImage src={o.image_url} alt={name} width={128} />
-                      ) : (
-                        <span className="grid h-full w-full place-items-center text-ink-soft">
-                          <TempleIcon size={22} />
-                        </span>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-semibold leading-snug text-ink">{name}</p>
-                      {odesc && <p className="mt-0.5 line-clamp-2 text-[13px] text-ink-soft">{odesc}</p>}
-                      <p className="tabular mt-1 text-base font-bold text-saffron-dark">{formatInr(o.price)}</p>
-                    </div>
-                    {qty === 0 ? (
-                      <button
-                        onClick={() => setQty(o.id, 1)}
-                        className="inline-flex h-10 shrink-0 items-center gap-1 rounded-[10px] border border-saffron px-4 text-sm font-semibold text-saffron-dark transition-colors hover:bg-saffron hover:text-white"
-                      >
-                        <Plus size={16} /> {t("ch_add")}
-                      </button>
-                    ) : (
-                      <div className="flex h-10 shrink-0 items-center overflow-hidden rounded-[10px] bg-saffron text-white">
-                        <button onClick={() => setQty(o.id, qty - 1)} className="grid h-full w-10 place-items-center hover:bg-saffron-dark" aria-label="Remove one">
-                          <Minus size={16} />
-                        </button>
-                        <span className="tabular w-6 text-center text-sm font-bold">{qty}</span>
-                        <button onClick={() => setQty(o.id, qty + 1)} className="grid h-full w-10 place-items-center hover:bg-saffron-dark" aria-label="Add one">
-                          <Plus size={16} />
-                        </button>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-
-          <div className="mt-6 rounded-xl border border-line bg-surface-muted/60 p-4 md:p-5">
-            <h3 className="mb-3 text-[15px] font-semibold text-ink">{t("whats_included")}</h3>
-            <ul className="space-y-2.5">
-              {[t("inc1"), t("inc2"), t("inc4"), t("inc3"), t("inc5")].map((line) => (
-                <li key={line} className="flex items-start gap-2.5 text-[15px] text-ink-muted">
-                  <Check size={16} strokeWidth={2.5} className="mt-0.5 shrink-0 text-success" /> {line}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <TrustRow className="mt-5" />
-        </div>
-      </section>
-
-      {about && (
-        <section id="aboutChadhava" className="scroll-mt-32 border-b border-line bg-surface-muted/60 py-10 md:py-12">
-          <div className="container max-w-4xl">
-            <SectionHeading title={t("ch_about_temple")} className="mb-4" />
-            <p className="whitespace-pre-line text-[15px] leading-[1.75] text-ink-muted md:text-base">{about}</p>
-          </div>
-        </section>
-      )}
-
-      <section id="howItWorks" className="scroll-mt-32 border-b border-line py-10 md:py-12">
-        <div className="container max-w-4xl">
-          <SectionHeading title={t("ch_how_title")} className="mb-5" />
-          <ol className="relative space-y-5 border-l border-dashed border-saffron/40 pl-7">
-            {[1, 2, 3].map((n) => (
-              <li key={n} className="relative">
-                <span className="tabular absolute -left-[42px] top-0 grid h-7 w-7 place-items-center rounded-full bg-saffron text-sm font-bold text-white">
-                  {n}
-                </span>
-                <p className="text-base font-semibold text-ink">{t(`ch_how_s${n}_title`)}</p>
-                <p className="mt-1 text-[15px] leading-relaxed text-ink-muted">{t(`ch_how_s${n}_desc`)}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      <ReviewsSection id="reviews" reviews={reviews} className="scroll-mt-32 border-b border-line py-10 md:py-12" />
-
-      <section id="faqSection" className="scroll-mt-32 py-10 md:py-12">
-        <div className="container max-w-4xl">
-          <SectionHeading title={t("pd_faqs")} />
-          <FaqList faqs={faqs} />
-        </div>
-      </section>
+        </aside>
+      </div>
 
       <StickyActionBar
         title={selectedCount > 0 ? formatInr(totalPrice) : `${t("pd_from")} ${formatInr(minPrice)}`}
         subtitle={selectedCount > 0 ? `${selectedCount} ${t("ch_items_selected")}` : t("ch_select_hint")}
         cta={selectedCount > 0 ? t("ch_proceed") : t("ch_view_offerings")}
         onClick={handleProceed}
+        className="lg:hidden"
       />
     </main>
   );
