@@ -10,7 +10,15 @@ describe("leadToCsvRow", () => {
       price: 951, source: "puja_page", created_at: "2026-09-26T07:50:22Z",
     });
     expect(row).toHaveLength(LEAD_CSV_HEADERS.length);
-    expect(row).toEqual(["2026-09-26 13:20", "Ram", "9876543210", "PITRA SHANTI", "Couple", 951, "puja_page"]);
+    expect(row).toEqual(["2026-09-26 13:20", "Ram", "9876543210", "PITRA SHANTI", "Couple", 951, "puja_page", ""]);
+  });
+
+  it("adds when the lead was contacted", () => {
+    const row = leadToCsvRow({
+      name: "Ram", phone: "9876543210", puja_name: null, package_label: null, price: null,
+      source: null, created_at: "2026-09-26T07:50:22Z", contacted_at: "2026-10-11T10:10:00Z",
+    });
+    expect(row.at(-1)).toBe("2026-10-11 15:40");
   });
 });
 

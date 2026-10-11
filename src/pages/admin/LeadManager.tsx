@@ -3,6 +3,12 @@ import { supabase } from "@/lib/supabase";
 import { fetchAllRows } from "@/lib/fetchAll";
 import { downloadCsv, formatDateTimeIST, toCsv } from "@/lib/csv";
 import { LEAD_CSV_HEADERS, leadToCsvRow } from "@/lib/leadExport";
+import {
+  applyContacted, lastContactByPhone, matchesContactFilter, setContacted, settleContacted, type ContactFilter,
+} from "@/lib/contacted";
+import { phoneKey } from "@/lib/orderSearch";
+import { toast } from "sonner";
+import ContactedSwitch from "./ContactedSwitch";
 import { RefreshCw, Download, Search, Calendar, X } from "lucide-react";
 
 interface Lead {
@@ -14,6 +20,7 @@ interface Lead {
   price: number | null;
   source: string | null;
   created_at: string;
+  contacted_at: string | null;
 }
 
 /* ── Date Presets ── */
@@ -66,6 +73,8 @@ const LeadManager = () => {
   const [leads,   setLeads]   = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search,  setSearch]  = useState("");
+  const [contactFilter, setContactFilter] = useState<ContactFilter>("all");
+  const [savingPhone, setSavingPhone] = useState<string | null>(null);
 
   /* ── Date filter state ── */
   const [datePreset, setDatePreset] = useState<DatePreset>("all");
@@ -78,7 +87,7 @@ const LeadManager = () => {
     const { data, error } = await fetchAllRows<Lead>((from, to) =>
       supabase
         .from("leads")
-        .select("id, name, phone, puja_name, package_label, price, source, created_at")
+        .select("id, name, phone, puja_name, package_label, price, source, created_at, contacted_at")
         .order("created_at", { ascending: false })
         .order("id", { ascending: false })
         .range(from, to),
@@ -100,8 +109,8 @@ const LeadManager = () => {
     return getPresetRange(datePreset);
   }, [datePreset, customFrom, customTo]);
 
-  /* ── Filter leads by search + date ── */
-  const filtered = useMemo(() => {
+  /* ── Filter leads by search + date (the contact filter is applied on top, so its chips can count) ── */
+  const searchedLeads = useMemo(() => {
     const q = search.toLowerCase();
     return leads.filter((l) => {
       // Search filter
@@ -119,6 +128,37 @@ const LeadManager = () => {
       return matchesSearch && matchesDate;
     });
   }, [leads, search, dateRange]);
+
+  const filtered = useMemo(
+    () => searchedLeads.filter((l) => matchesContactFilter(l, contactFilter)),
+    [searchedLeads, contactFilter],
+  );
+
+  const contactCounts = useMemo(() => {
+    const contacted = searchedLeads.filter((l) => l.contacted_at).length;
+    return { all: searchedLeads.length, contacted, not_contacted: searchedLeads.length - contacted };
+  }, [searchedLeads]);
+
+  const numberContactedAt = useMemo(() => lastContactByPhone(leads, (l) => l.phone), [leads]);
+
+  /* ── Contacted switch: marks every lead (and order) of this number ── */
+  const toggleContacted = async (lead: Lead) => {
+    const on = !lead.contacted_at;
+    const phoneOf = (l: Lead) => l.phone;
+    const before = leads;
+    const sameNumber = leads.filter((l) => phoneKey(l.phone) === phoneKey(lead.phone)).length;
+    setSavingPhone(phoneKey(lead.phone));
+    setLeads((prev) => applyContacted(prev, phoneOf, lead.phone, on ? new Date().toISOString() : null));
+    const { ts, error } = await setContacted(lead.phone, on);
+    setSavingPhone((p) => (p === phoneKey(lead.phone) ? null : p));
+    setLeads((prev) => settleContacted(prev, before, phoneOf, lead.phone, error ? undefined : ts));
+    if (error) {
+      toast.error("Could not save. Check your connection and try again.");
+      return;
+    }
+    const scope = sameNumber > 1 ? `: all ${sameNumber} leads of +91 ${lead.phone}` : "";
+    toast.success(`${on ? "Marked contacted" : "Marked not contacted"}${scope}`);
+  };
 
   /* ── Group leads by date for display ── */
   const groupedByDate = useMemo(() => {
@@ -277,6 +317,27 @@ const LeadManager = () => {
         </div>
       </div>
 
+      {/* Contact filter */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {([
+          { key: "all",           label: "All" },
+          { key: "not_contacted", label: "Not contacted" },
+          { key: "contacted",     label: "Contacted" },
+        ] as const).map((c) => (
+          <button
+            key={c.key}
+            onClick={() => setContactFilter(c.key)}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+              contactFilter === c.key
+                ? "bg-saffron text-white shadow-sm"
+                : "bg-cream border border-gold/40 text-maroon hover:bg-gold/20"
+            }`}
+          >
+            {c.label} <span className="opacity-70">({contactCounts[c.key]})</span>
+          </button>
+        ))}
+      </div>
+
       <p className="text-sm font-semibold text-brown/60">
         Showing <span className="text-maroon font-bold">{filtered.length}</span> of {leads.length} leads
       </p>
@@ -315,7 +376,9 @@ const LeadManager = () => {
                 {dateleads.map((l) => (
                   <div
                     key={l.id}
-                    className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-gold/30 bg-ivory p-4 shadow-soft hover:border-saffron/40 transition-colors"
+                    className={`flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-gold/30 bg-ivory p-4 shadow-soft hover:border-saffron/40 transition-colors ${
+                      l.contacted_at ? "border-l-4 border-l-green-400" : ""
+                    }`}
                   >
                     {/* Avatar */}
                     <div className="shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-saffron to-maroon grid place-items-center text-white font-bold text-sm shadow-sm">
@@ -359,13 +422,19 @@ const LeadManager = () => {
                       </p>
                     </div>
 
-                    {/* Price + WhatsApp CTA */}
-                    <div className="flex items-center gap-3 shrink-0">
+                    {/* Price + Contacted switch + WhatsApp CTA */}
+                    <div className="flex flex-wrap items-center gap-3 shrink-0">
                       {l.price && (
                         <span className="font-bold text-saffron text-lg">
                           ₹{l.price.toLocaleString("en-IN")}
                         </span>
                       )}
+                      <ContactedSwitch
+                        contactedAt={l.contacted_at}
+                        saving={savingPhone === phoneKey(l.phone)}
+                        onToggle={() => toggleContacted(l)}
+                        numberContactedAt={numberContactedAt.get(phoneKey(l.phone))}
+                      />
                       <a
                         href={`https://wa.me/91${l.phone}?text=${encodeURIComponent(`🙏 Namaste ${l.name}! Thank you for showing interest in ${l.puja_name || "our puja"}. We will get in touch with you shortly. — Narayan Kripa`)}`}
                         target="_blank"

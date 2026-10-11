@@ -18,6 +18,7 @@ export const normalise = (s: string): string => s.normalize("NFKC").toLowerCase(
 /**
  * A phone number's comparable digits: "+91 96908-88667", "919690888667" and
  * "09690888667" all become "9690888667". Numbers of other lengths keep all their digits.
+ * Keep in sync with public.phone_key() in docs/sql/contacted-status.sql.
  */
 export function phoneKey(raw: string | null | undefined): string {
   let digits = (raw ?? "").replace(/\D/g, "");

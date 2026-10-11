@@ -14,7 +14,11 @@ import { findPaidDuplicates } from "@/lib/orderDuplicates";
 import { formatDateTimeIST, slugify } from "@/lib/csv";
 import { buildPanditList } from "@/lib/orderExport";
 import { downloadPanditListPdf } from "@/lib/panditPdf";
-import { orderMatchesSearch, searchText } from "@/lib/orderSearch";
+import { orderMatchesSearch, phoneKey, searchText } from "@/lib/orderSearch";
+import {
+  applyContacted, lastContactByPhone, matchesContactFilter, setContacted, settleContacted, type ContactFilter,
+} from "@/lib/contacted";
+import ContactedSwitch from "./ContactedSwitch";
 import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck, CalendarClock, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +43,8 @@ interface Order {
   items: any[];
   puja_details?: { gotra?: string; member_names?: string[] } | null;
   created_at: string;
+  /** When the admin marked this customer's number as contacted (null = not contacted). */
+  contacted_at?: string | null;
 }
 
 interface Props { onRefresh?: () => void }
@@ -156,6 +162,7 @@ const OrderManager = (_props: Props) => {
   const [customFrom,   setCustomFrom]   = useState("");
   const [customTo,     setCustomTo]     = useState("");
   const [search,       setSearch]       = useState("");
+  const [contactFilter, setContactFilter] = useState<ContactFilter>("all");
   // Filtering 800 orders is cheap, but deferring keeps typing smooth on slow phones.
   const query = useDeferredValue(search.trim());
   const searchRef = useRef<HTMLInputElement>(null);
@@ -239,8 +246,8 @@ const OrderManager = (_props: Props) => {
     chadhava: orders.filter((o) => (o.items || []).some((i: any) => itemTypeOf(i) === "chadhava")).length,
   }), [orders]);
 
-  /* ── Status, type and order-date filters (everything except the seva drill-down) ── */
-  const baseFiltered = useMemo(() => {
+  /* ── Status, type and order-date filters (everything except contact and the seva drill-down) ── */
+  const preContactFiltered = useMemo(() => {
     return orders.filter((o) => {
       const statusMatch = statusFilter === "all" || o.status === statusFilter;
       const typeMatch   = typeFilter   === "all" || (o.items || []).some((item: any) => itemTypeOf(item) === typeFilter);
@@ -251,6 +258,16 @@ const OrderManager = (_props: Props) => {
       return statusMatch && typeMatch && dateMatch;
     });
   }, [orders, statusFilter, typeFilter, dateRange]);
+
+  const contactCounts = useMemo(() => {
+    const contacted = preContactFiltered.filter((o) => o.contacted_at).length;
+    return { all: null, contacted, not_contacted: preContactFiltered.length - contacted };
+  }, [preContactFiltered]);
+
+  const baseFiltered = useMemo(
+    () => preContactFiltered.filter((o) => matchesContactFilter(o, contactFilter)),
+    [preContactFiltered, contactFilter],
+  );
 
   /* ── Seva filter, level 2: Date and Package chips, counted within the other filters ── */
   const sevaSubFilters = useMemo(() => buildSubFilters(baseFiltered, seva), [baseFiltered, seva]);
@@ -335,9 +352,9 @@ const OrderManager = (_props: Props) => {
     }
   };
 
-  /** Resets date, status, type and seva — the search box is kept. */
+  /** Resets date, status, type, contact and seva — the search box is kept. */
   const clearFilters = () => {
-    setDatePreset("all"); setStatusFilter("all");
+    setDatePreset("all"); setStatusFilter("all"); setContactFilter("all");
     setTypeFilter("all"); setSeva(EMPTY_SEVA_FILTER);
     setCustomFrom(""); setCustomTo("");
   };
@@ -363,6 +380,30 @@ const OrderManager = (_props: Props) => {
   const applyOrderUpdate = (id: string, patch: Partial<PaymentPanelOrder>) => {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, ...patch } as Order : o)));
     setDetail((d) => (d && d.id === id ? { ...d, ...patch } as Order : d));
+  };
+
+  /* ── Contacted switch: marks every order (and lead) of this customer's number ── */
+  const [savingPhone, setSavingPhone] = useState<string | null>(null);
+  const numberContactedAt = useMemo(() => lastContactByPhone(orders, (o) => o.customer_phone), [orders]);
+
+  const toggleContacted = async (order: Order) => {
+    const on = !order.contacted_at;
+    const phone = order.customer_phone;
+    const phoneOf = (o: Order) => o.customer_phone;
+    const before = orders;
+    setSavingPhone(phoneKey(phone));
+    setOrders((prev) => applyContacted(prev, phoneOf, phone, on ? new Date().toISOString() : null));
+    setDetail((d) => (d ? applyContacted([d], phoneOf, phone, on ? new Date().toISOString() : null)[0] : d));
+    const { ts, error } = await setContacted(phone, on);
+    setSavingPhone((p) => (p === phoneKey(phone) ? null : p));
+    const settled = error ? undefined : ts;
+    setOrders((prev) => settleContacted(prev, before, phoneOf, phone, settled));
+    setDetail((d) => (d ? settleContacted([d], before, phoneOf, phone, settled)[0] : d));
+    if (error) {
+      toast.error("Could not save. Check your connection and try again.");
+      return;
+    }
+    toast.success(`${on ? "Marked contacted" : "Marked not contacted"}: every order and lead of ${phone}`);
   };
 
   /* ── Record or correct the gotra after asking the customer ── */
@@ -426,7 +467,7 @@ const OrderManager = (_props: Props) => {
   };
 
   const activePresetLabel = presets.find((p) => p.key === datePreset)?.label ?? "All Time";
-  const hasOtherFilter = datePreset !== "all" || statusFilter !== "all" || typeFilter !== "all" || seva.sevaKey !== ALL;
+  const hasOtherFilter = datePreset !== "all" || statusFilter !== "all" || typeFilter !== "all" || contactFilter !== "all" || seva.sevaKey !== ALL;
   const hasAnyFilter = hasOtherFilter || search.trim() !== "";
 
   return (
@@ -597,6 +638,25 @@ const OrderManager = (_props: Props) => {
           </div>
         </div>
 
+        {/* ── Contact filter ── */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-[11px] text-brown/50 font-semibold w-16 shrink-0">Contact:</span>
+          <div className="flex flex-wrap gap-1.5">
+            {([
+              { key: "all",           label: "All" },
+              { key: "not_contacted", label: "Not contacted" },
+              { key: "contacted",     label: "Contacted" },
+            ] as const).map((c) => (
+              <button key={c.key} onClick={() => setContactFilter(c.key)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                  contactFilter === c.key ? "bg-saffron text-white shadow-sm" : "bg-cream border border-gold/40 text-maroon hover:bg-gold/20"
+                }`}>
+                {c.label}{contactCounts[c.key] !== null && <span className="ml-1 opacity-70">({contactCounts[c.key]})</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* ── Seva: puja first, then its Date and Package ── */}
         <SevaFilter
           catalog={sevaCatalog}
@@ -613,6 +673,7 @@ const OrderManager = (_props: Props) => {
           Showing <span className="text-maroon font-bold">{filtered.length}</span> of {orders.length} orders
           {datePreset !== "all" && <span className="ml-1 text-saffron">• {activePresetLabel}</span>}
           {typeFilter !== "all" && <span className="ml-1 text-saffron">• {typeFilter === "puja" ? "Pujas" : "Chadhavas"}</span>}
+          {contactFilter !== "all" && <span className="ml-1 text-saffron">• {contactFilter === "contacted" ? "Contacted" : "Not contacted"}</span>}
           {sevaSummary && <span className="ml-1 text-saffron">• {sevaSummary}</span>}
           {query && <span className="ml-1 text-saffron">• “{query}”</span>}
         </p>
@@ -657,7 +718,9 @@ const OrderManager = (_props: Props) => {
             const sevaLines = (o.items || []).filter((i: any) => itemTypeOf(i) !== "addon") as OrderItem[];
             return (
               <div key={o.id}
-                className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-gold/30 bg-ivory p-4 shadow-soft hover:border-saffron/40 transition-colors">
+                className={`flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-gold/30 bg-ivory p-4 shadow-soft hover:border-saffron/40 transition-colors ${
+                  o.contacted_at ? "border-l-4 border-l-green-400" : ""
+                }`}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-semibold text-maroon text-sm">{o.customer_name}</h3>
@@ -698,8 +761,14 @@ const OrderManager = (_props: Props) => {
                     )}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className="font-bold text-saffron text-lg">₹{(o.amount / 100).toLocaleString("en-IN")}</span>
+                  <ContactedSwitch
+                    contactedAt={o.contacted_at}
+                    saving={savingPhone === phoneKey(o.customer_phone)}
+                    onToggle={() => toggleContacted(o)}
+                    numberContactedAt={numberContactedAt.get(phoneKey(o.customer_phone))}
+                  />
                   {o.status !== "paid" && o.razorpay_order_id && (
                     <button
                       onClick={() => checkOne(o)}
@@ -759,6 +828,14 @@ const OrderManager = (_props: Props) => {
                   <WhatsAppIcon className="h-4 w-4 fill-white shrink-0" />
                   Send Confirmation on WhatsApp
                 </a>
+                <div className="mt-3">
+                  <ContactedSwitch
+                    contactedAt={detail.contacted_at}
+                    saving={savingPhone === phoneKey(detail.customer_phone)}
+                    onToggle={() => toggleContacted(detail)}
+                    numberContactedAt={numberContactedAt.get(phoneKey(detail.customer_phone))}
+                  />
+                </div>
               </div>
               <div className="border-t border-gold/20 pt-3">
                 <p className="text-[11px] text-brown/50 uppercase mb-2">Items Ordered</p>
