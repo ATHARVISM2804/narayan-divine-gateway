@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -156,6 +156,16 @@ const Checkout = () => {
   // Sync memberNames array length when memberCount changes
   const syncedMemberNames = Array.from({ length: memberCount }, (_, i) => memberNames[i] || "");
 
+  // Puja bookings don't ask for the name again: the name from the lead form (or the account)
+  // fills Member 1 once, and the booking is under that name (or Member 1 if there was none).
+  const memberPrefilled = useRef(false);
+  useEffect(() => {
+    if (memberPrefilled.current || !form.name.trim()) return;
+    memberPrefilled.current = true;
+    setMemberNames((m) => (m[0]?.trim() ? m : [form.name.trim(), ...m.slice(1)]));
+  }, [form.name]);
+  const customerName = form.name.trim() || (memberCount > 0 ? syncedMemberNames[0].trim() : "");
+
   useEffect(() => {
     if (user) {
       setForm((f) => ({
@@ -225,7 +235,7 @@ const Checkout = () => {
   }, [addr.pincode, isValidPincode]);
 
   const validateDetails = () => {
-    if (!form.name.trim()) { toast.error(t("co_err_name")); return false; }
+    if (memberCount === 0 && !form.name.trim()) { toast.error(t("co_err_name")); return false; }
     if (!isValidIndianMobile(form.phone)) { toast.error(t("co_err_phone_in")); return false; }
     if (memberCount > 0 && !syncedMemberNames[0].trim()) { toast.error(t("co_err_member")); return false; }
     // Panditji recites the gotra in the sankalp — ask for it, or the "I don't know" tick (Kashyap).
@@ -283,7 +293,7 @@ const Checkout = () => {
         body: {
           items: orderItems,
           customer: {
-            name: form.name,
+            name: customerName,
             phone: form.phone,
             email: user?.email || undefined,
             address: wantBox ? composeAddress() : null,
@@ -359,7 +369,7 @@ const Checkout = () => {
         description: `Order: ${items.length} item${items.length > 1 ? "s" : ""}`,
         order_id: fnData.order_id,
         // Razorpay expects the country code; without it some numbers stall the contact step.
-        prefill: { name: form.name, contact: `+91${form.phone}` },
+        prefill: { name: customerName, contact: `+91${form.phone}` },
         theme: { color: "#D4891A" },
         // In-app browsers (Facebook / Instagram / WhatsApp) often reload or kill this page
         // while the customer is in their UPI app, so the handler below never runs. There,
@@ -439,7 +449,7 @@ const Checkout = () => {
   const bookingWhatsappText = () => {
     const lines = [t("wa_msg_checkout")];
     items.forEach((i) => lines.push(`• ${i.name}${i.quantity > 1 ? ` ×${i.quantity}` : ""}${i.description ? ` — ${i.description}` : ""}`));
-    if (form.name.trim()) lines.push(`Name: ${form.name.trim()}`);
+    if (customerName) lines.push(`Name: ${customerName}`);
     if (form.phone.trim()) lines.push(`Phone: ${form.phone.trim()}`);
     lines.push(`Total: ₹${totalPrice.toLocaleString("en-IN")}`);
     return lines.join("\n");
@@ -724,7 +734,8 @@ const Checkout = () => {
               <h2 className="font-display text-xl text-maroon mb-6">{pujaItem ? "Enter Details for Your Puja" : "Enter Your Details"}</h2>
               <div className="space-y-6">
 
-                {/* ── Your Name ── */}
+                {/* ── Your Name (puja bookings use Member 1 instead) ── */}
+                {memberCount === 0 && (<>
                 <div>
                   <h3 className="text-lg font-bold text-maroon mb-1 flex items-center gap-2">
                     <User size={18} className="text-saffron" /> {lang === "hi" ? "आपका नाम" : "Your Name"}
@@ -743,6 +754,7 @@ const Checkout = () => {
 
                 {/* Gold divider */}
                 <div className="h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+                </>)}
 
                 {/* ── WhatsApp Number ── */}
                 <div>
