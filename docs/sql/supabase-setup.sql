@@ -156,4 +156,4 @@ CREATE POLICY "Public insert leads"
 -- Only admin can read leads
 CREATE POLICY "Admin read leads"
   ON leads FOR SELECT
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (lower(auth.jwt() ->> 'email') = 'nkripa0206@gmail.com');

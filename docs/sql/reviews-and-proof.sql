@@ -97,7 +97,10 @@ items AS (
       ON r.category = 'chadhava' AND co.id::text = r.ref_id
 )
 SELECT
-  (SELECT count(DISTINCT customer_phone) FROM orders WHERE status = 'paid')::int AS devotees,
+  -- 20,000 = devotees served including bookings made outside the website (the owner's
+  -- figure, Oct 2026); change it here to update the site. Website customers alone are
+  -- far fewer, so the site shows 20,000 unless they ever pass it.
+  GREATEST(20000, (SELECT count(DISTINCT customer_phone) FROM orders WHERE status = 'paid'))::int AS devotees,
   (SELECT count(*) FROM items)::int                                             AS bookings,
   (SELECT count(*) FROM temples WHERE status = 'active')::int                   AS temples,
   coalesce(
