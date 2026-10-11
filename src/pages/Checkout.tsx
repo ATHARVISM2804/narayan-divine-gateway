@@ -503,8 +503,9 @@ const Checkout = () => {
     </ul>
   );
 
-  /* Order summary (both steps) */
-  const OrderSummary = ({ showPayButton = false }: { showPayButton?: boolean }) => (
+  /* Order summary (both steps). On laptops the one Pay button sits under the form,
+     next to any field errors, so the summary only carries the totals. */
+  const OrderSummary = () => (
     <aside className="h-fit rounded-xl border border-line bg-surface p-4 sm:p-5 lg:sticky lg:top-24">
       <h2 className="text-lg font-bold text-ink">{t("co_summary")}</h2>
       <ul className="mt-4 space-y-2.5 border-b border-line pb-4 text-sm">
@@ -535,22 +536,7 @@ const Checkout = () => {
         <span className="text-base font-semibold text-ink">{t("co_total")}</span>
         <span className="tabular text-2xl font-bold text-saffron-dark">{inr(totalPrice)}</span>
       </div>
-      {showPayButton && (
-        <div className="mt-5 hidden lg:block">
-          <button onClick={handleCheckout} disabled={loading} className="btn-primary w-full">
-            {loading ? (
-              <>
-                <Loader2 size={18} className="animate-spin" /> {t("co_processing")}
-              </>
-            ) : (
-              <>
-                <Lock size={16} /> {t("co_pay")} {inr(totalPrice)}
-              </>
-            )}
-          </button>
-          <p className="mt-3 text-center text-xs text-ink-soft">{t("co_powered")}</p>
-        </div>
-      )}
+      <p className="mt-4 hidden border-t border-line pt-4 text-center text-xs text-ink-soft lg:block">{t("co_powered")}</p>
     </aside>
   );
 
@@ -668,7 +654,8 @@ const Checkout = () => {
                 </div>
               )}
 
-              <div className={card}>
+              {/* Laptops already show these lines in the order summary beside it. */}
+              <div className={`${card} lg:hidden`}>
                 <h3 className={`${sectionTitle} mb-3`}>{t("co_bill")}</h3>
                 <ul className="space-y-2.5 text-sm">
                   {items.map((item) => (
@@ -906,7 +893,7 @@ const Checkout = () => {
             </div>
           )}
 
-          <OrderSummary showPayButton={checkoutStep === "details"} />
+          <OrderSummary />
         </div>
       </div>
 
