@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useDeferredValue, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { fetchAllRows } from "@/lib/fetchAll";
 import { checkOrderPayment } from "@/lib/orderStatus";
@@ -14,7 +14,8 @@ import { findPaidDuplicates } from "@/lib/orderDuplicates";
 import { formatDateTimeIST, slugify } from "@/lib/csv";
 import { buildPanditList } from "@/lib/orderExport";
 import { downloadPanditListPdf } from "@/lib/panditPdf";
-import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck, CalendarClock } from "lucide-react";
+import { orderMatchesSearch, searchText } from "@/lib/orderSearch";
+import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck, CalendarClock, Search } from "lucide-react";
 import { toast } from "sonner";
 
 /* Active pujas, used to move a booking to the same puja on another date. */
@@ -154,6 +155,10 @@ const OrderManager = (_props: Props) => {
   const [datePreset,   setDatePreset]   = useState<DatePreset>("all");
   const [customFrom,   setCustomFrom]   = useState("");
   const [customTo,     setCustomTo]     = useState("");
+  const [search,       setSearch]       = useState("");
+  // Filtering 800 orders is cheap, but deferring keeps typing smooth on slow phones.
+  const query = useDeferredValue(search.trim());
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -250,8 +255,38 @@ const OrderManager = (_props: Props) => {
   /* ── Seva filter, level 2: Date and Package chips, counted within the other filters ── */
   const sevaSubFilters = useMemo(() => buildSubFilters(baseFiltered, seva), [baseFiltered, seva]);
 
+  /* ── Search box: phone / name / member / order ref, on top of the filters ── */
+  const searchIndex = useMemo(() => new Map(orders.map((o) => [o.id, searchText(o)])), [orders]);
+  const matchesQuery = (o: Order) => orderMatchesSearch(o, query, searchIndex.get(o.id));
+
   /* ── Apply all filters ── */
-  const filtered = useMemo(() => baseFiltered.filter((o) => orderMatchesSeva(o, seva)), [baseFiltered, seva]);
+  const filtered = useMemo(
+    () => baseFiltered.filter((o) => orderMatchesSeva(o, seva) && matchesQuery(o)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [baseFiltered, seva, query, searchIndex],
+  );
+
+  /* Matches the other filters are hiding — so "type a number, see all its orders" holds
+     even when e.g. "Today" was left selected. */
+  const hiddenMatches = useMemo(
+    () => (query ? orders.filter(matchesQuery).length - filtered.length : 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [orders, query, searchIndex, filtered],
+  );
+
+  /* "/" focuses the search box (unless already typing somewhere). */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      const typing = el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable);
+      if (e.key === "/" && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const sevaSummary = (() => {
     if (!selectedSeva) return null;
@@ -300,10 +335,16 @@ const OrderManager = (_props: Props) => {
     }
   };
 
-  const clearAll = () => {
+  /** Resets date, status, type and seva — the search box is kept. */
+  const clearFilters = () => {
     setDatePreset("all"); setStatusFilter("all");
     setTypeFilter("all"); setSeva(EMPTY_SEVA_FILTER);
     setCustomFrom(""); setCustomTo("");
+  };
+
+  const clearAll = () => {
+    clearFilters();
+    setSearch("");
   };
 
   /* Switching type clears a seva selection that doesn't belong to it. */
@@ -385,7 +426,8 @@ const OrderManager = (_props: Props) => {
   };
 
   const activePresetLabel = presets.find((p) => p.key === datePreset)?.label ?? "All Time";
-  const hasAnyFilter = datePreset !== "all" || statusFilter !== "all" || typeFilter !== "all" || seva.sevaKey !== ALL;
+  const hasOtherFilter = datePreset !== "all" || statusFilter !== "all" || typeFilter !== "all" || seva.sevaKey !== ALL;
+  const hasAnyFilter = hasOtherFilter || search.trim() !== "";
 
   return (
     <div className="space-y-5">
@@ -414,6 +456,40 @@ const OrderManager = (_props: Props) => {
             <button onClick={clearAll} className="text-[11px] text-red-400 hover:text-red-600 font-semibold underline">
               ✕ Clear all
             </button>
+          )}
+        </div>
+
+        {/* ── SEARCH: one customer's orders by phone / name ── */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 rounded-xl border border-gold/40 bg-cream px-3 py-2.5 focus-within:border-saffron focus-within:ring-2 focus-within:ring-saffron/20 transition-all">
+            <Search size={16} className="text-saffron shrink-0" />
+            <input
+              ref={searchRef}
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Escape") { setSearch(""); e.currentTarget.blur(); } }}
+              placeholder="Search by phone number, name or order ID…"
+              aria-label="Search orders by phone number, name or order ID"
+              autoComplete="off"
+              spellCheck={false}
+              className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-maroon outline-none placeholder:font-normal placeholder:text-brown/40 [&::-webkit-search-cancel-button]:hidden"
+            />
+            {search ? (
+              <button onClick={() => { setSearch(""); searchRef.current?.focus(); }}
+                aria-label="Clear search"
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-brown/50 hover:bg-gold/20 hover:text-maroon transition-colors">
+                <X size={14} />
+              </button>
+            ) : (
+              <kbd className="hidden sm:inline-block shrink-0 rounded border border-gold/40 bg-ivory px-1.5 text-[10px] font-semibold text-brown/40">/</kbd>
+            )}
+          </div>
+          {query && hiddenMatches > 0 && (
+            <p className="text-[11px] text-brown/60">
+              <span className="font-bold text-maroon">{hiddenMatches} more order{hiddenMatches > 1 ? "s" : ""}</span> for this search {hiddenMatches > 1 ? "are" : "is"} hidden by your filters —{" "}
+              <button onClick={clearFilters} className="font-semibold text-saffron underline hover:text-maroon">Show all</button>
+            </p>
           )}
         </div>
 
@@ -538,6 +614,7 @@ const OrderManager = (_props: Props) => {
           {datePreset !== "all" && <span className="ml-1 text-saffron">• {activePresetLabel}</span>}
           {typeFilter !== "all" && <span className="ml-1 text-saffron">• {typeFilter === "puja" ? "Pujas" : "Chadhavas"}</span>}
           {sevaSummary && <span className="ml-1 text-saffron">• {sevaSummary}</span>}
+          {query && <span className="ml-1 text-saffron">• “{query}”</span>}
         </p>
         <div className="flex items-center gap-2">
           <button onClick={syncWithRazorpay} disabled={syncing}
@@ -565,8 +642,14 @@ const OrderManager = (_props: Props) => {
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-gold/30 bg-ivory p-12 text-center">
           <p className="text-3xl mb-3">📦</p>
-          <p className="font-display text-maroon">No orders found</p>
-          <p className="text-xs text-brown/50 mt-1">Try changing the filters above</p>
+          <p className="font-display text-maroon">{query ? `No orders match “${query}”` : "No orders found"}</p>
+          <p className="text-xs text-brown/50 mt-1">
+            {!query
+              ? "Try changing the filters above"
+              : hiddenMatches > 0
+              ? "It matches orders hidden by your filters — use “Show all” above"
+              : "Check the number or spelling (Hindi names match only when typed in Hindi)"}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
