@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { csvCell, formatDateTimeIST, formatPhoneForCsv, slugify, toCsv } from "./csv";
-import { ORDER_CSV_HEADERS, orderToCsvRow, type ExportableOrder } from "./orderExport";
+import { PANDIT_LIST_HEADERS, orderToPanditRow, type ExportableOrder } from "./orderExport";
 import { LEAD_CSV_HEADERS, leadToCsvRow } from "./leadExport";
 
 describe("leadToCsvRow", () => {
@@ -100,29 +100,29 @@ const base: ExportableOrder = {
   ],
 };
 
-describe("orderToCsvRow", () => {
-  const row = (o: ExportableOrder) => Object.fromEntries(ORDER_CSV_HEADERS.map((h, i) => [h, orderToCsvRow(o)[i]]));
+describe("orderToPanditRow", () => {
+  const row = (o: ExportableOrder) => Object.fromEntries(PANDIT_LIST_HEADERS.map((h, i) => [h, orderToPanditRow(o)[i]]));
 
-  it("exports only the name and the gotra", () => {
-    expect(ORDER_CSV_HEADERS).toEqual(["Name", "Gotra"]);
-    expect(orderToCsvRow(base)).toHaveLength(2);
+  it("exports only the name, the members and the gotra", () => {
+    expect(PANDIT_LIST_HEADERS).toEqual(["Name", "Member Names", "Gotra"]);
+    expect(orderToPanditRow(base)).toHaveLength(3);
   });
 
-  it("lists the sankalp members, and says when the gotra was left blank", () => {
-    expect(row(base)).toEqual({ Name: "Uttam Singh Bhauryal, Mrs Parvati Devi Bhauryal", Gotra: "Not provided" });
+  it("lists the customer, the sankalp members, and says when the gotra was left blank", () => {
+    expect(row(base)).toEqual({
+      Name: "Uttam Singh Bhauryal",
+      "Member Names": "Uttam Singh Bhauryal, Mrs Parvati Devi Bhauryal",
+      Gotra: "Not provided",
+    });
     expect(row({ ...base, puja_details: { gotra: " Kashyap ", member_names: ["A"] } })["Gotra"]).toBe("Kashyap");
   });
 
-  it("falls back to the customer's name when no members were given", () => {
-    expect(row({ ...base, puja_details: { gotra: "Bharadwaj", member_names: [" ", ""] } })["Name"]).toBe("Uttam Singh Bhauryal");
-  });
-
-  it("leaves the gotra blank for orders without sankalp details (chadhava)", () => {
+  it("leaves members and gotra blank for orders without sankalp details (chadhava)", () => {
     const chadhava = row({
       ...base,
       puja_details: null,
       items: [{ id: "chadhava-x", name: "Shani Shanti Mala Thali", price: 501, quantity: 1, category: "chadhava", chadhava_date: "3 October 2026", chadhava_temple: "Shani Dham" }],
     });
-    expect(chadhava).toEqual({ Name: "Uttam Singh Bhauryal", Gotra: "" });
+    expect(chadhava).toEqual({ Name: "Uttam Singh Bhauryal", "Member Names": "", Gotra: "" });
   });
 });

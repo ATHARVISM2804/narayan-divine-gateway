@@ -1,9 +1,8 @@
-// Admin → Orders → Export CSV. The list sent to Panditji for the sankalp: one row per order
-// with only the names and the gotra — more columns made the sheet hard for him to read.
+// Admin → Orders → Export PDF. The list sent to Panditji for the sankalp: one row per order
+// with only the customer's name, the members and the gotra — more columns made it hard to read.
 // Filter the orders (Paid, puja, date) before exporting; the export is exactly what is shown.
 
 import type { OrderItem } from "./orderItems";
-import type { CsvValue } from "./csv";
 
 export interface ExportableOrder {
   id: string;
@@ -23,13 +22,13 @@ export interface ExportableOrder {
   manual_payment?: Record<string, unknown> | null;
 }
 
-export const ORDER_CSV_HEADERS = ["Name", "Gotra"];
+export const PANDIT_LIST_HEADERS = ["Name", "Member Names", "Gotra"];
 
-export function orderToCsvRow(o: ExportableOrder): CsvValue[] {
+export function orderToPanditRow(o: ExportableOrder): string[] {
   const members = (o.puja_details?.member_names ?? []).map((m) => (m ?? "").trim()).filter(Boolean);
   const gotra = (o.puja_details?.gotra ?? "").trim();
   // Only puja bookings carry sankalp details; say so when the customer left the gotra blank.
   const gotraCell = o.puja_details ? gotra || "Not provided" : "";
 
-  return [members.length ? members.join(", ") : o.customer_name.trim(), gotraCell];
+  return [o.customer_name.trim(), members.join(", "), gotraCell];
 }
