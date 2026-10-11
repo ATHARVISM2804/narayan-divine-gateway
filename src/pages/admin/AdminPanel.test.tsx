@@ -49,12 +49,12 @@ describe("AdminPanel tab in the URL", () => {
 
   it("opens the dashboard on plain /admin", async () => {
     openAt("/admin");
-    expect(await screen.findByText("Total Pujas")).toBeTruthy();
+    expect(await screen.findByText("Total Poojas")).toBeTruthy();
   });
 
   it("puts the tab in the URL when one is clicked", async () => {
     openAt("/admin");
-    await screen.findByText("Total Pujas");
+    await screen.findByText("Total Poojas");
     fireEvent.click(screen.getAllByRole("button", { name: "Orders" })[0]);
     expect(await screen.findByText("ORDERS TAB")).toBeTruthy();
     expect(screen.getByTestId("path").textContent).toBe("/admin/orders");
@@ -64,7 +64,7 @@ describe("AdminPanel tab in the URL", () => {
 
   it("sends an unknown tab to the dashboard", async () => {
     openAt("/admin/nonsense");
-    expect(await screen.findByText("Total Pujas")).toBeTruthy();
+    expect(await screen.findByText("Total Poojas")).toBeTruthy();
     expect(screen.getByTestId("path").textContent).toBe("/admin");
   });
 });

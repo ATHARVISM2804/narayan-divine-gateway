@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
       // ── Puja tier ──
       if (item.category === "puja") {
         const match = PUJA_ID_RE.exec(item.id);
-        if (!match) return err(`Invalid puja item ID format: ${item.id}`);
+        if (!match) return err(`Invalid pooja item ID format: ${item.id}`);
         const [, pujaId, tierLabel] = match;
 
         const { data: puja } = await supabase

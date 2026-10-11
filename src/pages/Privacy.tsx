@@ -17,7 +17,7 @@ const Privacy = () => {
             <h2 className="text-xl font-bold text-ink mb-4">1. Introduction</h2>
             <p>
               Narayan Kripa ("we", "our", or "us") operates the website <strong>narayankripa.com</strong> and
-              associated services including online puja booking, chadhava offerings, pandit consultation, and
+              associated services including online pooja booking, chadhava offerings, pandit consultation, and
               related spiritual services. This Privacy Policy explains how we collect, use, disclose, and
               safeguard your personal information when you visit our website or use our services. By using our
               website, you consent to the data practices described in this policy.
@@ -34,7 +34,7 @@ const Privacy = () => {
               <li>Email address</li>
               <li>Phone number / mobile number</li>
               <li>Postal / delivery address (for prasad shipment)</li>
-              <li>Name, gotra, and nakshatra (for sankalp during pujas)</li>
+              <li>Name, gotra, and nakshatra (for sankalp during poojas)</li>
             </ul>
 
             <h3 className="font-semibold text-ink mt-4 mb-2">2.2 Payment Information</h3>
@@ -59,7 +59,7 @@ const Privacy = () => {
             <h2 className="text-xl font-bold text-ink mb-4">3. How We Use Your Information</h2>
             <p className="mb-3">We use the collected information for the following purposes:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li>To process and fulfil your puja bookings and chadhava offerings</li>
+              <li>To process and fulfil your pooja bookings and chadhava offerings</li>
               <li>To perform sankalp with your name and gotra during rituals</li>
               <li>To deliver prasad and blessings certificates to your address</li>
               <li>To send order confirmations, updates, and photo/video proof of ceremonies</li>
@@ -84,7 +84,7 @@ const Privacy = () => {
               </li>
               <li>
                 <strong>Temple Partners & Pandits:</strong> Your name, gotra, and sankalp details are shared with
-                verified temple priests solely to perform the booked puja or chadhava in your name.
+                verified temple priests solely to perform the booked pooja or chadhava in your name.
               </li>
               <li>
                 <strong>Shipping / Courier Partners:</strong> Your delivery address and phone number are shared

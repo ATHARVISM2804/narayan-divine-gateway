@@ -26,7 +26,7 @@ interface Props {
 }
 
 const SECTIONS: { type: SevaType; label: string; icon: string }[] = [
-  { type: "puja", label: "Pujas", icon: "🪔" },
+  { type: "puja", label: "Poojas", icon: "🪔" },
   { type: "chadhava", label: "Chadhavas", icon: "🌺" },
   { type: "addon", label: "Add-ons", icon: "🎁" },
 ];
@@ -142,7 +142,7 @@ const SevaFilter = ({ catalog, subFilters, value, typeFilter, onChange }: Props)
             <span className="flex-1 min-w-0 truncate">
               {selected
                 ? <>{SECTIONS.find((s) => s.type === selected.type)?.icon} {selected.label}</>
-                : <span className="text-brown/60">All pujas, chadhavas & add-ons</span>}
+                : <span className="text-brown/60">All poojas, chadhavas & add-ons</span>}
             </span>
             {selected && <span className="shrink-0 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] text-brown/70">{selected.count}</span>}
             <ChevronDown size={14} className={`shrink-0 text-brown/40 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -157,7 +157,7 @@ const SevaFilter = ({ catalog, subFilters, value, typeFilter, onChange }: Props)
                   ref={searchRef}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search puja, chadhava or add-on…"
+                  placeholder="Search pooja, chadhava or add-on…"
                   className="w-full bg-transparent text-xs text-maroon outline-none placeholder:text-brown/40"
                 />
                 {query && (

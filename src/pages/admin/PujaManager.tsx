@@ -195,7 +195,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
     if (sameName.length > 0) {
       const others = sameName.map((p) => `• ${p.date} (${p.status})`).join("\n");
       const ok = window.confirm(
-        `Another puja already has this exact name:\n${others}\n\n` +
+        `Another pooja already has this exact name:\n${others}\n\n` +
         `Customers and the Orders page will tell them apart only by the date (${date.trim()}). ` +
         `Make sure the date is clearly different, or add it to the name.\n\nSave anyway?`
       );
@@ -229,7 +229,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
     }
     setSaving(false);
     if (err) { toast.error(err.message); return; }
-    toast.success(editing.id ? "Puja updated" : "Puja created");
+    toast.success(editing.id ? "Pooja updated" : "Pooja created");
     setEditing(null); onRefresh();
   };
 
@@ -238,14 +238,14 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
     const { error: err } = await supabase.from("pujas").delete().eq("id", id);
     setDeleting(null);
     if (err) { toast.error(err.message); return; }
-    toast.success("Puja deleted"); onRefresh();
+    toast.success("Pooja deleted"); onRefresh();
   };
 
   const toggleStatus = async (p: Puja) => {
     const next = p.status === "active" ? "draft" : "active";
     const { error: err } = await supabase.from("pujas").update({ status: next }).eq("id", p.id);
     if (err) toast.error(err.message);
-    else { toast.success(`Puja ${next === "active" ? "published" : "unpublished"}`); onRefresh(); }
+    else { toast.success(`Pooja ${next === "active" ? "published" : "unpublished"}`); onRefresh(); }
   };
 
   const updateTier = (idx: number, field: "label" | "price", val: string | number) => {
@@ -262,15 +262,15 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
       <div className="flex items-center justify-between">
         <p className="text-sm text-brown/60">{pujas.length} puja{pujas.length !== 1 ? "s" : ""}</p>
         <button onClick={() => setEditing(emptyPuja())} className="flex items-center gap-2 rounded-xl bg-saffron px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-maroon transition-all">
-          <Plus size={16} />Add Puja
+          <Plus size={16} />Add Pooja
         </button>
       </div>
 
       {pujas.length === 0 ? (
         <div className="rounded-2xl border border-gold/30 bg-ivory p-12 text-center">
           <p className="text-3xl mb-3">🪔</p>
-          <p className="font-display text-maroon">No pujas yet</p>
-          <p className="text-sm text-brown/60 mt-1">Add your first puja to get started</p>
+          <p className="font-display text-maroon">No poojas yet</p>
+          <p className="text-sm text-brown/60 mt-1">Add your first pooja to get started</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -309,7 +309,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setEditing(null)} />
           <div className="relative flex h-full w-full max-w-lg flex-col bg-ivory shadow-2xl animate-fadeIn">
             <div className="shrink-0 flex items-center justify-between border-b border-gold/30 bg-ivory/95 px-4 sm:px-6 py-4 backdrop-blur">
-              <h3 className="font-display text-lg text-maroon">{editing.id ? "Edit Puja" : "New Puja"}</h3>
+              <h3 className="font-display text-lg text-maroon">{editing.id ? "Edit Pooja" : "New Pooja"}</h3>
               <button onClick={() => setEditing(null)} className="text-brown/50 hover:text-maroon transition-colors"><X size={20} /></button>
             </div>
 
@@ -343,7 +343,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Special Occasion Tag</label>
                   <input value={editing.occasion || ""} onChange={(e) => setEditing({ ...editing, occasion: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Ganga Dussehra Special" maxLength={80} />
-                  <p className="text-[11px] text-brown/40 mt-1">Shown as a badge above the puja name on the detail page</p></div>
+                  <p className="text-[11px] text-brown/40 mt-1">Shown as a badge above the pooja name on the detail page</p></div>
               </Section>
 
               <Section title="🇮🇳 Hindi Translation">
@@ -361,7 +361,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                 <GalleryEditor images={editing.gallery || []} onChange={(g) => setEditing({ ...editing, gallery: g })} />
               </Section>
 
-              <Section title="📖 About Puja">
+              <Section title="📖 About Pooja">
                 <label className="mb-1 block text-xs font-semibold text-maroon">English</label>
                 <textarea value={editing.about || ""} onChange={(e) => setEditing({ ...editing, about: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-y min-h-[100px]" placeholder="Detailed description..." />
@@ -377,7 +377,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                 <ListEditor items={editing.benefits_hi || []} onChange={(v) => setEditing({ ...editing, benefits_hi: v })} placeholder="जैसे: शनि दोष से मुक्ति" />
               </Section>
 
-              <Section title="🔱 Puja Process Steps">
+              <Section title="🔱 Pooja Process Steps">
                 <p className="text-xs text-brown/50 mb-2">English</p>
                 <StepEditor items={editing.process_steps || []} onChange={(v) => setEditing({ ...editing, process_steps: v })} />
                 <p className="text-xs text-brown/50 mb-2 mt-3">हिंदी</p>
@@ -395,10 +395,10 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-y min-h-[80px]" placeholder="मंदिर विवरण (HI)" />
                 <label className="mb-1 block text-xs font-semibold text-maroon">Temple Image</label>
                 <ImageUpload value={editing.temple_image || null} onChange={(url) => setEditing({ ...editing, temple_image: url })} />
-                <label className="mb-1 mt-3 block text-xs font-semibold text-maroon">Past puja video (YouTube link, optional)</label>
+                <label className="mb-1 mt-3 block text-xs font-semibold text-maroon">Past pooja video (YouTube link, optional)</label>
                 <input value={editing.past_video_url || ""} onChange={(e) => setEditing({ ...editing, past_video_url: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="https://youtu.be/..." />
-                <p className="text-[11px] text-brown/50">Shown as "Watch a past puja video" on the puja page. Use YouTube (unlisted is fine), not an upload.</p>
+                <p className="text-[11px] text-brown/50">Shown as "Watch a past pooja video" on the pooja page. Use YouTube (unlisted is fine), not an upload.</p>
               </Section>
 
               <Section title="❓ FAQs">
@@ -411,7 +411,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
               {/* ── Offerings ── */}
               <Section title={`🌺 Offerings (${offerings.length})`}>
                 {!editing.id ? (
-                  <p className="text-sm text-brown/60 italic">Save the puja first, then add offerings.</p>
+                  <p className="text-sm text-brown/60 italic">Save the pooja first, then add offerings.</p>
                 ) : (
                   <>
                     <div className="flex items-center justify-between mb-3">
@@ -542,7 +542,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                  style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)" }}>
               <button onClick={save} disabled={saving}
                 className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-saffron py-3 text-sm font-bold text-white shadow-md hover:bg-maroon transition-all disabled:opacity-60">
-                {saving ? <><Loader2 size={16} className="animate-spin" />Saving…</> : editing.id ? "Update Puja" : "Create Puja"}
+                {saving ? <><Loader2 size={16} className="animate-spin" />Saving…</> : editing.id ? "Update Pooja" : "Create Pooja"}
               </button>
               <button onClick={() => setEditing(null)} className="rounded-xl border border-gold/50 px-6 py-3 text-sm font-medium text-maroon hover:bg-gold/10">Cancel</button>
             </div>

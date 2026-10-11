@@ -110,7 +110,7 @@ const OrderPaymentPanel = ({ order, duplicateOf, onUpdated }: Props) => {
         <div className="flex gap-2 rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" />
           <p>
-            This customer already <b>paid</b> for this puja in order <b>{ref8(duplicateOf.id)}</b>
+            This customer already <b>paid</b> for this pooja in order <b>{ref8(duplicateOf.id)}</b>
             {duplicateOf.paid_at ? ` (${when(duplicateOf.paid_at)})` : ""}. This one is most likely an earlier attempt —
             cancel it rather than following up or marking it paid.
           </p>

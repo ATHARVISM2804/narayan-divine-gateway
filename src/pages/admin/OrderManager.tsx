@@ -64,7 +64,7 @@ const statusColors: Record<string, string> = {
 /* Maps the raw item.category stored on each order line to a filter bucket + dropdown group label. */
 type ItemType = "puja" | "chadhava" | "addon";
 const CATEGORY_META: Record<string, { type: ItemType; label: string }> = {
-  puja:     { type: "puja",     label: "🪔 Pujas" },
+  puja:     { type: "puja",     label: "🪔 Poojas" },
   chadhava: { type: "chadhava", label: "🌺 Chadhavas" },
   offering: { type: "addon",    label: "🎁 Add-ons" },
   addon:    { type: "addon",    label: "🎁 Add-ons" },
@@ -625,7 +625,7 @@ const OrderManager = (_props: Props) => {
           <div className="flex flex-wrap gap-1.5">
             {([
               { key: "all",      label: "All Types",     count: null },
-              { key: "puja",     label: "🪔 Pujas",      count: typeCounts.puja },
+              { key: "puja",     label: "🪔 Poojas",      count: typeCounts.puja },
               { key: "chadhava", label: "🌺 Chadhavas",  count: typeCounts.chadhava },
             ] as const).map((t) => (
               <button key={t.key} onClick={() => changeType(t.key)}
@@ -672,7 +672,7 @@ const OrderManager = (_props: Props) => {
         <p className="text-sm font-semibold text-brown/70">
           Showing <span className="text-maroon font-bold">{filtered.length}</span> of {orders.length} orders
           {datePreset !== "all" && <span className="ml-1 text-saffron">• {activePresetLabel}</span>}
-          {typeFilter !== "all" && <span className="ml-1 text-saffron">• {typeFilter === "puja" ? "Pujas" : "Chadhavas"}</span>}
+          {typeFilter !== "all" && <span className="ml-1 text-saffron">• {typeFilter === "puja" ? "Poojas" : "Chadhavas"}</span>}
           {contactFilter !== "all" && <span className="ml-1 text-saffron">• {contactFilter === "contacted" ? "Contacted" : "Not contacted"}</span>}
           {sevaSummary && <span className="ml-1 text-saffron">• {sevaSummary}</span>}
           {query && <span className="ml-1 text-saffron">• “{query}”</span>}
@@ -851,7 +851,7 @@ const OrderManager = (_props: Props) => {
                       </div>
                       {when
                         ? <p className="text-xs text-maroon/80 mt-0.5">📅 {when}</p>
-                        : (item.category === "puja" || item.category === "chadhava") && <p className="text-xs text-amber-600 mt-0.5">📅 date not recorded (puja edited or deleted)</p>}
+                        : (item.category === "puja" || item.category === "chadhava") && <p className="text-xs text-amber-600 mt-0.5">📅 date not recorded (pooja edited or deleted)</p>}
                       {alternatives.length > 0 && (
                         <div className="mt-1.5 flex items-center gap-2">
                           <CalendarClock size={12} className="text-saffron shrink-0" />

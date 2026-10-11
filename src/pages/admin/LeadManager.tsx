@@ -296,7 +296,7 @@ const LeadManager = () => {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, phone or puja…"
+            placeholder="Search by name, phone or pooja…"
             className="w-full bg-transparent text-sm outline-none placeholder:text-brown/30"
           />
         </div>
@@ -354,7 +354,7 @@ const LeadManager = () => {
           <p className="text-xs text-brown/50 mt-1">
             {datePreset !== "all"
               ? "Try changing the date range or clearing filters."
-              : "Leads appear here when customers fill their details before booking a puja."}
+              : "Leads appear here when customers fill their details before booking a pooja."}
           </p>
         </div>
       ) : (
@@ -436,7 +436,7 @@ const LeadManager = () => {
                         numberContactedAt={numberContactedAt.get(phoneKey(l.phone))}
                       />
                       <a
-                        href={`https://wa.me/91${l.phone}?text=${encodeURIComponent(`🙏 Namaste ${l.name}! Thank you for showing interest in ${l.puja_name || "our puja"}. We will get in touch with you shortly. — Narayan Kripa`)}`}
+                        href={`https://wa.me/91${l.phone}?text=${encodeURIComponent(`🙏 Namaste ${l.name}! Thank you for showing interest in ${l.puja_name || "our pooja"}. We will get in touch with you shortly. — Narayan Kripa`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 rounded-xl bg-green-500 hover:bg-green-600 px-3 py-2 text-xs font-bold text-white transition-colors"

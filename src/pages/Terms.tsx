@@ -29,7 +29,7 @@ const Terms = () => {
             <h2 className="text-xl font-bold text-ink mb-4">2. About Our Services</h2>
             <p className="mb-3">Narayan Kripa is an online platform that provides the following spiritual services:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong>Online Puja Booking:</strong> Book sacred pujas performed by verified, experienced pandits at partnered temples across India.</li>
+              <li><strong>Online Pooja Booking:</strong> Book sacred poojas performed by verified, experienced pandits at partnered temples across India.</li>
               <li><strong>Chadhava Offerings:</strong> Offer chadhava (sacred offerings) at revered temples on your behalf.</li>
               <li><strong>Pandit Consultation:</strong> Connect with certified Vedic acharyas for kundali reading, marriage matching, vastu consultation, and other astrological guidance.</li>
               <li><strong>Prasad Delivery:</strong> Receive blessed prasad and blessings certificates delivered to your doorstep.</li>
@@ -63,11 +63,11 @@ const Terms = () => {
           <div>
             <h2 className="text-xl font-bold text-ink mb-4">5. Booking & Order Process</h2>
             <ul className="list-disc pl-6 space-y-2">
-              <li>All puja and chadhava bookings are subject to availability and confirmation.</li>
+              <li>All pooja and chadhava bookings are subject to availability and confirmation.</li>
               <li>By placing an order, you make an offer to purchase our services at the listed price.</li>
               <li>An order is confirmed only upon successful payment and receipt of a confirmation notification.</li>
               <li>We reserve the right to refuse or cancel any order for reasons including pricing errors, service unavailability, or suspected fraudulent activity.</li>
-              <li>Puja dates mentioned on our website are indicative. In case of unforeseen circumstances (natural calamities, temple closures, or religious observances), we may reschedule the puja to the nearest auspicious date and inform you accordingly.</li>
+              <li>Pooja dates mentioned on our website are indicative. In case of unforeseen circumstances (natural calamities, temple closures, or religious observances), we may reschedule the pooja to the nearest auspicious date and inform you accordingly.</li>
             </ul>
           </div>
 
@@ -137,7 +137,7 @@ const Terms = () => {
             <ul className="list-disc pl-6 space-y-2">
               <li>Our services are provided on an "as is" and "as available" basis without warranties of any kind, either express or implied.</li>
               <li>We do not guarantee uninterrupted, error-free, or secure access to our Website.</li>
-              <li>While we work with verified pandits and temple partners, we do not guarantee specific spiritual outcomes or results from any puja, chadhava, or consultation service.</li>
+              <li>While we work with verified pandits and temple partners, we do not guarantee specific spiritual outcomes or results from any pooja, chadhava, or consultation service.</li>
               <li>Astrological and pandit consultations are for guidance purposes only and should not be considered a substitute for professional medical, legal, or financial advice.</li>
             </ul>
           </div>

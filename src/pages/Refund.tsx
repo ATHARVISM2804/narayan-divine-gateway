@@ -27,7 +27,7 @@ const Refund = () => {
           <div>
             <h2 className="text-xl font-bold text-ink mb-4">2. Cancellation Policy</h2>
 
-            <h3 className="font-semibold text-ink mt-4 mb-2">2.1 Puja Bookings</h3>
+            <h3 className="font-semibold text-ink mt-4 mb-2">2.1 Pooja Bookings</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border border-line rounded-xl overflow-hidden">
                 <thead>
@@ -38,19 +38,19 @@ const Refund = () => {
                 </thead>
                 <tbody>
                   <tr className="border-b border-line">
-                    <td className="px-4 py-3">More than 48 hours before scheduled puja</td>
+                    <td className="px-4 py-3">More than 48 hours before scheduled pooja</td>
                     <td className="px-4 py-3 font-semibold text-green-700">100% refund</td>
                   </tr>
                   <tr className="border-b border-line bg-surface">
-                    <td className="px-4 py-3">24 – 48 hours before scheduled puja</td>
+                    <td className="px-4 py-3">24 – 48 hours before scheduled pooja</td>
                     <td className="px-4 py-3 font-semibold text-saffron">75% refund</td>
                   </tr>
                   <tr className="border-b border-line">
-                    <td className="px-4 py-3">Less than 24 hours before scheduled puja</td>
+                    <td className="px-4 py-3">Less than 24 hours before scheduled pooja</td>
                     <td className="px-4 py-3 font-semibold text-red-600">No refund</td>
                   </tr>
                   <tr className="bg-surface">
-                    <td className="px-4 py-3">After puja has been performed</td>
+                    <td className="px-4 py-3">After pooja has been performed</td>
                     <td className="px-4 py-3 font-semibold text-red-600">No refund</td>
                   </tr>
                 </tbody>
@@ -77,7 +77,7 @@ const Refund = () => {
             <h2 className="text-xl font-bold text-ink mb-4">3. Refund Eligibility</h2>
             <p className="mb-3">Refunds may be issued in the following circumstances:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Service not delivered:</strong> If a puja or chadhava was not performed despite successful payment.</li>
+              <li><strong>Service not delivered:</strong> If a pooja or chadhava was not performed despite successful payment.</li>
               <li><strong>Duplicate payment:</strong> If you were charged more than once for the same booking.</li>
               <li><strong>Technical error:</strong> If a system or payment gateway error resulted in an incorrect charge.</li>
               <li><strong>Service cancellation by us:</strong> If Narayan Kripa cancels a service due to unforeseen circumstances (natural calamities, temple closures, etc.).</li>
@@ -89,7 +89,7 @@ const Refund = () => {
             <h2 className="text-xl font-bold text-ink mb-4">4. Non-Refundable Cases</h2>
             <p className="mb-3">Refunds will <strong>not</strong> be issued in the following cases:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li>Puja or chadhava has already been performed</li>
+              <li>Pooja or chadhava has already been performed</li>
               <li>Dissatisfaction with spiritual or astrological outcomes (as results are based on faith and belief)</li>
               <li>Failure to provide correct personal details (name, gotra, etc.) leading to sankalp errors</li>
               <li>Cancellation requests made after the applicable cancellation window</li>
@@ -157,7 +157,7 @@ const Refund = () => {
           <div>
             <h2 className="text-xl font-bold text-ink mb-4">6. Rescheduling</h2>
             <p>
-              If you wish to reschedule a puja or consultation instead of cancelling, please contact us at least
+              If you wish to reschedule a pooja or consultation instead of cancelling, please contact us at least
               24 hours before the scheduled date. Rescheduling is subject to availability and may be accommodated
               at no extra charge for the first instance. Subsequent rescheduling requests may incur additional fees.
             </p>

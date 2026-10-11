@@ -12,7 +12,7 @@ export interface ExportableLead {
   contacted_at?: string | null;
 }
 
-export const LEAD_CSV_HEADERS = ["Date (IST)", "Name", "WhatsApp", "Puja", "Package", "Price (₹)", "Source", "Contacted (IST)"];
+export const LEAD_CSV_HEADERS = ["Date (IST)", "Name", "WhatsApp", "Pooja", "Package", "Price (₹)", "Source", "Contacted (IST)"];
 
 export const leadToCsvRow = (l: ExportableLead): CsvValue[] => [
   formatDateTimeIST(l.created_at),

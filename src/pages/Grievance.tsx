@@ -133,7 +133,7 @@ const Grievance = () => {
             <p className="mb-3">We handle grievances related to, but not limited to:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Payment issues: duplicate charges, failed refunds, incorrect deductions</li>
-              <li>Service quality: puja not performed as described, missing deliverables</li>
+              <li>Service quality: pooja not performed as described, missing deliverables</li>
               <li>Delivery issues: prasad not received, damaged shipment, incorrect address</li>
               <li>Data privacy: unauthorised use of personal information, data breach concerns</li>
               <li>Website content: objectionable content, copyright concerns</li>

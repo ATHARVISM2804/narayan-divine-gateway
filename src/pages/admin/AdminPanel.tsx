@@ -15,7 +15,7 @@ type Section = AdminSection;
 
 const NAV: { id: Section; label: string; Icon: typeof LayoutDashboard }[] = [
   { id: "dashboard" as const, label: "Dashboard", Icon: LayoutDashboard },
-  { id: "pujas"     as const, label: "Pujas",     Icon: Flame },
+  { id: "pujas"     as const, label: "Poojas",     Icon: Flame },
   { id: "chadhavas" as const, label: "Chadhavas", Icon: Flower2 },
   { id: "temples"   as const, label: "Temples",   Icon: Landmark },
   { id: "reviews"   as const, label: "Reviews",   Icon: MessageSquareQuote },
@@ -186,7 +186,7 @@ const Dashboard = ({
   pujas: Puja[]; chadhavas: Chadhava[]; onNavigate: (s: Section) => void;
 }) => {
   const stats = [
-    { label: "Total Pujas", value: pujas.length, active: pujas.filter((p) => p.status === "active").length, color: "from-saffron to-maroon", Icon: Flame },
+    { label: "Total Poojas", value: pujas.length, active: pujas.filter((p) => p.status === "active").length, color: "from-saffron to-maroon", Icon: Flame },
     { label: "Total Chadhavas", value: chadhavas.length, active: chadhavas.filter((c) => c.status === "active").length, color: "from-gold to-saffron", Icon: Flower2 },
     { label: "Active Products", value: pujas.filter((p) => p.status === "active").length + chadhavas.filter((c) => c.status === "active").length, active: null, color: "from-green-500 to-emerald-600", Icon: CircleCheck },
     { label: "Drafts", value: pujas.filter((p) => p.status === "draft").length + chadhavas.filter((c) => c.status === "draft").length, active: null, color: "from-gray-400 to-gray-500", Icon: FilePen },
@@ -209,7 +209,7 @@ const Dashboard = ({
 
       <div className="grid gap-4 sm:grid-cols-2">
         {([
-          { label: "Manage Pujas", desc: "Add, edit or remove puja listings", sec: "pujas" as const, Icon: Flame },
+          { label: "Manage Poojas", desc: "Add, edit or remove pooja listings", sec: "pujas" as const, Icon: Flame },
           { label: "Manage Chadhavas", desc: "Add, edit or remove chadhava offerings", sec: "chadhavas" as const, Icon: Flower2 },
         ]).map((c) => (
           <button key={c.sec} onClick={() => onNavigate(c.sec)}

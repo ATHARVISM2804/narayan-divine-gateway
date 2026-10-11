@@ -55,7 +55,7 @@ export function validateCartLines(items: unknown): LinesResult {
 
   const hasPuja = lines.some((l) => l.category === "puja");
   if (!hasPuja && lines.some((l) => l.category === "offering" || l.category === "addon")) {
-    return { ok: false, error: "Add-ons need a puja in the cart" };
+    return { ok: false, error: "Add-ons need a pooja in the cart" };
   }
   return { ok: true, lines };
 }

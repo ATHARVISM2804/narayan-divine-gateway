@@ -122,7 +122,7 @@ const HomeHero = ({ pujas, stats }: { pujas: Puja[]; stats: SiteStats | null }) 
                   <button
                     key={s.id}
                     onClick={() => setActive(i)}
-                    aria-label={`Puja ${i + 1}`}
+                    aria-label={`Pooja ${i + 1}`}
                     aria-current={i === active ? "true" : undefined}
                     className={cn("h-2 rounded-full transition-all", i === active ? "w-6 bg-maroon" : "w-2 bg-ink-soft/40")}
                   />

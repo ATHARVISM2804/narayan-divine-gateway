@@ -24,7 +24,7 @@ const byDate = <T extends { date?: string | null; countdown_datetime?: string | 
   parseDate(a.date, a.countdown_datetime) - parseDate(b.date, b.countdown_datetime);
 
 const Home = () => {
-  usePageTitle("Narayan Kripa | Online Puja and Chadhava at Famous Temples");
+  usePageTitle("Narayan Kripa | Online Pooja and Chadhava at Famous Temples");
 
   const pujasQ = useCatalog<Puja[]>("pujas:active", activePujasFetcher, activePujasFromSnapshot);
   const chadhavasQ = useCatalog<ChadhavaList>("chadhavas:active", chadhavaListFetcher, chadhavaListFromSnapshot);

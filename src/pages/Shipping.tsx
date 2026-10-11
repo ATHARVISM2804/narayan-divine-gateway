@@ -26,7 +26,7 @@ const Shipping = () => {
           {/* 2 */}
           <div>
             <h2 className="text-xl font-bold text-ink mb-4">2. Digital Deliverables</h2>
-            <p className="mb-3">The following items are delivered digitally after the puja or chadhava is performed:</p>
+            <p className="mb-3">The following items are delivered digitally after the pooja or chadhava is performed:</p>
 
             <div className="overflow-x-auto">
               <table className="w-full text-sm border border-line rounded-xl overflow-hidden">
@@ -39,7 +39,7 @@ const Shipping = () => {
                 </thead>
                 <tbody>
                   <tr className="border-b border-line">
-                    <td className="px-4 py-3">HD Puja / Chadhava Video</td>
+                    <td className="px-4 py-3">HD Pooja / Chadhava Video</td>
                     <td className="px-4 py-3">WhatsApp / Email</td>
                     <td className="px-4 py-3">Within 24 – 48 hours after the ceremony</td>
                   </tr>
@@ -49,7 +49,7 @@ const Shipping = () => {
                     <td className="px-4 py-3">Within 24 – 48 hours after the ceremony</td>
                   </tr>
                   <tr className="border-b border-line">
-                    <td className="px-4 py-3">Puja Photos</td>
+                    <td className="px-4 py-3">Pooja Photos</td>
                     <td className="px-4 py-3">WhatsApp / Email</td>
                     <td className="px-4 py-3">Within 24 – 48 hours after the ceremony</td>
                   </tr>
@@ -74,8 +74,8 @@ const Shipping = () => {
 
             <h3 className="font-semibold text-ink mt-4 mb-2">3.1 Prasad Shipment</h3>
             <p className="mb-3">
-              Blessed prasad from the puja or chadhava is carefully packaged and shipped to the delivery
-              address provided during checkout. Prasad delivery is included for eligible puja packages.
+              Blessed prasad from the pooja or chadhava is carefully packaged and shipped to the delivery
+              address provided during checkout. Prasad delivery is included for eligible pooja packages.
             </p>
 
             <div className="overflow-x-auto">
@@ -165,7 +165,7 @@ const Shipping = () => {
               <li>Delivery timelines are <strong>estimates</strong> and may vary due to courier delays, public holidays, weather conditions, or unforeseen circumstances.</li>
               <li>Please ensure your <strong>delivery address, pin code, and phone number</strong> are accurate during checkout. We are not responsible for delays caused by incorrect address information.</li>
               <li>Prasad is sacred and perishable in nature. Please accept delivery promptly and store appropriately.</li>
-              <li>For puja packages that <strong>do not include prasad delivery</strong>, only digital deliverables (video, certificate, photos) will be provided.</li>
+              <li>For pooja packages that <strong>do not include prasad delivery</strong>, only digital deliverables (video, certificate, photos) will be provided.</li>
             </ul>
           </div>
 

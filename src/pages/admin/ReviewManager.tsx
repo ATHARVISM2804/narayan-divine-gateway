@@ -203,7 +203,7 @@ const ReviewManager = ({ pujas, chadhavas }: Props) => {
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className={labelCls}>Show on puja</label>
+                  <label className={labelCls}>Show on pooja</label>
                   <select value={editing.puja_id || ""} onChange={(e) => setEditing({ ...editing, puja_id: e.target.value || null, chadhava_id: e.target.value ? null : editing.chadhava_id })} className={inputCls}>
                     <option value="">Not linked</option>
                     {pujas.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
