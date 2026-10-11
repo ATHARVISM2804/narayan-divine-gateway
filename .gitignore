@@ -68,3 +68,8 @@ public/google*.html
 
 # Written at build time by scripts/snapshot-catalog.mjs
 public/catalog-snapshot.json
+
+# gstack (project-local install, not committed)
+.claude/skills/
+.gstack/
+.gstack-worktrees/
