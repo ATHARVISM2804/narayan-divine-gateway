@@ -95,7 +95,7 @@ const ChadhavaDetail = () => {
   if (loading)
     return (
       <main className="container animate-pulse py-6 md:py-10">
-        <div className="grid gap-6 md:grid-cols-[1.15fr_1fr]">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
           <div className="aspect-[1483/1061] rounded-xl bg-surface-muted" />
           <div className="space-y-4">
             <div className="h-7 w-full rounded bg-surface-muted" />
@@ -156,7 +156,7 @@ const ChadhavaDetail = () => {
               <span className="truncate text-ink">{item}</span>
             </nav>
 
-            <div className="grid gap-5 md:grid-cols-[1.15fr_1fr] md:gap-8 lg:block">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-8 lg:block">
               <PujaGallery images={chadhava.gallery?.length ? chadhava.gallery : []} fallbackUrl={chadhava.image_url} name={item} />
 
               <div className="flex flex-col lg:hidden">

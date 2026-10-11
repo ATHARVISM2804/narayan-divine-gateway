@@ -18,7 +18,7 @@ const HowItWorks = ({ className }: { className?: string }) => {
     <section className={cn("py-12 md:py-16", className)}>
       <div className="container">
         <SectionHeading title={t("hiw_title")} />
-        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map(({ Icon, title, desc }, i) => (
             <li key={i} className="flex gap-4 rounded-xl border border-line bg-surface p-4 lg:flex-col lg:gap-3 lg:p-5">
               <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-saffron-soft text-saffron-dark">

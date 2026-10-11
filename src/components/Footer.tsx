@@ -45,7 +45,7 @@ const Footer = React.memo(() => {
         </ul>
       </div>
 
-      <div className="container grid gap-8 py-10 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="container grid grid-cols-1 gap-8 py-10 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
         <div>
           <p className="text-lg font-bold text-white">Narayan Kripa</p>
           <p className="mt-2 max-w-sm text-sm leading-relaxed">{t("footer_description")}</p>

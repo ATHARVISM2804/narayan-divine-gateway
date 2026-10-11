@@ -194,7 +194,7 @@ const Dashboard = ({
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="rounded-2xl border border-gold/40 bg-ivory p-5 shadow-soft">
             <div className="flex items-center justify-between">
@@ -207,7 +207,7 @@ const Dashboard = ({
         ))}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {([
           { label: "Manage Poojas", desc: "Add, edit or remove pooja listings", sec: "pujas" as const, Icon: Flame },
           { label: "Manage Chadhavas", desc: "Add, edit or remove chadhava offerings", sec: "chadhavas" as const, Icon: Flower2 },

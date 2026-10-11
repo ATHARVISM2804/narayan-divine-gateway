@@ -39,13 +39,14 @@ const Countdown = ({
   return (
     <div>
       <p className={cn("mb-2 text-sm font-semibold", onDark ? "text-white/85" : "text-ink")}>{label}</p>
-      <div className="flex gap-1.5" role="timer" aria-live="off">
+      {/* flex-wrap: on the narrowest phones (320px) a box wraps instead of running off-screen */}
+      <div className="flex flex-wrap gap-1.5" role="timer" aria-live="off">
         {units.map(({ v, l }) => (
           <div
             key={l}
             className={cn(
               "flex items-baseline gap-1 rounded-lg",
-              compact ? "px-2 py-1" : "px-2.5 py-1.5",
+              compact ? "px-2 py-1" : "px-2 py-1.5 sm:px-2.5",
               onDark ? "bg-white/15" : urgent ? "bg-maroon/10" : "bg-saffron-soft",
             )}
           >

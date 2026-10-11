@@ -145,7 +145,7 @@ export const WhyUs = ({ stats }: { stats: SiteStats | null }) => {
             ))}
           </dl>
         )}
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {reasons.map(({ icon: Icon, title, desc }) => (
             <li key={title} className="flex gap-4 rounded-xl border border-line bg-surface p-4 md:p-5">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-saffron-soft text-saffron-dark">
@@ -200,7 +200,7 @@ export const HomeFaq = () => {
   const faqs = [1, 2, 3, 4, 5].map((n) => ({ question: t(`faq_home_q${n}`), answer: t(`faq_home_a${n}`) }));
   return (
     <section className="border-t border-line py-12 md:py-16">
-      <div className="container grid gap-6 lg:grid-cols-[1fr_1.6fr] lg:gap-12">
+      <div className="container grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-12">
         <div>
           <SectionHeading title={t("faq_home_title")} className="mb-3" />
           <p className="text-[15px] text-ink-muted">{t("about_contact_d")}</p>

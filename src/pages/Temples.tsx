@@ -86,7 +86,7 @@ const Temples = () => {
 
           <div className="mt-6">
             {loading ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="aspect-[4/3] animate-pulse rounded-xl bg-surface-muted" />
                 ))}
@@ -96,7 +96,7 @@ const Temples = () => {
             ) : filtered.length === 0 ? (
               <p className="rounded-xl border border-line bg-surface p-8 text-center text-ink-muted">{t("tmp_no_results")}</p>
             ) : (
-              <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filtered.map((tp) => (
                   <li key={tp.id}>
                     <button
@@ -165,7 +165,7 @@ const Temples = () => {
                   ))}
                 </ul>
               )}
-              <div className="grid gap-3 pt-1 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2">
                 <Link to="/puja" onClick={() => setSelected(null)} className="btn-primary">
                   {t("tmp_book_puja_here")}
                 </Link>

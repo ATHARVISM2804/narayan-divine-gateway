@@ -9,7 +9,7 @@
 export const isWideGrid = (count: number): boolean => count > 0 && count <= 2;
 
 export const cardGridClass = (count: number): string => {
-  if (count === 1) return "grid gap-4 sm:grid-cols-2 lg:max-w-4xl lg:grid-cols-1";
-  if (count === 2) return "grid gap-4 sm:grid-cols-2 lg:gap-6";
-  return "grid gap-4 sm:grid-cols-2 lg:grid-cols-3";
+  if (count === 1) return "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:max-w-4xl lg:grid-cols-1";
+  if (count === 2) return "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6";
+  return "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3";
 };

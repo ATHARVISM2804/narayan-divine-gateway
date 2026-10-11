@@ -104,7 +104,7 @@ const Chadhava = () => {
       <section className="border-t border-line bg-surface-muted/60 py-12 md:py-16">
         <div className="container">
           <SectionHeading title={t("ch_how_title")} />
-          <ol className="grid gap-3 md:grid-cols-3">
+          <ol className="grid grid-cols-1 gap-3 md:grid-cols-3">
             {[1, 2, 3].map((n) => (
               <li key={n} className="flex gap-4 rounded-xl border border-line bg-surface p-4 md:p-5">
                 <span className="tabular grid h-8 w-8 shrink-0 place-items-center rounded-full bg-saffron text-sm font-bold text-white">{n}</span>

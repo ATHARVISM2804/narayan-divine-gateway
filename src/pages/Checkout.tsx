@@ -558,7 +558,7 @@ const Checkout = () => {
       </header>
 
       <div className="container py-6 pb-32 sm:py-8 lg:pb-12">
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">
           {/* Step 1: review */}
           {checkoutStep === "review" && (
             <div className="space-y-4">
@@ -604,7 +604,7 @@ const Checkout = () => {
                 <div className={card}>
                   <h3 className={sectionTitle}>{t("co_add_more_t")}</h3>
                   <p className="mb-4 mt-0.5 text-sm text-ink-muted">{t("co_add_more_d")}</p>
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {pujaOfferings.map((off) => {
                       const isSelected = !!selectedOfferings[off.id];
                       return (
@@ -735,7 +735,7 @@ const Checkout = () => {
                     <Users size={18} className="text-saffron-dark" /> {t("co_member_names")}
                   </h3>
                   <p className="mb-3 mt-0.5 text-sm text-ink-muted">{t("co_member_sub")}</p>
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {syncedMemberNames.map((val, idx) => (
                       <div key={idx}>
                         <label htmlFor={`co-member-${idx}`} className={fieldLabelCls}>

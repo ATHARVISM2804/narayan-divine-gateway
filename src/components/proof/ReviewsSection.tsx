@@ -62,7 +62,7 @@ const ReviewsSection = ({
 
         {texts.length > 0 && (
           <>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
               {texts.slice(0, shown).map((r) => {
                 const text = lang === "hi" && r.text_hi ? r.text_hi : r.text;
                 const city = lang === "hi" && r.city_hi ? r.city_hi : r.city;

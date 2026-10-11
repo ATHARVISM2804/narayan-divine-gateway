@@ -50,7 +50,7 @@ const scrollToId = (id: string) => {
 
 const DetailSkeleton = () => (
   <main className="container animate-pulse py-6 md:py-10">
-    <div className="grid gap-6 md:grid-cols-[1.15fr_1fr] lg:gap-10">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-10">
       <div className="aspect-[1483/1061] rounded-xl bg-surface-muted" />
       <div className="space-y-4">
         <div className="h-3 w-32 rounded bg-surface-muted" />
@@ -191,7 +191,7 @@ const PujaDetail = () => {
               <span className="truncate text-ink">{name}</span>
             </nav>
 
-            <div className="grid gap-5 md:grid-cols-[1.15fr_1fr] md:gap-8 lg:block">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-8 lg:block">
               <PujaGallery images={puja.gallery?.length ? puja.gallery : []} fallbackUrl={puja.image_url} name={name} />
 
               <div className="flex flex-col lg:hidden">
@@ -245,7 +245,7 @@ const PujaDetail = () => {
             <div className="container max-w-4xl">
               <SectionHeading title={t("pd_packages")} subtitle={t("select_package_sub")} />
 
-              <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={t("pd_packages")}>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label={t("pd_packages")}>
                 {prices.map((tier) => (
                   <PackageOption
                     key={tier.label}

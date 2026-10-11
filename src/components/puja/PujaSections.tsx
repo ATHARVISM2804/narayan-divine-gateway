@@ -66,7 +66,7 @@ const PujaSections = ({ puja, bookedCount }: { puja: Puja; bookedCount?: number 
       {benefits && benefits.length > 0 && (
         <Section id="pujaBenefits" muted>
           <SectionHeading title={t("pd_benefits")} className="mb-5" />
-          <ul className="grid gap-3 sm:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {benefits.map((b, i) => (
               <li key={i} className="flex items-start gap-3 rounded-xl border border-line bg-surface p-4">
                 <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-success/10 text-success">
@@ -98,7 +98,7 @@ const PujaSections = ({ puja, bookedCount }: { puja: Puja; bookedCount?: number 
         <Section id="templeDetails" muted>
           <SectionHeading title={t("pd_where")} className="mb-5" />
           <div className="overflow-hidden rounded-xl border border-line bg-surface">
-            <div className={puja.temple_image ? "grid md:grid-cols-2" : ""}>
+            <div className={puja.temple_image ? "grid grid-cols-1 md:grid-cols-2" : ""}>
               {puja.temple_image && (
                 <div className="relative aspect-[4/3] overflow-hidden md:aspect-auto md:min-h-[260px]">
                   <FitImage src={puja.temple_image} alt={templeName || location || ""} width={640} />

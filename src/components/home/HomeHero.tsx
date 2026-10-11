@@ -79,7 +79,7 @@ const HomeHero = ({ pujas, stats }: { pujas: Puja[]; stats: SiteStats | null }) 
 
   return (
     <section className="border-b border-line bg-surface-muted/60">
-      <div className="container grid items-center gap-6 py-6 md:py-12 lg:grid-cols-[1fr_minmax(0,400px)] lg:gap-12 lg:py-6 xl:grid-cols-[1fr_minmax(0,440px)] xl:gap-16">
+      <div className="container grid grid-cols-1 items-center gap-6 py-6 md:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-12 lg:py-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,440px)] xl:gap-16">
         <div>
           <h1 className="text-[26px] font-bold leading-tight text-ink md:text-4xl lg:text-[42px] lg:leading-[1.15] xl:text-5xl">
             {t("hero_s1_title")} <span className="text-maroon">{t("hero_s1_accent")}</span>

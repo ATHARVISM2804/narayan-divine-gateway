@@ -33,7 +33,7 @@ const AppDownload = () => {
   return (
     <section className="border-t border-line py-12 md:py-16">
       <div className="container">
-        <div className="grid gap-6 rounded-2xl border border-line bg-surface p-5 md:grid-cols-[1.2fr_1fr] md:items-center md:p-10 lg:grid-cols-2 lg:gap-12 lg:p-12">
+        <div className="grid grid-cols-1 gap-6 rounded-2xl border border-line bg-surface p-5 md:grid-cols-[1.2fr_1fr] md:items-center md:p-10 lg:grid-cols-2 lg:gap-12 lg:p-12">
           <div>
             <p className="inline-flex items-center gap-1.5 rounded-md bg-surface-muted px-2.5 py-1 text-xs font-semibold text-maroon">
               <Smartphone size={14} /> {t("app_badge")} · {t("app_coming")}

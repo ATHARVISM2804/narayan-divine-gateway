@@ -24,7 +24,7 @@ const Contact = () => {
 
       <section className="py-8 md:py-12">
         <div className="container">
-          <ul className="grid gap-3 md:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-3 md:grid-cols-3">
             {quick.map(({ Icon, title, value, href, external, track }) => (
               <li key={title}>
                 <a

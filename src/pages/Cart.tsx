@@ -41,7 +41,7 @@ const Cart = () => {
       <ListingHeader title={t("cart_title")} subtitle={t("cart_subtitle")} crumb={t("cart_title")} />
 
       <div className="container py-6 md:py-10">
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">
           <div>
             <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
               {items.map((item) => (
