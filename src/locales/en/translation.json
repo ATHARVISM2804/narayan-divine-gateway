@@ -553,5 +553,20 @@
   "home_rcv_5_d": "Real people answer before and after your pooja.",
   "home_rating_title": "Pooja rating",
   "home_rating_line_post": "devotees have trusted Narayan Kripa with their poojas",
-  "home_rating_cta": "See poojas"
+  "home_rating_cta": "See poojas",
+  "pay_loading": "Loading your booking…",
+  "pay_namaste": "Namaste",
+  "pay_title": "Complete your payment",
+  "pay_sub": "Your booking is reserved. Pay securely with UPI, card or net banking.",
+  "pay_items": "Your seva",
+  "pay_total": "Total",
+  "pay_button": "Pay",
+  "pay_secure": "Secure payment by Razorpay",
+  "pay_paid_title": "This booking is already paid",
+  "pay_paid_sub": "Thank you. We will keep you updated on WhatsApp.",
+  "pay_closed_title": "This payment link is closed",
+  "pay_closed_sub": "Please message us on WhatsApp and we will help you.",
+  "pay_invalid": "This payment link is not valid.",
+  "pay_retry": "Try again",
+  "pay_whatsapp": "Message us on WhatsApp"
 }

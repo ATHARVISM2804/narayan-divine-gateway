@@ -10,7 +10,7 @@ import { phoneKey } from "@/lib/orderSearch";
 import { toast } from "sonner";
 import { useShowMore } from "@/hooks/useShowMore";
 import ContactedSwitch from "./ContactedSwitch";
-import { RefreshCw, Download, Search, Calendar, X } from "lucide-react";
+import { RefreshCw, Download, Search, Calendar, X, ClipboardPlus } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -102,12 +102,13 @@ const WaIcon = ({ className }: { className: string }) => (
 
 /** One lead. Memoized: a Contacted tap re-draws only the cards of that number. */
 const LeadCard = memo(function LeadCard({
-  lead: l, saving, numberContactedAt, onToggle,
+  lead: l, saving, numberContactedAt, onToggle, onBook,
 }: {
   lead: LeadRow;
   saving: boolean;
   numberContactedAt: string | undefined;
   onToggle: (lead: LeadRow) => void;
+  onBook?: (lead: LeadRow) => void;
 }) {
   return (
     <div
@@ -176,12 +177,22 @@ const LeadCard = memo(function LeadCard({
           <WaIcon className="h-3.5 w-3.5 fill-white shrink-0" />
           Chat
         </a>
+        {onBook && (
+          <button
+            onClick={() => onBook(l)}
+            title="Book this pooja for the customer (New Booking, filled in)"
+            className="flex items-center gap-1.5 rounded-xl bg-saffron hover:bg-maroon px-3 py-2 text-xs font-bold text-white transition-colors"
+          >
+            <ClipboardPlus size={14} /> Book
+          </button>
+        )}
       </div>
     </div>
   );
 });
 
-const LeadManager = () => {
+/** onBook: open New Booking filled in with this lead (admin panel). */
+const LeadManager = ({ onBook }: { onBook?: (lead: Lead) => void } = {}) => {
   const [leads,   setLeads]   = useState<LeadRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search,  setSearch]  = useState("");
@@ -503,6 +514,7 @@ const LeadManager = () => {
                     saving={savingPhone === l._key}
                     numberContactedAt={numberContactedAt.get(l._key)}
                     onToggle={toggleContacted}
+                    onBook={onBook}
                   />
                 ))}
               </div>

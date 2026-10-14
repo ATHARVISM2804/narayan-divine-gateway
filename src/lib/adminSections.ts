@@ -1,7 +1,7 @@
 // Admin panel tabs live in the URL (/admin/orders, /admin/leads, …) so a reload,
 // a bookmark or the back button keeps the admin on the tab they were using.
 
-export const ADMIN_SECTIONS = ["dashboard", "pujas", "chadhavas", "temples", "reviews", "orders", "leads"] as const;
+export const ADMIN_SECTIONS = ["dashboard", "booking", "pujas", "chadhavas", "temples", "reviews", "orders", "leads"] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
 const isSection = (s: string): s is AdminSection => (ADMIN_SECTIONS as readonly string[]).includes(s);

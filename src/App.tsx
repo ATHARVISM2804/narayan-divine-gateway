@@ -27,6 +27,7 @@ const About = lazyPage(() => import("./pages/About"));
 const Cart = lazyPage(() => import("./pages/Cart"));
 const Checkout = lazyPage(() => import("./pages/Checkout"));
 const OrderSuccess = lazyPage(() => import("./pages/OrderSuccess"));
+const PayOrder = lazyPage(() => import("./pages/PayOrder"));
 const Login = lazyPage(() => import("./pages/Login"));
 const MyOrders = lazyPage(() => import("./pages/MyOrders"));
 const Privacy = lazyPage(() => import("./pages/Privacy"));
@@ -153,6 +154,8 @@ const App = () => (
             <Route path="/cart" element={<PublicLayout><Cart /></PublicLayout>} />
             <Route path="/checkout" element={<PublicLayout><Checkout /></PublicLayout>} />
             <Route path="/order-success" element={<PublicLayout><OrderSuccess /></PublicLayout>} />
+            {/* Payment link for a booking taken by the team (admin → New Booking) */}
+            <Route path="/pay/:id" element={<PublicLayout><PayOrder /></PublicLayout>} />
             <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />
             <Route path="/my-orders" element={<PublicLayout><MyOrders /></PublicLayout>} />
             <Route path="/privacy-policy" element={<PublicLayout><Privacy /></PublicLayout>} />

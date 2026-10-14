@@ -1,21 +1,24 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase, type Puja, type Chadhava, type Temple } from "@/lib/supabase";
 import { adminPath, sectionFromParam, type AdminSection } from "@/lib/adminSections";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { LayoutDashboard, Flame, Flower2, ShoppingBag, LogOut, Menu, X, ChevronRight, Users, Landmark, MessageSquareQuote, CircleCheck, FilePen } from "lucide-react";
+import { LayoutDashboard, Flame, Flower2, ShoppingBag, LogOut, Menu, X, ChevronRight, Users, Landmark, MessageSquareQuote, CircleCheck, FilePen, ClipboardPlus } from "lucide-react";
+import { matchLeadPuja } from "@/lib/manualBooking";
 import PujaManager from "./PujaManager";
 import ChadhavaManager from "./ChadhavaManager";
 import OrderManager from "./OrderManager";
 import LeadManager from "./LeadManager";
 import TempleManager from "./TempleManager";
 import ReviewManager from "./ReviewManager";
+import ManualBooking, { type BookingPrefill } from "./ManualBooking";
 
 type Section = AdminSection;
 
 const NAV: { id: Section; label: string; Icon: typeof LayoutDashboard }[] = [
   { id: "dashboard" as const, label: "Dashboard", Icon: LayoutDashboard },
+  { id: "booking"   as const, label: "New Booking", Icon: ClipboardPlus },
   { id: "pujas"     as const, label: "Poojas",     Icon: Flame },
   { id: "chadhavas" as const, label: "Chadhavas", Icon: Flower2 },
   { id: "temples"   as const, label: "Temples",   Icon: Landmark },
@@ -45,7 +48,19 @@ const AdminPanel = () => {
      going back to them shows the list at once instead of downloading it all again. */
   const [opened, setOpened] = useState<Section[]>(() => (section ? [section] : []));
   if (section && !opened.includes(section)) setOpened([...opened, section]);
-  const keepAlive = (s: "orders" | "leads") => opened.includes(s);
+  const keepAlive = (s: "orders" | "leads" | "booking") => opened.includes(s);
+
+  /* New Booking: a fresh form each time a lead's "Book" is pressed (the key remounts it);
+     Orders reloads after a booking so the new order is in the list. */
+  const [bookingPrefill, setBookingPrefill] = useState<BookingPrefill | null>(null);
+  const [bookingKey, setBookingKey] = useState(0);
+  const [ordersReload, setOrdersReload] = useState(0);
+  const bookForLead = useCallback((lead: { name: string; phone: string; puja_name: string | null; package_label: string | null }) => {
+    const match = matchLeadPuja(pujas.filter((p) => p.status === "active"), lead.puja_name, lead.package_label);
+    setBookingPrefill({ name: lead.name, phone: lead.phone, pujaId: match?.puja.id, tierLabel: match?.tier?.label });
+    setBookingKey((k) => k + 1);
+    nav(adminPath("booking"));
+  }, [pujas, nav]);
 
   /* Fetch data. A failed load says so: silently keeping the old list made a saved price
      look unsaved, and editing that stale copy could write old values back. */
@@ -132,7 +147,7 @@ const AdminPanel = () => {
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-gold/30 bg-ivory px-4 py-3 lg:px-6">
           <div className="flex items-center gap-3">
             <button onClick={() => setMobileNav(true)} className="lg:hidden text-maroon"><Menu size={22} /></button>
-            <h2 className="font-display text-lg text-maroon capitalize">{section}</h2>
+            <h2 className="font-display text-lg text-maroon capitalize">{NAV.find((n) => n.id === section)?.label ?? section}</h2>
           </div>
         </header>
 
@@ -157,14 +172,27 @@ const AdminPanel = () => {
             <ReviewManager pujas={pujas} chadhavas={chadhavas} />
           )}
           </ErrorBoundary>
+          {keepAlive("booking") && (
+            <div hidden={section !== "booking"}>
+              <ErrorBoundary>
+                <ManualBooking
+                  key={bookingKey}
+                  pujas={pujas}
+                  chadhavas={chadhavas}
+                  prefill={bookingPrefill}
+                  onViewOrders={() => { setOrdersReload((n) => n + 1); setSection("orders"); }}
+                />
+              </ErrorBoundary>
+            </div>
+          )}
           {keepAlive("orders") && (
             <div hidden={section !== "orders"}>
-              <ErrorBoundary><OrderManager /></ErrorBoundary>
+              <ErrorBoundary><OrderManager reloadSignal={ordersReload} /></ErrorBoundary>
             </div>
           )}
           {keepAlive("leads") && (
             <div hidden={section !== "leads"}>
-              <ErrorBoundary><LeadManager /></ErrorBoundary>
+              <ErrorBoundary><LeadManager onBook={bookForLead} /></ErrorBoundary>
             </div>
           )}
         </main>

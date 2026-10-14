@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { fetchAllRows } from "@/lib/fetchAll";
 import { checkOrderPayment } from "@/lib/orderStatus";
 import {
-  formatOrderItemLine, orderItemPujaId, orderItemTier, orderItemWhen, type OrderItem,
+  orderItemPujaId, orderItemTier, orderItemWhen, type OrderItem,
 } from "@/lib/orderItems";
 import {
   ALL, EMPTY_SEVA_FILTER, buildSevaCatalog, buildSubFilters, orderMatchesSeva, type SevaFilterValue,
@@ -18,6 +18,7 @@ import { orderMatchesSearch, searchText } from "@/lib/orderSearch";
 import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck, CalendarClock, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useShowMore } from "@/hooks/useShowMore";
+import { buildConfirmationMessage, buildPayLinkMessage, payLink, waLink } from "@/lib/orderMessages";
 
 /* Active pujas, used to move a booking to the same puja on another date. */
 interface PujaOption { id: string; name: string; date: string; location: string; prices: { label: string; price: number }[]; status: string }
@@ -42,9 +43,16 @@ interface Order {
   created_at: string;
   /** When the admin marked this customer's number as contacted (null = not contacted). */
   contacted_at?: string | null;
+  /** 'admin' = entered by hand in New Booking (docs/sql/manual-bookings.sql). */
+  source?: string | null;
+  admin_booking?: { catalog_amount?: number; amount_note?: string | null; created_by?: string } | null;
 }
 
-interface Props { onRefresh?: () => void }
+interface Props {
+  onRefresh?: () => void;
+  /** Changes after a New Booking is saved, so the (kept-alive) list loads it. */
+  reloadSignal?: number;
+}
 
 /** "Payment was cancelled by user · upi · payment_cancelled" */
 const paymentErrorText = (e: NonNullable<Order["payment_error"]>) =>
@@ -74,30 +82,8 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 32 32" className={className}><path d="M16.003 2C8.28 2 2 8.28 2 16.003c0 2.478.65 4.908 1.885 7.054L2 30l7.144-1.87A14.034 14.034 0 0 0 16.003 30C23.72 30 30 23.72 30 16.003 30 8.28 23.72 2 16.003 2zm0 25.6a11.62 11.62 0 0 1-5.923-1.62l-.425-.252-4.24 1.11 1.132-4.134-.277-.446A11.563 11.563 0 0 1 4.4 16.003c0-6.4 5.203-11.6 11.603-11.6s11.598 5.2 11.598 11.6-5.198 11.597-11.598 11.597zm6.36-8.68c-.348-.174-2.063-1.018-2.383-1.133-.32-.116-.552-.174-.786.174-.233.348-.902 1.133-1.107 1.366-.203.232-.407.26-.755.086-.348-.174-1.47-.543-2.8-1.727-1.034-.922-1.73-2.06-1.934-2.407-.203-.348-.022-.535.152-.707.157-.155.348-.406.523-.61.174-.202.232-.347.348-.578.116-.232.058-.435-.03-.61-.086-.173-.785-1.892-1.075-2.59-.284-.682-.573-.59-.785-.6l-.67-.012c-.232 0-.61.087-.928.435-.32.347-1.22 1.192-1.22 2.91s1.25 3.378 1.422 3.61c.174.232 2.46 3.757 5.96 5.27.834.36 1.483.575 1.99.736.836.267 1.598.23 2.2.14.672-.1 2.063-.843 2.353-1.658.29-.812.29-1.51.203-1.658-.087-.145-.32-.23-.67-.406z"/></svg>
 );
 
-/* Sanitize an Indian phone to wa.me digits (prefixes 91 for bare 10-digit numbers). */
-const waNumber = (phone: string) => {
-  const d = (phone || "").replace(/\D/g, "").replace(/^0+/, "");
-  return d.length === 10 ? `91${d}` : d;
-};
-
-/* Pre-filled order-confirmation message sent to the customer on WhatsApp. */
-const buildConfirmationMessage = (o: Order) => {
-  // Each line carries the puja date & place so the customer can spot a wrong-date booking.
-  const items  = (o.items || []).map((i: any) => `• ${formatOrderItemLine(i)}${i.quantity > 1 ? ` ×${i.quantity}` : ""}`).join("\n");
-  const amount = `₹${(o.amount / 100).toLocaleString("en-IN")}`;
-  return (
-    `🙏 Namaste ${o.customer_name}!\n\n` +
-    `Your booking with *Narayan Kripa* is confirmed ✅\n\n` +
-    (items ? `🪔 *Your Seva:*\n${items}\n\n` : "") +
-    `💰 *Amount:* ${amount}\n` +
-    `🧾 *Order Ref:* ${o.id.slice(0, 8).toUpperCase()}\n\n` +
-    `Our team will perform your seva with full devotion and keep you updated. 🌺\n\n` +
-    `Har Har Mahadev 🙏\n— Team Narayan Kripa`
-  );
-};
-
-const waConfirmLink = (o: Order) =>
-  `https://wa.me/${waNumber(o.customer_phone)}?text=${encodeURIComponent(buildConfirmationMessage(o))}`;
+const waConfirmLink = (o: Order) => waLink(o.customer_phone, buildConfirmationMessage(o));
+const waPayLink = (o: Order) => waLink(o.customer_phone, buildPayLinkMessage(o, payLink(o.id)));
 
 type DatePreset = "all" | "today" | "yesterday" | "last7" | "last30" | "thisMonth" | "lastMonth" | "custom";
 
@@ -150,7 +136,7 @@ const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 
 /* Only what the cards, the detail view, the PDF and the search read. select("*") also
    pulled meta_tracking (IP, browser, ad ids) and the payment signature of every order. */
-const ORDER_COLUMNS = "id, razorpay_order_id, razorpay_payment_id, customer_name, customer_email, customer_phone, customer_address, amount, status, items, puja_details, created_at, paid_at, payment_method, manual_payment, payment_error";
+const ORDER_COLUMNS = "id, razorpay_order_id, razorpay_payment_id, customer_name, customer_email, customer_phone, customer_address, amount, status, items, puja_details, created_at, paid_at, payment_method, manual_payment, payment_error, source, admin_booking";
 
 // Built once: toLocaleString with options builds a new formatter on every call.
 const createdFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -177,6 +163,9 @@ const OrderCard = memo(function OrderCard({
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusColors[o.status] || "bg-gray-100 text-gray-500"}`}>
             {o.status.toUpperCase()}
           </span>
+          {o.source === "admin" && (
+            <span title="Entered by hand in New Booking" className="rounded-full bg-maroon/10 px-2 py-0.5 text-[10px] font-bold text-maroon">MANUAL</span>
+          )}
         </div>
         <p className="text-xs text-brown/60 mt-0.5">{o.customer_email ? `${o.customer_email} • ` : ""}{o.customer_phone}</p>
         {sevaLines.map((i, idx) => {
@@ -241,7 +230,7 @@ const OrderCard = memo(function OrderCard({
   );
 });
 
-const OrderManager = (_props: Props) => {
+const OrderManager = ({ reloadSignal = 0 }: Props) => {
   const [orders,       setOrders]       = useState<Order[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -271,6 +260,7 @@ const OrderManager = (_props: Props) => {
   };
 
   useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { if (reloadSignal) fetchOrders(); }, [reloadSignal]);
 
   /* ── Razorpay is the source of truth: ask it about every unpaid order ── */
   const [syncing, setSyncing] = useState(false);
@@ -811,6 +801,34 @@ const OrderManager = (_props: Props) => {
                   <WhatsAppIcon className="h-4 w-4 fill-white shrink-0" />
                   Send Confirmation on WhatsApp
                 </a>
+                {(detail.status === "pending" || detail.status === "failed") && (
+                  <div className="mt-2 flex gap-2">
+                    <a
+                      href={waPayLink(detail)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="The customer pays online at this link; the order turns PAID by itself"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-green-400 bg-green-50 px-3 py-2 text-xs font-bold text-green-700 hover:bg-green-100"
+                    >
+                      <WhatsAppIcon className="h-3.5 w-3.5 fill-green-600 shrink-0" />
+                      Send payment link
+                    </a>
+                    <button
+                      onClick={() => { void navigator.clipboard?.writeText(payLink(detail.id)); toast.success("Payment link copied"); }}
+                      className="rounded-xl border border-gold/40 bg-cream px-3 py-2 text-xs font-bold text-maroon hover:bg-gold/20"
+                    >
+                      Copy link
+                    </button>
+                  </div>
+                )}
+                {detail.source === "admin" && (
+                  <p className="mt-2 text-xs text-brown/60">
+                    Entered by hand (New Booking).
+                    {detail.admin_booking?.amount_note && detail.admin_booking.catalog_amount != null && (
+                      <> Price changed from ₹{(detail.admin_booking.catalog_amount / 100).toLocaleString("en-IN")}: {detail.admin_booking.amount_note}</>
+                    )}
+                  </p>
+                )}
               </div>
               <div className="border-t border-gold/20 pt-3">
                 <p className="text-[11px] text-brown/50 uppercase mb-2">Items Ordered</p>
