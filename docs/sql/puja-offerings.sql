@@ -28,6 +28,8 @@ CREATE POLICY "Anyone can view active puja offerings"
   USING (status = 'active');
 
 -- Authenticated users can manage (admin)
+-- REPLACED by offerings-admin-only.sql: these let ANY signed-in customer change offerings.
+-- If you re-run this file, run offerings-admin-only.sql right after it.
 CREATE POLICY "Authenticated users can insert puja offerings"
   ON puja_offerings FOR INSERT
   TO authenticated
