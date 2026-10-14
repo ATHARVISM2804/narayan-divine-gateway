@@ -51,7 +51,7 @@ const Home = () => {
           <DegradedBanner />
         </div>
       )}
-      <HomeHero pujas={heroPujas} stats={stats} />
+      <HomeHero pujas={heroPujas} stats={stats} loading={pujasQ.loading} />
       <TrustStrip stats={stats} />
       <FeaturedPujas pujas={pujas} loading={pujasQ.loading} failed={pujasQ.failed} retry={pujasQ.retry} stats={stats} />
       <FeaturedChadhavas chadhavas={chadhavas} minPrices={chadhavasQ.data?.minPrices ?? {}} stats={stats} />

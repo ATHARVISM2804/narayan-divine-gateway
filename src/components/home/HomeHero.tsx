@@ -55,8 +55,23 @@ const Slide = ({ puja, priority }: { puja: Puja; priority: boolean }) => {
   );
 };
 
+/** Same footprint as a Slide (poster + facts + dots), shown while the pujas load so the
+    sections below don't jump down when the first slide arrives (layout shift was 0.5). */
+const SlideSkeleton = () => (
+  <div aria-hidden="true">
+    <div className="overflow-hidden rounded-xl border border-line bg-surface">
+      <div className="aspect-[1483/1061] animate-pulse bg-surface-muted" />
+      <div className="h-[280px] p-4 md:p-5">
+        <div className="h-5 w-3/4 rounded bg-surface-muted" />
+        <div className="mt-3 h-4 w-1/2 rounded bg-surface-muted" />
+      </div>
+    </div>
+    <div className="mt-3 h-2" />
+  </div>
+);
+
 /** Home hero: what we do in one line, the proof, and the next pujas to book. */
-const HomeHero = ({ pujas, stats }: { pujas: Puja[]; stats: SiteStats | null }) => {
+const HomeHero = ({ pujas, stats, loading = false }: { pujas: Puja[]; stats: SiteStats | null; loading?: boolean }) => {
   const { t } = useLanguage();
   const slides = pujas.slice(0, 4);
   const [active, setActive] = useState(0);
@@ -105,10 +120,13 @@ const HomeHero = ({ pujas, stats }: { pujas: Puja[]; stats: SiteStats | null }) 
               </li>
             ))}
           </ul>
-          {devotees && (
+          {devotees ? (
             <p className="mt-4 text-[15px] text-ink-muted">
               <Highlight>{roundedCount(devotees)} {t("pd_devotees_word")}</Highlight> {t("hero_s1_trust")}
             </p>
+          ) : (
+            // Holds the line's place until the count arrives, so the page doesn't shift.
+            !stats && <p aria-hidden="true" className="mt-4 text-[15px]">&nbsp;</p>
           )}
           <div className="mt-6 hidden gap-3 sm:flex">
             <Link to="/puja" className="btn-primary">{t("featured_view_all")} <ArrowRight size={18} /></Link>
@@ -116,6 +134,7 @@ const HomeHero = ({ pujas, stats }: { pujas: Puja[]; stats: SiteStats | null }) 
           </div>
         </div>
 
+        {slides.length === 0 && loading && <SlideSkeleton />}
         {slides.length > 0 && (
           <div
             onPointerEnter={() => setPaused(true)}
