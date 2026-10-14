@@ -1,5 +1,5 @@
-// Admin → Leads / Orders: the "Contacted" switch. One switch covers a whole phone number:
-// marking it marks every lead and order with that number (set_contacted in
+// Admin → Leads: the "Contacted" switch (not shown in Orders). One switch covers a whole phone
+// number: marking it marks every lead, and in the DB every order, with that number (set_contacted in
 // docs/sql/contacted-status.sql); the helpers below mirror that on the rows already loaded.
 import { supabase } from "@/lib/supabase";
 import { phoneKey } from "./orderSearch";

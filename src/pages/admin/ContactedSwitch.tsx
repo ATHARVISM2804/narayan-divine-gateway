@@ -1,5 +1,5 @@
-/* "Not contacted / Contacted" switch on a lead or order card. Switching it marks every
-   lead and order with the same phone number (see src/lib/contacted.ts). */
+/* "Not contacted / Contacted" switch on a lead card. Switching it marks every lead (and,
+   in the DB, every order) with the same phone number (see src/lib/contacted.ts). */
 
 const shortDateTime = (iso: string) =>
   new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
