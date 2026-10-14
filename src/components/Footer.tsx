@@ -4,6 +4,7 @@ import { Facebook, Instagram, Lock, Mail, MapPin, MessageCircle, Phone, Video } 
 import { useLanguage } from "@/context/LanguageContext";
 import { whatsappLink } from "@/lib/whatsapp";
 import { PrasadBoxIcon } from "@/components/icons";
+import Logo from "@/components/Logo";
 
 const Footer = React.memo(() => {
   const { t } = useLanguage();
@@ -47,8 +48,10 @@ const Footer = React.memo(() => {
 
       <div className="container grid grid-cols-1 gap-8 py-10 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
         <div>
-          <p className="text-lg font-bold text-white">Narayan Kripa</p>
-          <p className="mt-2 max-w-sm text-sm leading-relaxed">{t("footer_description")}</p>
+          <div className="inline-flex">
+            <Logo tone="light" />
+          </div>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed">{t("footer_description")}</p>
           <div className="mt-4 flex gap-2">
             {social.map(({ Icon, label, href }) => (
               <a
