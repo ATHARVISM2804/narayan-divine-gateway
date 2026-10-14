@@ -13,7 +13,8 @@
     ]
   },
   "rewrites": [
-    { "source": "/((?!_vercel/|assets/).*)", "destination": "/index.html" }
+    { "source": "/sb/:path*", "destination": "https://opztoxuohtizymhwofas.supabase.co/:path*" },
+    { "source": "/((?!_vercel/|assets/|sb/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
