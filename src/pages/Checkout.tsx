@@ -16,6 +16,8 @@ import { toast } from "sonner";
 
 import { useLanguage } from "@/context/LanguageContext";
 import StorageImage from "@/components/StorageImage";
+import OfferingRow from "@/components/shared/OfferingRow";
+import { MAX_QTY } from "@/lib/orderLimits";
 import { whatsappLink } from "@/lib/whatsapp";
 
 declare global {
@@ -61,7 +63,7 @@ const Checkout = () => {
   const nav = useNavigate();
   const { items, totalPrice: cartTotal, clearCart, removeItem, setItemPrice } = useCart();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   usePageTitle(`${t("co_title")} | Narayan Kripa`);
 
   /* Steps */
@@ -94,7 +96,8 @@ const Checkout = () => {
   const [bookingFallback, setBookingFallback] = useState<string | null>(null);
   const [wantBox, setWantBox] = useState(false);
   const [pujaOfferings, setPujaOfferings] = useState<PujaOffering[]>([]);
-  const [selectedOfferings, setSelectedOfferings] = useState<Record<string, boolean>>({});
+  // Puja add-on offerings: id → quantity (absent = not added).
+  const [selectedOfferings, setSelectedOfferings] = useState<Record<string, number>>({});
 
   const BLESSING_BOX_PRICE = 200;
 
@@ -139,11 +142,16 @@ const Checkout = () => {
       .then(({ data }) => { if (data) setPujaOfferings(data as PujaOffering[]); });
   }, [pujaId]);
 
-  const toggleOffering = (id: string) => {
-    setSelectedOfferings(prev => ({ ...prev, [id]: !prev[id] }));
-  };
+  const setOfferingQty = (id: string, qty: number) =>
+    setSelectedOfferings((prev) => {
+      const next = { ...prev };
+      if (qty <= 0) delete next[id];
+      else next[id] = Math.min(qty, MAX_QTY);
+      return next;
+    });
 
-  const offeringsTotal = pujaOfferings.filter(o => selectedOfferings[o.id]).reduce((sum, o) => sum + o.price, 0);
+  // price × quantity, the same sum create-order makes (its amount is checked against totalPrice).
+  const offeringsTotal = pujaOfferings.reduce((sum, o) => sum + o.price * (selectedOfferings[o.id] || 0), 0);
   const totalPrice = cartTotal + (wantBox && pujaItem ? BLESSING_BOX_PRICE : 0) + offeringsTotal;
 
   // Sync memberNames array length when memberCount changes
@@ -280,7 +288,7 @@ const Checkout = () => {
         orderItems.push({ id: "blessing-box", name: "Narayan Kripa Blessing Box", price: BLESSING_BOX_PRICE, quantity: 1, category: "addon" });
       }
       pujaOfferings.filter(o => selectedOfferings[o.id]).forEach(o => {
-        orderItems.push({ id: `offering-${o.id}`, name: o.name, price: o.price, quantity: 1, category: "offering" });
+        orderItems.push({ id: `offering-${o.id}`, name: o.name, price: o.price, quantity: selectedOfferings[o.id], category: "offering" });
       });
 
       const { data: fnData, error: fnError } = await supabase.functions.invoke("create-order", {
@@ -314,7 +322,7 @@ const Checkout = () => {
           if (id.startsWith("offering-")) {
             const offeringId = id.slice("offering-".length);
             setPujaOfferings((prev) => prev.filter((o) => o.id !== offeringId));
-            setSelectedOfferings((prev) => ({ ...prev, [offeringId]: false }));
+            setOfferingQty(offeringId, 0);
           } else {
             removeItem(id);
           }
@@ -507,6 +515,8 @@ const Checkout = () => {
   }
 
   const selectedOfferingList = pujaOfferings.filter((o) => selectedOfferings[o.id]);
+  const offeringUnits = selectedOfferingList.reduce((n, o) => n + selectedOfferings[o.id], 0);
+  const offName = (o: PujaOffering) => (lang === "hi" && o.name_hi ? o.name_hi : o.name);
   const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
   const card = "rounded-xl border border-line bg-surface p-4 sm:p-5";
   const sectionTitle = "text-base font-semibold text-ink";
@@ -540,8 +550,10 @@ const Checkout = () => {
         ))}
         {selectedOfferingList.map((off) => (
           <li key={off.id} className="flex justify-between gap-3">
-            <span className="min-w-0 text-ink-muted">{off.name}</span>
-            <span className="tabular shrink-0 font-medium text-ink">{inr(off.price)}</span>
+            <span className="min-w-0 text-ink-muted">
+              {offName(off)} {selectedOfferings[off.id] > 1 && <span className="text-ink-soft">x {selectedOfferings[off.id]}</span>}
+            </span>
+            <span className="tabular shrink-0 font-medium text-ink">{inr(off.price * selectedOfferings[off.id])}</span>
           </li>
         ))}
         {wantBox && pujaItem && (
@@ -625,49 +637,16 @@ const Checkout = () => {
                 <div className={card}>
                   <h3 className={sectionTitle}>{t("co_add_more_t")}</h3>
                   <p className="mb-4 mt-0.5 text-sm text-ink-muted">{t("co_add_more_d")}</p>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {pujaOfferings.map((off) => {
-                      const isSelected = !!selectedOfferings[off.id];
-                      return (
-                        <button
-                          key={off.id}
-                          onClick={() => toggleOffering(off.id)}
-                          aria-pressed={isSelected}
-                          className={`flex items-start gap-3 rounded-[10px] border-2 p-3 text-left transition-colors ${
-                            isSelected ? "border-saffron bg-saffron-soft" : "border-line bg-surface hover:border-saffron/40"
-                          }`}
-                        >
-                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-muted">
-                            {off.image_url ? (
-                              <StorageImage src={off.image_url} width={48} alt="" className="h-full w-full object-cover" />
-                            ) : (
-                              <span className="grid h-full w-full place-items-center text-ink-soft">
-                                <Flower2 size={20} />
-                              </span>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="text-sm font-semibold text-ink">{off.name}</p>
-                              <span
-                                className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${
-                                  isSelected ? "border-saffron bg-saffron text-white" : "border-input bg-surface"
-                                }`}
-                              >
-                                {isSelected && <Check size={12} strokeWidth={3} />}
-                              </span>
-                            </div>
-                            {off.description && <p className="mt-0.5 line-clamp-2 text-xs text-ink-soft">{off.description}</p>}
-                            <p className="tabular mt-1 text-sm font-bold text-saffron-dark">{inr(off.price)}</p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {/* Each offering can be added a few times (e.g. 3 chunari), up to the server's limit. */}
+                  <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+                    {pujaOfferings.map((off) => (
+                      <OfferingRow key={off.id} offering={off} qty={selectedOfferings[off.id] || 0} onQty={(q) => setOfferingQty(off.id, q)} max={MAX_QTY} placeholder={<Flower2 size={22} />} />
+                    ))}
+                  </ul>
                   {offeringsTotal > 0 && (
                     <p className="mt-3 flex items-center justify-between rounded-[10px] bg-saffron-soft px-3.5 py-2 text-sm">
                       <span className="font-medium text-ink-muted">
-                        {selectedOfferingList.length} {t("co_offerings_selected")}
+                        {offeringUnits} {t("co_offerings_selected")}
                       </span>
                       <span className="tabular font-bold text-saffron-dark">+{inr(offeringsTotal)}</span>
                     </p>
@@ -681,14 +660,18 @@ const Checkout = () => {
                 <ul className="space-y-2.5 text-sm">
                   {items.map((item) => (
                     <li key={item.id} className="flex justify-between gap-3">
-                      <span className="text-ink-muted">{item.name}</span>
+                      <span className="text-ink-muted">
+                        {item.name} {item.quantity > 1 && <span className="text-ink-soft">x {item.quantity}</span>}
+                      </span>
                       <span className="tabular shrink-0 font-medium text-ink">{inr(item.price * item.quantity)}</span>
                     </li>
                   ))}
                   {selectedOfferingList.map((off) => (
                     <li key={off.id} className="flex justify-between gap-3">
-                      <span className="text-ink-muted">{off.name}</span>
-                      <span className="tabular shrink-0 font-medium text-ink">{inr(off.price)}</span>
+                      <span className="text-ink-muted">
+                        {offName(off)} {selectedOfferings[off.id] > 1 && <span className="text-ink-soft">x {selectedOfferings[off.id]}</span>}
+                      </span>
+                      <span className="tabular shrink-0 font-medium text-ink">{inr(off.price * selectedOfferings[off.id])}</span>
                     </li>
                   ))}
                 </ul>

@@ -56,6 +56,14 @@ describe("priceOrderLines", () => {
     expect(r.items[3]).toMatchObject({ name: "Narayan Kripa Blessing Box", price: 200 });
   });
 
+  it("charges a puja's offering once per unit booked", async () => {
+    const r = await priceOrderLines(db, [line(`puja-${PUJA_ID}-Single`, "puja"), line(`offering-${ADDON_ID}`, "offering", 3)]);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.totalPaise).toBe((851 + 3 * 51) * 100);
+    expect(r.items[1]).toMatchObject({ name: "Deep Daan", price: 51, quantity: 3 });
+  });
+
   it("refuses a package that no longer exists", async () => {
     const r = await priceOrderLines(db, [line(`puja-${PUJA_ID}-Family`, "puja")]);
     expect(r).toMatchObject({ ok: false, status: 409, code: "ITEM_UNAVAILABLE" });

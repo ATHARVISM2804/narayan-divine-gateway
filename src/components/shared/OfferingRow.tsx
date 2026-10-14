@@ -1,13 +1,31 @@
 import { Minus, Plus } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import type { ChadhavaOffering } from "@/lib/supabase";
 import FitImage from "@/components/FitImage";
 import { TempleIcon } from "@/components/icons";
 import { formatInr } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
-/** One chadhava offering with Add / − qty +, the same row on the page and in the popup. */
-const OfferingRow = ({ offering: o, qty, onQty }: { offering: ChadhavaOffering; qty: number; onQty: (qty: number) => void }) => {
+/** What a row needs; chadhava offerings and a puja's add-on offerings both fit. */
+export interface OfferingLike {
+  id: string;
+  name: string;
+  name_hi?: string | null;
+  description?: string | null;
+  description_hi?: string | null;
+  price: number;
+  image_url?: string | null;
+}
+
+/** One offering with Add / − qty +: chadhava page and popup, and checkout add-ons. */
+const OfferingRow = ({ offering: o, qty, onQty, max, placeholder }: {
+  offering: OfferingLike;
+  qty: number;
+  onQty: (qty: number) => void;
+  /** Highest quantity allowed (the server's limit); + stops there. */
+  max?: number;
+  /** Shown when the offering has no picture; a temple by default. */
+  placeholder?: React.ReactNode;
+}) => {
   const { t, lang } = useLanguage();
   const hi = lang === "hi";
   const name = hi && o.name_hi ? o.name_hi : o.name;
@@ -20,7 +38,7 @@ const OfferingRow = ({ offering: o, qty, onQty }: { offering: ChadhavaOffering; 
           <FitImage src={o.image_url} alt={name} width={128} />
         ) : (
           <span className="grid h-full w-full place-items-center text-ink-soft">
-            <TempleIcon size={22} />
+            {placeholder ?? <TempleIcon size={22} />}
           </span>
         )}
       </div>
@@ -42,7 +60,12 @@ const OfferingRow = ({ offering: o, qty, onQty }: { offering: ChadhavaOffering; 
             <Minus size={16} />
           </button>
           <span className="tabular w-6 text-center text-sm font-bold" aria-live="polite">{qty}</span>
-          <button onClick={() => onQty(qty + 1)} className="grid h-full w-10 place-items-center hover:bg-saffron-dark" aria-label={t("ch_qty_add")}>
+          <button
+            onClick={() => onQty(qty + 1)}
+            disabled={max !== undefined && qty >= max}
+            className="grid h-full w-10 place-items-center hover:bg-saffron-dark disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+            aria-label={t("ch_qty_add")}
+          >
             <Plus size={16} />
           </button>
         </div>

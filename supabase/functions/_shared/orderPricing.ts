@@ -46,8 +46,9 @@ export function validateCartLines(items: unknown): LinesResult {
     if (typeof quantity !== "number" || !Number.isInteger(quantity) || quantity < 1) {
       return { ok: false, error: `Invalid quantity for ${name}` };
     }
-    // Add-ons are a single unit on top of a puja; pujas and chadhavas can be booked a few times.
-    const max = category === "offering" || category === "addon" ? 1 : MAX_QTY;
+    // The blessing box is one per order; pujas, chadhavas and a puja's offerings
+    // (e.g. 3 chunaris) can be booked a few times.
+    const max = category === "addon" ? 1 : MAX_QTY;
     if (quantity > max) return { ok: false, error: `Invalid quantity for ${name}` };
 
     lines.push({ id, category, quantity, name });

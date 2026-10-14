@@ -16,7 +16,8 @@ import Countdown from "@/components/shared/Countdown";
 import RichText from "@/components/shared/RichText";
 import ReadMore from "@/components/shared/ReadMore";
 import StickyActionBar from "@/components/shared/StickyActionBar";
-import OfferingRow from "@/components/chadhava/OfferingRow";
+import OfferingRow from "@/components/shared/OfferingRow";
+import { MAX_QTY } from "@/lib/orderLimits";
 import OfferingsSheet from "@/components/chadhava/OfferingsSheet";
 import TrustRow from "@/components/shared/TrustRow";
 import FaqList, { type Faq } from "@/components/shared/FaqList";
@@ -217,7 +218,7 @@ const ChadhavaDetail = () => {
               ) : (
                 <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
                   {offerings.map((o) => (
-                    <OfferingRow key={o.id} offering={o} qty={selected[o.id] || 0} onQty={(q) => setQty(o.id, q)} />
+                    <OfferingRow key={o.id} offering={o} qty={selected[o.id] || 0} onQty={(q) => setQty(o.id, q)} max={MAX_QTY} />
                   ))}
                 </ul>
               )}

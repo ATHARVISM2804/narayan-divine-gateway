@@ -2,7 +2,8 @@ import { ArrowRight, Check, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import type { ChadhavaOffering } from "@/lib/supabase";
 import BottomSheet from "@/components/shared/BottomSheet";
-import OfferingRow from "@/components/chadhava/OfferingRow";
+import OfferingRow from "@/components/shared/OfferingRow";
+import { MAX_QTY } from "@/lib/orderLimits";
 import { formatInr } from "@/components/ui/typography";
 
 /**
@@ -53,7 +54,7 @@ const OfferingsSheet = ({
         ) : (
           <ul className="mt-4 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
             {offerings.map((o) => (
-              <OfferingRow key={o.id} offering={o} qty={selected[o.id] || 0} onQty={(q) => onQty(o.id, q)} />
+              <OfferingRow key={o.id} offering={o} qty={selected[o.id] || 0} onQty={(q) => onQty(o.id, q)} max={MAX_QTY} />
             ))}
           </ul>
         )}

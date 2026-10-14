@@ -30,9 +30,15 @@ describe("validateCartLines", () => {
     expect(validateCartLines([line(PUJA, "puja", 1), line(CHADHAVA, "chadhava", qty)]).ok).toBe(false);
   });
 
-  it("allows only a single unit of an add-on", () => {
-    expect(validateCartLines([line(PUJA, "puja"), line(OFFERING, "offering", 2)]).ok).toBe(false);
-    expect(validateCartLines([line(PUJA, "puja"), line("blessing-box", "addon", 3)]).ok).toBe(false);
+  it("lets a puja's offering be booked a few times, up to the limit", () => {
+    const r = validateCartLines([line(PUJA, "puja"), line(OFFERING, "offering", 3)]);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.lines[1].quantity).toBe(3);
+    expect(validateCartLines([line(PUJA, "puja"), line(OFFERING, "offering", MAX_QTY + 1)]).ok).toBe(false);
+  });
+
+  it("allows only one blessing box", () => {
+    expect(validateCartLines([line(PUJA, "puja"), line("blessing-box", "addon", 2)]).ok).toBe(false);
   });
 
   it("rejects add-ons without a puja", () => {
