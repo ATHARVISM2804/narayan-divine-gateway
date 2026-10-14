@@ -47,6 +47,9 @@ const ImageUpload = ({ value, onChange }: Props) => {
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  // The result is still reported if this box unmounts mid-upload (the chadhava form has
+  // tabs): the parent decides, via useFormSession, whether the form it belongs to is open.
+  // Parents must apply it with a functional update, never a copy of the form taken earlier.
 
   const upload = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -60,26 +63,29 @@ const ImageUpload = ({ value, onChange }: Props) => {
     setError("");
     setUploading(true);
 
-    const compressed = await compressImage(file);
-    const ext = compressed.name.split(".").pop() || "jpg";
-    const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    try {
+      const compressed = await compressImage(file);
+      const ext = compressed.name.split(".").pop() || "jpg";
+      const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    // Names are unique per upload, so browsers/CDN can cache for a year.
-    const { error: upErr } = await supabase.storage
-      .from("product-images")
-      .upload(name, compressed, { cacheControl: "31536000", upsert: false });
+      // Names are unique per upload, so browsers/CDN can cache for a year.
+      const { error: upErr } = await supabase.storage
+        .from("product-images")
+        .upload(name, compressed, { cacheControl: "31536000", upsert: false });
+      if (upErr) {
+        setError(upErr.message);
+        return;
+      }
 
-    if (upErr) {
-      setError(upErr.message);
-      setUploading(false);
-      return;
+      const { data } = supabase.storage.from("product-images").getPublicUrl(name);
+      // On the live site the client talks through /sb (lib/supabase.ts); save the project's own
+      // address so the image is recognised and resized by Vercel instead of streamed through /sb.
+      onChange(data.publicUrl.replace(SUPABASE_URL, SUPABASE_DIRECT_URL));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed. Try again.");
+    } finally {
+      setUploading(false); // always, or the spinner stayed forever after a network error
     }
-
-    const { data } = supabase.storage.from("product-images").getPublicUrl(name);
-    // On the live site the client talks through /sb (lib/supabase.ts); save the project's own
-    // address so the image is recognised and resized by Vercel instead of streamed through /sb.
-    onChange(data.publicUrl.replace(SUPABASE_URL, SUPABASE_DIRECT_URL));
-    setUploading(false);
   }, [onChange]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {

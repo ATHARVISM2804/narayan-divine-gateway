@@ -95,6 +95,22 @@ export function writeCache<T>(key: string, data: T, now = Date.now()): void {
   }
 }
 
+/**
+ * Drops every saved catalog copy on this device. The admin panel calls it after a save,
+ * so the admin checking the site on the same device sees the new price at once instead
+ * of a copy up to FRESH_MS old.
+ */
+export function clearCatalogCache(): void {
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k?.startsWith(CACHE_PREFIX)) localStorage.removeItem(k);
+    }
+  } catch {
+    /* storage blocked — nothing saved to clear */
+  }
+}
+
 /* ── snapshot baked into the build ── */
 
 let snapshotPromise: Promise<Snapshot | null> | null = null;

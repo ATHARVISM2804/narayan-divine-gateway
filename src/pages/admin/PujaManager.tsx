@@ -1,11 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, type Puja, type PujaOffering } from "@/lib/supabase";
 import { Plus, Pencil, Trash2, X, Loader2, Star, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
 import StorageImage from "@/components/StorageImage";
+import { deleteRow, insertRow, saveErrorMessage, updateRow } from "@/lib/adminWrite";
+import { isDirty, isWholeRupees, missingField, PRICE_RULE, priceInput, tierProblem } from "@/lib/adminValidate";
+import { clearCatalogCache } from "@/lib/catalog";
+import { fromIstInput, toIstInput } from "@/lib/istDatetime";
+import { useFormSession } from "./useFormSession";
 
-interface Props { pujas: Puja[]; onRefresh: () => void }
+interface Props { pujas: Puja[]; onRefresh: () => Promise<void> | void }
 
 const emptyPuja = (): Partial<Puja> => ({
   name: "", deity: "", location: "", date: "", countdown_datetime: "", image_url: null, benefit: "", occasion: "", occasion_hi: "",
@@ -90,7 +95,9 @@ const FaqEditor = ({ items, onChange }: { items: { question: string; answer: str
 );
 
 /* Gallery editor */
-const GalleryEditor = ({ images, onChange }: { images: string[]; onChange: (v: string[]) => void }) => (
+/* `onAdd` runs when an upload finishes, seconds later: it must add to the gallery as it is
+   then, not to the `images` this render saw. */
+const GalleryEditor = ({ images, onChange, onAdd }: { images: string[]; onChange: (v: string[]) => void; onAdd: (url: string) => void }) => (
   <div className="space-y-3">
     <div className="grid grid-cols-3 gap-2">
       {images.map((url, i) => (
@@ -104,7 +111,7 @@ const GalleryEditor = ({ images, onChange }: { images: string[]; onChange: (v: s
       ))}
     </div>
     {images.length < 6 && (
-      <ImageUpload value={null} onChange={(url) => { if (url) onChange([...images, url]); }} />
+      <ImageUpload value={null} onChange={(url) => { if (url) onAdd(url); }} />
     )}
     <p className="text-[11px] text-brown/40">{images.length}/6 images</p>
   </div>
@@ -115,46 +122,90 @@ const emptyOffering = (pujaId: string): Partial<PujaOffering> => ({
   description: "", description_hi: "", status: "active", sort_order: 0,
 });
 
+/** A loaded row with every list field present, so the editors never see undefined. */
+const withDefaults = (p: Puja): Partial<Puja> => ({
+  ...p, gallery: p.gallery || [], benefits: p.benefits || [], benefits_hi: p.benefits_hi || [],
+  process_steps: p.process_steps || [], process_steps_hi: p.process_steps_hi || [],
+  faqs: p.faqs || [], faqs_hi: p.faqs_hi || [], includes: p.includes || [], includes_hi: p.includes_hi || [],
+});
+
 const PujaManager = ({ pujas, onRefresh }: Props) => {
   const [editing, setEditing] = useState<Partial<Puja> | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [opening, setOpening] = useState<string | null>(null);
 
   // Offerings state
   const [offerings, setOfferings] = useState<PujaOffering[]>([]);
+  const [offeringsError, setOfferingsError] = useState(false);
   const [editingOff, setEditingOff] = useState<Partial<PujaOffering> | null>(null);
+  const offOriginal = useRef<Partial<PujaOffering> | null>(null);
   const [savingOff, setSavingOff] = useState(false);
   const [offeringCounts, setOfferingCounts] = useState<Record<string, number>>({});
+  const offeringsRun = useRef(0);
 
-  // Load offering counts for list view
-  useEffect(() => {
-    const loadCounts = async () => {
-      const { data } = await supabase.from("puja_offerings").select("puja_id");
-      if (data) {
-        const counts: Record<string, number> = {};
-        data.forEach((o: { puja_id: string }) => { counts[o.puja_id] = (counts[o.puja_id] || 0) + 1; });
-        setOfferingCounts(counts);
-      }
-    };
-    loadCounts();
-  }, [pujas]);
+  // Field updates always start from the latest form, never from the copy a slow callback
+  // (an image upload finishing seconds later) captured: that copy used to put back the old
+  // price the admin had just changed, and "Update" then saved ₹951 again.
+  const patch = (fields: Partial<Puja>) => setEditing((prev) => (prev ? { ...prev, ...fields } : prev));
+  const patchOff = (fields: Partial<PujaOffering>) => setEditingOff((prev) => (prev ? { ...prev, ...fields } : prev));
+
+  // Uploads finish seconds later: only apply them to the form they were started in.
+  const form = useFormSession();
+  const offForm = useFormSession();
+
+  const openOffering = (o: Partial<PujaOffering> | null) => { offForm.bump(); setEditingOff(o); offOriginal.current = o; };
+  const offeringUnsaved = () => editingOff != null && isDirty(editingOff, offOriginal.current);
+
+  // Offering counts for the list view
+  const loadCounts = useCallback(async () => {
+    const { data, error } = await supabase.from("puja_offerings").select("puja_id");
+    if (error || !data) return; // the badge is a hint; keep the last counts
+    const counts: Record<string, number> = {};
+    data.forEach((o: { puja_id: string }) => { counts[o.puja_id] = (counts[o.puja_id] || 0) + 1; });
+    setOfferingCounts(counts);
+  }, []);
+  useEffect(() => { loadCounts(); }, [pujas, loadCounts]);
 
   const loadOfferings = async (pujaId: string) => {
-    const { data } = await supabase.from("puja_offerings").select("*").eq("puja_id", pujaId).order("sort_order");
-    if (data) setOfferings(data as PujaOffering[]);
+    const run = ++offeringsRun.current;
+    const { data, error } = await supabase.from("puja_offerings").select("*").eq("puja_id", pujaId).order("sort_order");
+    if (run !== offeringsRun.current) return; // another pooja was opened meanwhile
+    setOfferingsError(!!error);
+    if (!error) setOfferings((data ?? []) as PujaOffering[]);
   };
 
-  const openEdit = async (p: Partial<Puja>) => {
-    setEditing(p);
-    if (p.id) await loadOfferings(p.id);
-    else setOfferings([]);
+  const resetOfferings = () => { offeringsRun.current++; setOfferings([]); setOfferingsError(false); openOffering(null); };
+
+  const startNew = () => { form.bump(); resetOfferings(); setEditing(emptyPuja()); };
+
+  // Edit the row as it is in the database now, not the list's copy, which can be older
+  // than a save made on another device.
+  const openEdit = async (p: Puja) => {
+    setOpening(p.id);
+    const { data, error } = await supabase.from("pujas").select("*").eq("id", p.id).maybeSingle();
+    setOpening(null);
+    if (error) { toast.error(`Could not open the latest version: ${saveErrorMessage(error)}`); return; }
+    if (!data) { toast.error("This pooja no longer exists."); onRefresh(); return; }
+    resetOfferings();
+    form.bump();
+    setEditing(withDefaults(data as Puja));
+    loadOfferings(p.id);
+  };
+
+  const closeEditor = () => {
+    if (offeringUnsaved() && !window.confirm("The offering you're editing isn't saved. Close and lose those changes?")) return;
+    form.bump();
+    setEditing(null);
+    resetOfferings();
   };
 
   // Save offering
   const saveOffering = async () => {
-    if (!editingOff || !editingOff.name?.trim() || !editingOff.price) {
-      toast.error("Offering name and price required"); return;
-    }
+    if (!editingOff) return;
+    if (!editingOff.name?.trim()) { toast.error("The offering needs a name."); return; }
+    if (!isWholeRupees(editingOff.price)) { toast.error(`The offering price ${PRICE_RULE}.`); return; }
+    if (!Number.isInteger(editingOff.sort_order ?? 0)) { toast.error("Sort order must be a whole number."); return; }
     setSavingOff(true);
     const payload = {
       puja_id: editingOff.puja_id, name: editingOff.name.trim(),
@@ -164,31 +215,48 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
       description_hi: editingOff.description_hi?.trim() || null,
       status: editingOff.status || "active", sort_order: editingOff.sort_order || 0,
     };
-    let err;
-    if (editingOff.id) {
-      ({ error: err } = await supabase.from("puja_offerings").update(payload).eq("id", editingOff.id));
-    } else {
-      ({ error: err } = await supabase.from("puja_offerings").insert(payload));
+    try {
+      if (editingOff.id) await updateRow("puja_offerings", editingOff.id, payload);
+      else await insertRow("puja_offerings", payload);
+    } catch (e) {
+      toast.error(saveErrorMessage(e));
+      return;
+    } finally {
+      setSavingOff(false);
     }
-    setSavingOff(false);
-    if (err) { toast.error(err.message); return; }
+    clearCatalogCache();
     toast.success(editingOff.id ? "Offering updated" : "Offering created");
-    setEditingOff(null);
-    if (editing?.id) loadOfferings(editing.id);
+    openOffering(null);
+    if (editingOff.puja_id) loadOfferings(editingOff.puja_id);
+    loadCounts();
   };
 
-  const removeOffering = async (offId: string) => {
-    const { error: err } = await supabase.from("puja_offerings").delete().eq("id", offId);
-    if (err) { toast.error(err.message); return; }
+  const removeOffering = async (o: PujaOffering) => {
+    if (!window.confirm(`Delete the offering "${o.name}"?`)) return;
+    try {
+      await deleteRow("puja_offerings", o.id);
+    } catch (e) {
+      toast.error(saveErrorMessage(e));
+      return;
+    }
+    clearCatalogCache();
     toast.success("Offering deleted");
-    if (editing?.id) loadOfferings(editing.id);
+    if (editingOff?.id === o.id) openOffering(null);
+    loadOfferings(o.puja_id);
+    loadCounts();
   };
 
   const save = async () => {
     if (!editing) return;
     const { name, location, date, prices } = editing;
-    if (!name?.trim() || !location?.trim() || !date?.trim()) { toast.error("Fill required fields"); return; }
-    if (!prices?.length || prices.some((t) => !t.label.trim() || t.price <= 0)) { toast.error("Each tier needs label & price > 0"); return; }
+    const missing = missingField([["Name", name], ["Date", date], ["Location", location]]);
+    if (missing || !name || !location || !date) { toast.error(`Fill in the ${missing ?? "required"} field.`); return; }
+    const tierError = tierProblem(prices);
+    if (tierError || !prices) { toast.error(tierError); return; }
+    if (offeringUnsaved()) {
+      toast.error("Save or cancel the offering you're editing first (its own Update button), then update the pooja.");
+      return;
+    }
     // Same name on two pujas is allowed (same puja on different dates), but the date is then the
     // only thing that tells customers and the orders list apart — make that a conscious choice.
     const sameName = pujas.filter((p) => p.id !== editing.id && p.name.trim().toLowerCase() === name.trim().toLowerCase());
@@ -204,11 +272,12 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
     setSaving(true);
     const payload = {
       name: name.trim(), deity: editing.deity?.trim() || name.trim(), location: location.trim(), date: date.trim(),
-      countdown_datetime: editing.countdown_datetime?.trim() || null,
+      countdown_datetime: fromIstInput(editing.countdown_datetime),
       image_url: editing.image_url || null, benefit: editing.benefit?.trim() || null,
       occasion: editing.occasion?.trim() || null, occasion_hi: editing.occasion_hi?.trim() || null,
       name_hi: editing.name_hi?.trim() || null, location_hi: editing.location_hi?.trim() || null, benefit_hi: editing.benefit_hi?.trim() || null,
-      prices, status: editing.status || "draft", featured: editing.featured || false,
+      prices: prices.map((t) => ({ label: t.label.trim(), price: t.price })),
+      status: editing.status || "draft", featured: editing.featured || false,
       gallery: editing.gallery || [], about: editing.about?.trim() || null, about_hi: editing.about_hi?.trim() || null,
       benefits: (editing.benefits || []).filter(b => b.trim()), benefits_hi: (editing.benefits_hi || []).filter(b => b.trim()),
       process_steps: (editing.process_steps || []).filter(s => s.title.trim()), process_steps_hi: (editing.process_steps_hi || []).filter(s => s.title.trim()),
@@ -221,47 +290,64 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
       // saving keeps working before docs/sql/reviews-and-proof.sql has been run.
       ...("past_video_url" in editing ? { past_video_url: editing.past_video_url?.trim() || null } : {}),
     };
-    let err;
-    if (editing.id) {
-      ({ error: err } = await supabase.from("pujas").update(payload).eq("id", editing.id));
-    } else {
-      ({ error: err } = await supabase.from("pujas").insert(payload));
+    try {
+      // `version`: refuse to overwrite a save made on another device after this form opened.
+      if (editing.id) await updateRow("pujas", editing.id, payload, { version: editing.updated_at });
+      else await insertRow("pujas", payload);
+    } catch (e) {
+      toast.error(saveErrorMessage(e), { duration: 10000 });
+      return;
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    if (err) { toast.error(err.message); return; }
+    clearCatalogCache();
     toast.success(editing.id ? "Pooja updated" : "Pooja created");
-    setEditing(null); onRefresh();
+    await onRefresh();
+    form.bump();
+    setEditing(null);
+    resetOfferings();
   };
 
-  const remove = async (id: string) => {
-    setDeleting(id);
-    const { error: err } = await supabase.from("pujas").delete().eq("id", id);
-    setDeleting(null);
-    if (err) { toast.error(err.message); return; }
+  const remove = async (p: Puja) => {
+    if (!window.confirm(`Delete the pooja "${p.name}" (${p.date})? This can't be undone.`)) return;
+    setDeleting(p.id);
+    try {
+      await deleteRow("pujas", p.id);
+    } catch (e) {
+      toast.error(saveErrorMessage(e));
+      return;
+    } finally {
+      setDeleting(null);
+    }
+    clearCatalogCache();
     toast.success("Pooja deleted"); onRefresh();
   };
 
   const toggleStatus = async (p: Puja) => {
     const next = p.status === "active" ? "draft" : "active";
-    const { error: err } = await supabase.from("pujas").update({ status: next }).eq("id", p.id);
-    if (err) toast.error(err.message);
-    else { toast.success(`Pooja ${next === "active" ? "published" : "unpublished"}`); onRefresh(); }
+    try {
+      await updateRow("pujas", p.id, { status: next });
+    } catch (e) {
+      toast.error(saveErrorMessage(e));
+      return;
+    }
+    clearCatalogCache();
+    toast.success(`Pooja ${next === "active" ? "published" : "unpublished"}`); onRefresh();
   };
 
-  const updateTier = (idx: number, field: "label" | "price", val: string | number) => {
-    if (!editing?.prices) return;
-    const next = [...editing.prices];
-    next[idx] = { ...next[idx], [field]: field === "price" ? Number(val) || 0 : val };
-    setEditing({ ...editing, prices: next });
-  };
-  const addTier = () => setEditing({ ...editing, prices: [...(editing?.prices || []), { label: "", price: 0 }] });
-  const removeTier = (idx: number) => setEditing({ ...editing, prices: editing!.prices!.filter((_, i) => i !== idx) });
+  type Tier = { label: string; price: number };
+  const setTiers = (fn: (tiers: Tier[]) => Tier[]) =>
+    setEditing((prev) => (prev ? { ...prev, prices: fn(prev.prices || []) } : prev));
+  const updateTier = (idx: number, field: "label" | "price", val: string) =>
+    setTiers((tiers) => tiers.map((t, i) => (i === idx ? { ...t, [field]: field === "price" ? priceInput(val) : val } : t)));
+  const addTier = () => setTiers((tiers) => [...tiers, { label: "", price: 0 }]);
+  const removeTier = (idx: number) => setTiers((tiers) => tiers.filter((_, i) => i !== idx));
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-brown/60">{pujas.length} puja{pujas.length !== 1 ? "s" : ""}</p>
-        <button onClick={() => setEditing(emptyPuja())} className="flex items-center gap-2 rounded-xl bg-saffron px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-maroon transition-all">
+        <button onClick={startNew} className="flex items-center gap-2 rounded-xl bg-saffron px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-maroon transition-all">
           <Plus size={16} />Add Pooja
         </button>
       </div>
@@ -285,15 +371,17 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                   {p.featured && <Star size={14} className="text-saffron fill-saffron shrink-0" />}
                 </div>
                 <p className="text-xs text-brown/60 mt-0.5">{p.location} • {p.date} • {offeringCounts[p.id] || 0} offerings</p>
-                <p className="text-xs text-saffron font-semibold mt-0.5">From ₹{Math.min(...p.prices.map((t) => t.price)).toLocaleString("en-IN")}</p>
+                <p className="text-xs text-saffron font-semibold mt-0.5">{p.prices?.length ? `From ₹${Math.min(...p.prices.map((t) => t.price)).toLocaleString("en-IN")}` : "No prices set"}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={() => toggleStatus(p)} className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all ${p.status === "active" ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
                   {p.status === "active" ? "Active" : "Draft"}
                 </button>
-                <button onClick={() => openEdit({ ...p, gallery: p.gallery || [], benefits: p.benefits || [], benefits_hi: p.benefits_hi || [], process_steps: p.process_steps || [], process_steps_hi: p.process_steps_hi || [], faqs: p.faqs || [], faqs_hi: p.faqs_hi || [], includes: p.includes || [], includes_hi: p.includes_hi || [] })}
-                  className="grid h-8 w-8 place-items-center rounded-lg bg-gold/15 text-maroon hover:bg-gold/30 transition-colors"><Pencil size={14} /></button>
-                <button onClick={() => remove(p.id)} disabled={deleting === p.id}
+                <button onClick={() => openEdit(p)} disabled={opening === p.id} aria-label="Edit"
+                  className="grid h-8 w-8 place-items-center rounded-lg bg-gold/15 text-maroon hover:bg-gold/30 transition-colors disabled:opacity-50">
+                  {opening === p.id ? <Loader2 size={14} className="animate-spin" /> : <Pencil size={14} />}
+                </button>
+                <button onClick={() => remove(p)} disabled={deleting === p.id}
                   className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors disabled:opacity-50">
                   {deleting === p.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                 </button>
@@ -306,108 +394,109 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
       {/* ── Slide-over Form ── */}
       {editing && (
         <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setEditing(null)} />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeEditor} />
           <div className="relative flex h-full w-full max-w-lg flex-col bg-ivory shadow-2xl animate-fadeIn">
             <div className="shrink-0 flex items-center justify-between border-b border-gold/30 bg-ivory/95 px-4 sm:px-6 py-4 backdrop-blur">
               <h3 className="font-display text-lg text-maroon">{editing.id ? "Edit Pooja" : "New Pooja"}</h3>
-              <button onClick={() => setEditing(null)} className="text-brown/50 hover:text-maroon transition-colors"><X size={20} /></button>
+              <button onClick={closeEditor} aria-label="Close" className="text-brown/50 hover:text-maroon transition-colors"><X size={20} /></button>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-5 p-4 sm:p-6">
               {/* Core fields */}
               <Section title="📷 Main Image" defaultOpen>
-                <ImageUpload value={editing.image_url || null} onChange={(url) => setEditing({ ...editing, image_url: url })} />
+                <ImageUpload value={editing.image_url || null} onChange={form.guard((url: string | null) => patch({ image_url: url }))} />
               </Section>
 
               <Section title="📝 Basic Info" defaultOpen>
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Name *</label>
-                  <input value={editing.name || ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                  <input value={editing.name || ""} onChange={(e) => patch({name: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Maha Rudrabhishek" /></div>
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Deity</label>
-                  <input value={editing.deity || ""} onChange={(e) => setEditing({ ...editing, deity: e.target.value })}
+                  <input value={editing.deity || ""} onChange={(e) => patch({deity: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Shiva, Vishnu, Ganga" /></div>
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Date *</label>
-                  <input value={editing.date || ""} onChange={(e) => setEditing({ ...editing, date: e.target.value })}
+                  <input value={editing.date || ""} onChange={(e) => patch({date: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. 13 May" />
                   <p className="text-[11px] text-brown/40 mt-1">Display text shown to users (e.g. "13 May", "12 July 2026")</p></div>
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Countdown Date & Time</label>
-                  <input type="datetime-local" value={editing.countdown_datetime || ""} onChange={(e) => setEditing({ ...editing, countdown_datetime: e.target.value })}
+                  <input type="datetime-local" value={toIstInput(editing.countdown_datetime)} onChange={(e) => patch({countdown_datetime: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" />
-                  <p className="text-[11px] text-brown/40 mt-1">Timer counts down to this exact date & time. Leave empty to use end of day.</p></div>
+                  <p className="text-[11px] text-brown/40 mt-1">India time (IST). Timer counts down to this exact date & time. Leave empty to use end of day.</p></div>
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Location *</label>
-                  <input value={editing.location || ""} onChange={(e) => setEditing({ ...editing, location: e.target.value })}
+                  <input value={editing.location || ""} onChange={(e) => patch({location: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Badrinath Dham" /></div>
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Benefit (1 liner)</label>
-                  <input value={editing.benefit || ""} onChange={(e) => setEditing({ ...editing, benefit: e.target.value })}
+                  <input value={editing.benefit || ""} onChange={(e) => patch({benefit: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Peace, prosperity" maxLength={150} /></div>
                 <div><label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Special Occasion Tag</label>
-                  <input value={editing.occasion || ""} onChange={(e) => setEditing({ ...editing, occasion: e.target.value })}
+                  <input value={editing.occasion || ""} onChange={(e) => patch({occasion: e.target.value })}
                     className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="e.g. Ganga Dussehra Special" maxLength={80} />
                   <p className="text-[11px] text-brown/40 mt-1">Shown as a badge above the pooja name on the detail page</p></div>
               </Section>
 
               <Section title="🇮🇳 Hindi Translation">
-                <input value={editing.name_hi || ""} onChange={(e) => setEditing({ ...editing, name_hi: e.target.value })}
+                <input value={editing.name_hi || ""} onChange={(e) => patch({name_hi: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="पूजा का नाम" />
-                <input value={editing.location_hi || ""} onChange={(e) => setEditing({ ...editing, location_hi: e.target.value })}
+                <input value={editing.location_hi || ""} onChange={(e) => patch({location_hi: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="स्थान" />
-                <input value={editing.benefit_hi || ""} onChange={(e) => setEditing({ ...editing, benefit_hi: e.target.value })}
+                <input value={editing.benefit_hi || ""} onChange={(e) => patch({benefit_hi: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="लाभ" maxLength={150} />
-                <input value={editing.occasion_hi || ""} onChange={(e) => setEditing({ ...editing, occasion_hi: e.target.value })}
+                <input value={editing.occasion_hi || ""} onChange={(e) => patch({occasion_hi: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="विशेष अवसर" maxLength={80} />
               </Section>
 
               <Section title="🖼️ Photo Gallery (up to 6)">
-                <GalleryEditor images={editing.gallery || []} onChange={(g) => setEditing({ ...editing, gallery: g })} />
+                <GalleryEditor images={editing.gallery || []} onChange={(g) => patch({gallery: g })}
+                  onAdd={form.guard((url: string) => setEditing((prev) => (prev ? { ...prev, gallery: [...(prev.gallery || []), url].slice(0, 6) } : prev)))} />
               </Section>
 
               <Section title="📖 About Pooja">
                 <label className="mb-1 block text-xs font-semibold text-maroon">English</label>
-                <textarea value={editing.about || ""} onChange={(e) => setEditing({ ...editing, about: e.target.value })}
+                <textarea value={editing.about || ""} onChange={(e) => patch({about: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-y min-h-[100px]" placeholder="Detailed description..." />
                 <label className="mb-1 block text-xs font-semibold text-maroon mt-3">हिंदी</label>
-                <textarea value={editing.about_hi || ""} onChange={(e) => setEditing({ ...editing, about_hi: e.target.value })}
+                <textarea value={editing.about_hi || ""} onChange={(e) => patch({about_hi: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-y min-h-[100px]" placeholder="विस्तृत विवरण..." />
                 <p className="mt-1 text-xs text-ink-soft">Tip: a short line on its own (like “Location:”) shows as a heading on the site, and “Label: text” shows the label in bold.</p>
               </Section>
 
               <Section title="✨ Benefits">
                 <p className="text-xs text-brown/50 mb-2">English</p>
-                <ListEditor items={editing.benefits || []} onChange={(v) => setEditing({ ...editing, benefits: v })} placeholder="e.g. Relief from Shani Dosha" />
+                <ListEditor items={editing.benefits || []} onChange={(v) => patch({benefits: v })} placeholder="e.g. Relief from Shani Dosha" />
                 <p className="text-xs text-brown/50 mb-2 mt-3">हिंदी</p>
-                <ListEditor items={editing.benefits_hi || []} onChange={(v) => setEditing({ ...editing, benefits_hi: v })} placeholder="जैसे: शनि दोष से मुक्ति" />
+                <ListEditor items={editing.benefits_hi || []} onChange={(v) => patch({benefits_hi: v })} placeholder="जैसे: शनि दोष से मुक्ति" />
               </Section>
 
               <Section title="🔱 Pooja Process Steps">
                 <p className="text-xs text-brown/50 mb-2">English</p>
-                <StepEditor items={editing.process_steps || []} onChange={(v) => setEditing({ ...editing, process_steps: v })} />
+                <StepEditor items={editing.process_steps || []} onChange={(v) => patch({process_steps: v })} />
                 <p className="text-xs text-brown/50 mb-2 mt-3">हिंदी</p>
-                <StepEditor items={editing.process_steps_hi || []} onChange={(v) => setEditing({ ...editing, process_steps_hi: v })} />
+                <StepEditor items={editing.process_steps_hi || []} onChange={(v) => patch({process_steps_hi: v })} />
               </Section>
 
               <Section title="🛕 Temple Details">
-                <input value={editing.temple_name || ""} onChange={(e) => setEditing({ ...editing, temple_name: e.target.value })}
+                <input value={editing.temple_name || ""} onChange={(e) => patch({temple_name: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="Temple name (EN)" />
-                <input value={editing.temple_name_hi || ""} onChange={(e) => setEditing({ ...editing, temple_name_hi: e.target.value })}
+                <input value={editing.temple_name_hi || ""} onChange={(e) => patch({temple_name_hi: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="मंदिर का नाम (HI)" />
-                <textarea value={editing.temple_description || ""} onChange={(e) => setEditing({ ...editing, temple_description: e.target.value })}
+                <textarea value={editing.temple_description || ""} onChange={(e) => patch({temple_description: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-y min-h-[80px]" placeholder="Temple description (EN)" />
-                <textarea value={editing.temple_description_hi || ""} onChange={(e) => setEditing({ ...editing, temple_description_hi: e.target.value })}
+                <textarea value={editing.temple_description_hi || ""} onChange={(e) => patch({temple_description_hi: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron resize-y min-h-[80px]" placeholder="मंदिर विवरण (HI)" />
                 <p className="mt-1 text-xs text-ink-soft">Tip: a short line on its own (like “Location:”) shows as a heading on the site, and “Label: text” shows the label in bold.</p>
                 <label className="mb-1 block text-xs font-semibold text-maroon">Temple Image</label>
-                <ImageUpload value={editing.temple_image || null} onChange={(url) => setEditing({ ...editing, temple_image: url })} />
+                <ImageUpload value={editing.temple_image || null} onChange={form.guard((url: string | null) => patch({ temple_image: url }))} />
                 <label className="mb-1 mt-3 block text-xs font-semibold text-maroon">Past pooja video (YouTube link, optional)</label>
-                <input value={editing.past_video_url || ""} onChange={(e) => setEditing({ ...editing, past_video_url: e.target.value })}
+                <input value={editing.past_video_url || ""} onChange={(e) => patch({past_video_url: e.target.value })}
                   className="w-full rounded-xl border border-gold/50 bg-cream px-4 py-2.5 text-sm outline-none focus:border-saffron" placeholder="https://youtu.be/..." />
                 <p className="text-[11px] text-brown/50">Shown as "Watch a past pooja video" on the pooja page. Use YouTube (unlisted is fine), not an upload.</p>
               </Section>
 
               <Section title="❓ FAQs">
                 <p className="text-xs text-brown/50 mb-2">English</p>
-                <FaqEditor items={editing.faqs || []} onChange={(v) => setEditing({ ...editing, faqs: v })} />
+                <FaqEditor items={editing.faqs || []} onChange={(v) => patch({faqs: v })} />
                 <p className="text-xs text-brown/50 mb-2 mt-3">हिंदी</p>
-                <FaqEditor items={editing.faqs_hi || []} onChange={(v) => setEditing({ ...editing, faqs_hi: v })} />
+                <FaqEditor items={editing.faqs_hi || []} onChange={(v) => patch({faqs_hi: v })} />
               </Section>
 
               {/* ── Offerings ── */}
@@ -418,13 +507,18 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                   <>
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-sm text-brown/60">{offerings.length} offerings</p>
-                      <button onClick={() => setEditingOff(emptyOffering(editing.id!))}
+                      <button onClick={() => openOffering(emptyOffering(editing.id!))}
                         className="flex items-center gap-1 rounded-lg bg-saffron px-3 py-2 text-xs font-semibold text-white hover:bg-maroon transition-all">
                         <Plus size={14} /> Add Offering
                       </button>
                     </div>
 
-                    {offerings.length === 0 ? (
+                    {offeringsError ? (
+                      <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                        Couldn't load the offerings.{" "}
+                        <button type="button" onClick={() => loadOfferings(editing.id!)} className="font-semibold underline">Try again</button>
+                      </div>
+                    ) : offerings.length === 0 ? (
                       <p className="text-sm text-brown/40 italic text-center py-4">No offerings yet — add your first one</p>
                     ) : (
                       <div className="space-y-2">
@@ -435,10 +529,13 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-semibold text-maroon truncate">{o.name}</p>
-                              <p className="text-xs text-saffron font-bold">₹{o.price}</p>
+                              <p className="text-xs text-saffron font-bold">
+                                ₹{o.price}
+                                {o.status !== "active" && <span className="ml-2 rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-semibold text-gray-600">Hidden</span>}
+                              </p>
                             </div>
-                            <button onClick={() => setEditingOff({ ...o })} className="grid h-7 w-7 place-items-center rounded bg-gold/15 text-maroon hover:bg-gold/30"><Pencil size={12} /></button>
-                            <button onClick={() => removeOffering(o.id)} className="grid h-7 w-7 place-items-center rounded bg-red-50 text-red-400 hover:bg-red-100"><Trash2 size={12} /></button>
+                            <button onClick={() => openOffering({ ...o })} aria-label="Edit offering" className="grid h-7 w-7 place-items-center rounded bg-gold/15 text-maroon hover:bg-gold/30"><Pencil size={12} /></button>
+                            <button onClick={() => removeOffering(o)} aria-label="Delete offering" className="grid h-7 w-7 place-items-center rounded bg-red-50 text-red-400 hover:bg-red-100"><Trash2 size={12} /></button>
                           </div>
                         ))}
                       </div>
@@ -451,41 +548,46 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <label className="text-[11px] font-semibold text-maroon">Name (EN) *</label>
-                            <input value={editingOff.name || ""} onChange={e => setEditingOff({ ...editingOff, name: e.target.value })}
+                            <input value={editingOff.name || ""} onChange={e => patchOff({name: e.target.value })}
                               className="w-full rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" placeholder="e.g. Gau Seva" />
                           </div>
                           <div>
                             <label className="text-[11px] font-semibold text-maroon">Name (HI)</label>
-                            <input value={editingOff.name_hi || ""} onChange={e => setEditingOff({ ...editingOff, name_hi: e.target.value })}
+                            <input value={editingOff.name_hi || ""} onChange={e => patchOff({name_hi: e.target.value })}
                               className="w-full rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" placeholder="गौ सेवा" />
                           </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <label className="text-[11px] font-semibold text-maroon">Price (₹) *</label>
-                            <input type="number" value={editingOff.price || ""} onChange={e => setEditingOff({ ...editingOff, price: Number(e.target.value) || 0 })}
+                            <input type="number" inputMode="numeric" min={1} step={1} value={editingOff.price || ""} onChange={e => patchOff({price: priceInput(e.target.value) })}
                               className="w-full rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" />
                           </div>
                           <div>
                             <label className="text-[11px] font-semibold text-maroon">Sort Order</label>
-                            <input type="number" value={editingOff.sort_order || 0} onChange={e => setEditingOff({ ...editingOff, sort_order: Number(e.target.value) || 0 })}
+                            <input type="number" value={editingOff.sort_order || 0} onChange={e => patchOff({sort_order: Number(e.target.value) || 0 })}
                               className="w-full rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" />
                           </div>
                         </div>
                         <div>
                           <label className="text-[11px] font-semibold text-maroon">Description (EN)</label>
-                          <input value={editingOff.description || ""} onChange={e => setEditingOff({ ...editingOff, description: e.target.value })}
+                          <input value={editingOff.description || ""} onChange={e => patchOff({description: e.target.value })}
                             className="w-full rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" placeholder="Short description" />
                         </div>
                         <div>
                           <label className="text-[11px] font-semibold text-maroon">Image</label>
-                          <ImageUpload value={editingOff.image_url || null} onChange={url => setEditingOff({ ...editingOff, image_url: url })} />
+                          <ImageUpload value={editingOff.image_url || null} onChange={offForm.guard((url: string | null) => patchOff({ image_url: url }))} />
                         </div>
+                        <label className="flex items-center gap-2.5 cursor-pointer">
+                          <input type="checkbox" checked={(editingOff.status || "active") === "active"} onChange={(e) => patchOff({ status: e.target.checked ? "active" : "draft" })}
+                            className="h-4 w-4 rounded border-gold accent-saffron" />
+                          <span className="text-sm text-maroon font-medium">Show on the website</span>
+                        </label>
                         <div className="flex gap-2">
                           <button onClick={saveOffering} disabled={savingOff}
                             className="flex-1 rounded-lg bg-saffron py-2 text-sm font-bold text-white hover:bg-maroon transition-all disabled:opacity-60">
                             {savingOff ? "Saving…" : editingOff.id ? "Update" : "Create"}</button>
-                          <button onClick={() => setEditingOff(null)} className="rounded-lg border border-gold/50 px-4 py-2 text-sm text-maroon hover:bg-gold/10">Cancel</button>
+                          <button onClick={() => openOffering(null)} className="rounded-lg border border-gold/50 px-4 py-2 text-sm text-maroon hover:bg-gold/10">Cancel</button>
                         </div>
                       </div>
                     )}
@@ -495,9 +597,9 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
 
               <Section title="📦 What's Included">
                 <p className="text-xs text-brown/50 mb-2">English</p>
-                <ListEditor items={editing.includes || []} onChange={(v) => setEditing({ ...editing, includes: v })} placeholder="e.g. Sankalp in your name" />
+                <ListEditor items={editing.includes || []} onChange={(v) => patch({includes: v })} placeholder="e.g. Sankalp in your name" />
                 <p className="text-xs text-brown/50 mb-2 mt-3">हिंदी</p>
-                <ListEditor items={editing.includes_hi || []} onChange={(v) => setEditing({ ...editing, includes_hi: v })} placeholder="जैसे: आपके नाम में संकल्प" />
+                <ListEditor items={editing.includes_hi || []} onChange={(v) => patch({includes_hi: v })} placeholder="जैसे: आपके नाम में संकल्प" />
               </Section>
 
               {/* Pricing */}
@@ -509,7 +611,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                         className="flex-1 rounded-lg border border-gold/40 bg-cream px-3 py-2 text-sm outline-none focus:border-saffron" placeholder="Label" />
                       <div className="flex items-center rounded-lg border border-gold/40 bg-cream px-3 py-2">
                         <span className="text-sm text-brown/50 mr-1">₹</span>
-                        <input type="number" value={tier.price || ""} onChange={(e) => updateTier(idx, "price", e.target.value)}
+                        <input type="number" inputMode="numeric" min={1} step={1} value={tier.price || ""} onChange={(e) => updateTier(idx, "price", e.target.value)}
                           className="w-20 bg-transparent text-sm outline-none" placeholder="0" />
                       </div>
                       {(editing.prices?.length || 0) > 1 && (
@@ -526,12 +628,12 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
               {/* Toggles */}
               <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2.5 cursor-pointer">
-                  <input type="checkbox" checked={editing.status === "active"} onChange={(e) => setEditing({ ...editing, status: e.target.checked ? "active" : "draft" })}
+                  <input type="checkbox" checked={editing.status === "active"} onChange={(e) => patch({status: e.target.checked ? "active" : "draft" })}
                     className="h-4 w-4 rounded border-gold accent-saffron" />
                   <span className="text-sm text-maroon font-medium">Active (visible)</span>
                 </label>
                 <label className="flex items-center gap-2.5 cursor-pointer">
-                  <input type="checkbox" checked={editing.featured || false} onChange={(e) => setEditing({ ...editing, featured: e.target.checked })}
+                  <input type="checkbox" checked={editing.featured || false} onChange={(e) => patch({featured: e.target.checked })}
                     className="h-4 w-4 rounded border-gold accent-saffron" />
                   <span className="text-sm text-maroon font-medium">Featured on homepage</span>
                 </label>
@@ -546,7 +648,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
                 className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-saffron py-3 text-sm font-bold text-white shadow-md hover:bg-maroon transition-all disabled:opacity-60">
                 {saving ? <><Loader2 size={16} className="animate-spin" />Saving…</> : editing.id ? "Update Pooja" : "Create Pooja"}
               </button>
-              <button onClick={() => setEditing(null)} className="rounded-xl border border-gold/50 px-6 py-3 text-sm font-medium text-maroon hover:bg-gold/10">Cancel</button>
+              <button onClick={closeEditor} className="rounded-xl border border-gold/50 px-6 py-3 text-sm font-medium text-maroon hover:bg-gold/10">Cancel</button>
             </div>
           </div>
         </div>

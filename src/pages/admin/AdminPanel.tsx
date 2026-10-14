@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { supabase, type Puja, type Chadhava, type Temple } from "@/lib/supabase";
 import { adminPath, sectionFromParam, type AdminSection } from "@/lib/adminSections";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -46,18 +47,24 @@ const AdminPanel = () => {
   if (section && !opened.includes(section)) setOpened([...opened, section]);
   const keepAlive = (s: "orders" | "leads") => opened.includes(s);
 
-  /* Fetch data */
+  /* Fetch data. A failed load says so: silently keeping the old list made a saved price
+     look unsaved, and editing that stale copy could write old values back. */
+  const loadFailed = (what: string) =>
+    toast.error(`Couldn't load the latest ${what}. What you see may be out of date — check the connection and reload.`, { id: "admin-load" });
   const fetchPujas = async () => {
-    const { data } = await supabase.from("pujas").select("*").order("created_at", { ascending: false });
-    if (data) setPujas(data as Puja[]);
+    const { data, error } = await supabase.from("pujas").select("*").order("created_at", { ascending: false });
+    if (error) { loadFailed("poojas"); return; }
+    setPujas((data ?? []) as Puja[]);
   };
   const fetchChadhavas = async () => {
-    const { data } = await supabase.from("chadhavas").select("*").order("created_at", { ascending: false });
-    if (data) setChadhavas(data as Chadhava[]);
+    const { data, error } = await supabase.from("chadhavas").select("*").order("created_at", { ascending: false });
+    if (error) { loadFailed("chadhavas"); return; }
+    setChadhavas((data ?? []) as Chadhava[]);
   };
   const fetchTemples = async () => {
-    const { data } = await supabase.from("temples").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
-    if (data) setTemples(data as Temple[]);
+    const { data, error } = await supabase.from("temples").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+    if (error) { loadFailed("temples"); return; }
+    setTemples((data ?? []) as Temple[]);
   };
 
   useEffect(() => { fetchPujas(); fetchChadhavas(); fetchTemples(); }, []);
