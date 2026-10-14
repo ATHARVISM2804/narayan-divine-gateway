@@ -40,7 +40,14 @@ const text = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/\s
 const MAX_RUPEES = 10_00_000; // ₹10 lakh — far above any real booking, catches typos like an extra zero-string
 const CLOCK_SKEW_MS = 5 * 60 * 1000;
 
-export function buildMarkPaidPatch(order: OrderState, input: MarkPaidInput, admin: string, now = new Date()): Result {
+export function buildMarkPaidPatch(
+  order: OrderState,
+  input: MarkPaidInput,
+  admin: string,
+  now = new Date(),
+  /** Earliest allowed payment time; defaults to 24 h before the order was placed. */
+  earliestPaidAt = new Date(new Date(order.created_at).getTime() - 24 * 60 * 60 * 1000),
+): Result {
   if (order.status === "paid") return { ok: false, error: "This order is already paid." };
   if (!["pending", "failed", "cancelled"].includes(order.status)) {
     return { ok: false, error: `A ${order.status} order cannot be marked paid.` };
@@ -64,7 +71,7 @@ export function buildMarkPaidPatch(order: OrderState, input: MarkPaidInput, admi
     const d = new Date(input.paid_at);
     if (Number.isNaN(d.getTime())) return { ok: false, error: "Payment time is not valid." };
     if (d.getTime() > now.getTime() + CLOCK_SKEW_MS) return { ok: false, error: "Payment time cannot be in the future." };
-    if (d.getTime() < new Date(order.created_at).getTime() - 24 * 60 * 60 * 1000) {
+    if (d.getTime() < earliestPaidAt.getTime()) {
       return { ok: false, error: "Payment time is before the order was placed." };
     }
     paidAt = d;

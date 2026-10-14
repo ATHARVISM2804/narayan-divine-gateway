@@ -295,6 +295,8 @@ export async function sendPurchaseForOrder(supabase: any, orderId: string): Prom
     .eq("id", orderId)
     .eq("status", "paid")
     .is("meta_purchase_sent_at", null)
+    // Bookings the admin entered by hand are not ad conversions (owner's decision, Oct 2026).
+    .neq("source", "admin")
     .select("id, amount, currency, items, customer_name, customer_phone, customer_email, meta_tracking, paid_at, payment_method")
     .maybeSingle();
 
