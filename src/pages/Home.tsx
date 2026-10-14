@@ -11,13 +11,14 @@ import {
   chadhavaListFromSnapshot,
   type ChadhavaList,
 } from "@/lib/catalogQueries";
-import { useReviews, useSiteStats } from "@/lib/proof";
+import { MIN_PROOF_COUNT, useReviews, useSiteStats } from "@/lib/proof";
 import { useActiveTemples } from "@/lib/temples";
 import { DegradedBanner } from "@/components/LoadError";
 import HomeHero from "@/components/home/HomeHero";
 import { FeaturedChadhavas, FeaturedPujas, HomeFaq, TemplePartners, TrustStrip, WhyUs } from "@/components/home/HomeSections";
 import HowItWorks from "@/components/home/HowItWorks";
 import ReviewsSection from "@/components/proof/ReviewsSection";
+import WhatYouReceive from "@/components/home/WhatYouReceive";
 import AppDownload from "@/components/home/AppDownload";
 
 const byDate = <T extends { date?: string | null; countdown_datetime?: string | null }>(a: T, b: T) =>
@@ -31,6 +32,9 @@ const Home = () => {
   const { data: temples } = useActiveTemples();
   const { data: reviews } = useReviews();
   const { data: stats } = useSiteStats();
+  const devotees = stats && stats.devotees >= MIN_PROOF_COUNT ? stats.devotees : null;
+  // The rating links scroll to the reviews; with no reviews yet there is nothing to scroll to.
+  const toReviews = reviews?.length ? () => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" }) : undefined;
 
   const pujas = useMemo(() => [...(pujasQ.data ?? [])].sort(byDate), [pujasQ.data]);
   // Featured pujas lead the hero (without any, the next pujas by date do), and
@@ -51,12 +55,13 @@ const Home = () => {
           <DegradedBanner />
         </div>
       )}
-      <HomeHero pujas={heroPujas} stats={stats} loading={pujasQ.loading} />
+      <HomeHero pujas={heroPujas} stats={stats} reviews={reviews ?? []} onRatingClick={toReviews} loading={pujasQ.loading} />
       <TrustStrip stats={stats} />
       <FeaturedPujas pujas={pujas} loading={pujasQ.loading} failed={pujasQ.failed} retry={pujasQ.retry} stats={stats} />
+      <WhatYouReceive devotees={devotees} onReviewsClick={toReviews} />
       <FeaturedChadhavas chadhavas={chadhavas} minPrices={chadhavasQ.data?.minPrices ?? {}} stats={stats} />
       <HowItWorks className="border-t border-line bg-surface-muted/60" />
-      <ReviewsSection reviews={reviews ?? []} className="border-t border-line py-12 md:py-16" />
+      <ReviewsSection id="reviews" reviews={reviews ?? []} className="scroll-mt-20 border-t border-line py-12 md:py-16" />
       <WhyUs stats={stats} />
       <TemplePartners temples={temples ?? []} />
       <HomeFaq />

@@ -537,5 +537,21 @@
   "login_side_title": "Your bookings in one place",
   "login_side_p1": "See every pooja and chadhava you have booked",
   "login_side_p2": "Check the pooja date and payment status",
-  "login_side_p3": "Book again faster next time"
+  "login_side_p3": "Book again faster next time",
+  "home_proof_pre": "Till now",
+  "home_proof_post": "have booked poojas with Narayan Kripa.",
+  "home_rcv_title": "What you will receive",
+  "home_rcv_1_t": "Name and gotra in the sankalp",
+  "home_rcv_1_d": "Pandit ji recites your family's names and gotra as per Vedic vidhi.",
+  "home_rcv_2_t": "Pooja video on WhatsApp",
+  "home_rcv_2_d": "The full video of your pooja within 24 to 48 hours.",
+  "home_rcv_3_t": "At the temple, by its pandits",
+  "home_rcv_3_d": "Performed at famous temples with full vidhi.",
+  "home_rcv_4_t": "Prasad at home",
+  "home_rcv_4_d": "Add a prasad box and we courier it anywhere in India.",
+  "home_rcv_5_t": "Help on WhatsApp",
+  "home_rcv_5_d": "Real people answer before and after your pooja.",
+  "home_rating_title": "Pooja rating",
+  "home_rating_line_post": "devotees have trusted Narayan Kripa with their poojas",
+  "home_rating_cta": "See poojas"
 }

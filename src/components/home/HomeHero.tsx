@@ -5,11 +5,12 @@ import { useLanguage } from "@/context/LanguageContext";
 import type { Puja } from "@/lib/supabase";
 import { bookingDeadline } from "@/lib/countdown";
 import { prefetchProps } from "@/lib/prefetch";
-import { MIN_PROOF_COUNT, roundedCount, type SiteStats } from "@/lib/proof";
+import { MIN_PROOF_COUNT, type Review, type SiteStats } from "@/lib/proof";
 import FitImage from "@/components/FitImage";
 import Countdown from "@/components/shared/Countdown";
 import { TempleIcon } from "@/components/icons";
-import { Eyebrow, Highlight, Price } from "@/components/ui/typography";
+import { Eyebrow, Price } from "@/components/ui/typography";
+import SocialProofRow from "@/components/proof/SocialProofRow";
 import { cn } from "@/lib/utils";
 
 const AUTOPLAY_MS = 7000;
@@ -71,7 +72,11 @@ const SlideSkeleton = () => (
 );
 
 /** Home hero: what we do in one line, the proof, and the next pujas to book. */
-const HomeHero = ({ pujas, stats, loading = false }: { pujas: Puja[]; stats: SiteStats | null; loading?: boolean }) => {
+const HomeHero = ({
+  pujas, stats, reviews = [], onRatingClick, loading = false,
+}: {
+  pujas: Puja[]; stats: SiteStats | null; reviews?: Review[]; onRatingClick?: () => void; loading?: boolean;
+}) => {
   const { t } = useLanguage();
   const slides = pujas.slice(0, 4);
   const [active, setActive] = useState(0);
@@ -120,14 +125,8 @@ const HomeHero = ({ pujas, stats, loading = false }: { pujas: Puja[]; stats: Sit
               </li>
             ))}
           </ul>
-          {devotees ? (
-            <p className="mt-4 text-[15px] text-ink-muted">
-              <Highlight>{roundedCount(devotees)} {t("pd_devotees_word")}</Highlight> {t("hero_s1_trust")}
-            </p>
-          ) : (
-            // Holds the line's place until the count arrives, so the page doesn't shift.
-            !stats && <p aria-hidden="true" className="mt-4 text-[15px]">&nbsp;</p>
-          )}
+          {/* Rating + devotee count. Holds the count's line until stats arrive, so the page doesn't shift. */}
+          <SocialProofRow reviews={reviews} devotees={devotees} loading={!stats} onRatingClick={onRatingClick} className="mt-5" />
           <div className="mt-6 hidden gap-3 sm:flex">
             <Link to="/puja" className="btn-primary">{t("featured_view_all")} <ArrowRight size={18} /></Link>
             <Link to="/chadhava" className="btn-secondary">{t("hero_book_chadhava")}</Link>

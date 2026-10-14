@@ -31,6 +31,10 @@ export interface SiteStats {
   by_item: Record<string, number>;
 }
 
+/** Overall rating across website and offline bookings, supplied by the owner (confirmed
+    14 Oct 2026). Admin reviews don't change it; update it here when the owner does. */
+export const SITE_RATING = { avg: 4.9, count: 7000 };
+
 /** Counts below this are not shown: "3 devotees booked" reads as weak, not as proof. */
 export const MIN_PROOF_COUNT = 25;
 
@@ -90,4 +94,11 @@ export function youTubeId(url: string | null | undefined): string | null {
 export function roundedCount(n: number): string {
   const step = n >= 10000 ? 1000 : n >= 1000 ? 100 : n >= 100 ? 10 : 1;
   return `${new Intl.NumberFormat("en-IN").format(Math.floor(n / step) * step)}+`;
+}
+
+/** Short "7K+" / "7 हज़ार+" figure for tight spots; below 1,000 it falls back to roundedCount. */
+export function compactCount(n: number, lang: "en" | "hi"): string {
+  if (n < 1000) return roundedCount(n);
+  const k = Math.floor(n / 1000);
+  return lang === "hi" ? `${k} हज़ार+` : `${k}K+`;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { averageRating, reviewsFor, roundedCount, youTubeId, type Review } from "./proof";
+import { averageRating, compactCount, reviewsFor, roundedCount, youTubeId, type Review } from "./proof";
 import { timeLeft } from "./countdown";
 
 const review = (over: Partial<Review>): Review => ({
@@ -28,6 +28,17 @@ describe("roundedCount", () => {
     expect(roundedCount(37)).toBe("37+");
     expect(roundedCount(1287)).toBe("1,200+");
     expect(roundedCount(25480)).toBe("25,000+");
+  });
+});
+
+describe("compactCount", () => {
+  it("shortens thousands per language", () => {
+    expect(compactCount(7000, "en")).toBe("7K+");
+    expect(compactCount(7450, "hi")).toBe("7 हज़ार+");
+    expect(compactCount(20000, "en")).toBe("20K+");
+  });
+  it("keeps small counts exact-ish", () => {
+    expect(compactCount(462, "en")).toBe("460+");
   });
 });
 
