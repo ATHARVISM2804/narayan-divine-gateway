@@ -9,7 +9,6 @@ import { activePujasFetcher, activePujasFromSnapshot } from "@/lib/catalogQuerie
 import { useReviews, useSiteStats } from "@/lib/proof";
 import { DegradedBanner, LoadError } from "@/components/LoadError";
 import ListingHeader from "@/components/shared/ListingHeader";
-import TrustRow from "@/components/shared/TrustRow";
 import { CardSkeleton, PujaCard } from "@/components/cards/PujaCard";
 import { cardGridClass, isWideGrid } from "@/components/cards/cardGrid";
 import HowItWorks from "@/components/home/HowItWorks";
@@ -56,13 +55,10 @@ const Puja = () => {
         subtitle={t("puja_hero_sub")}
         crumb={t("nav_puja")}
         centered
-        aside={<TrustRow className="lg:justify-center" />}
       />
 
       <section className="py-6 md:py-10">
         <div className="container">
-          <TrustRow className="mb-6 lg:hidden" />
-
           {showFilters && (
             <div className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide lg:mx-0 lg:flex-wrap lg:px-0">
               {[null, ...places].map((v) => (
