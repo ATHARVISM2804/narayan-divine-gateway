@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { supabase, type Puja, type Chadhava, type Temple } from "@/lib/supabase";
 import { adminPath, sectionFromParam, type AdminSection } from "@/lib/adminSections";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -27,32 +27,24 @@ const NAV: { id: Section; label: string; Icon: typeof LayoutDashboard }[] = [
 
 const AdminPanel = () => {
   const nav = useNavigate();
-  const location = useLocation();
   // The open tab comes from the URL (/admin/orders…), not memory, so a reload keeps it.
   const section = sectionFromParam(useParams().section);
   const setSection = (s: Section) => { if (s !== section) nav(adminPath(s)); };
-  const [loading, setLoading] = useState(true);
   const [mobileNav, setMobileNav] = useState(false);
   const [pujas, setPujas] = useState<Puja[]>([]);
   const [chadhavas, setChadhavas] = useState<Chadhava[]>([]);
   const [temples, setTemples] = useState<Temple[]>([]);
 
-  /* Auth check — only the admin email can access */
-  const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
+  /* Who may open this is checked by ProtectedAdminRoute (App.tsx) from the saved login,
+     and the database rules check the admin email on every request. A second
+     supabase.auth.getUser() here only added a network round trip, with a spinner,
+     before any data started loading. */
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
-        nav("/admin/login", { replace: true, state: { from: location.pathname + location.search } });
-      } else if (!ADMIN_EMAIL || data.user.email !== ADMIN_EMAIL) {
-        // No admin email configured, or user is not the admin — deny access
-        nav("/");
-      } else {
-        setLoading(false);
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- check once on open, not per tab
-  }, [nav, ADMIN_EMAIL]);
+  /* Orders and Leads stay mounted once opened (hidden when another tab is open), so
+     going back to them shows the list at once instead of downloading it all again. */
+  const [opened, setOpened] = useState<Section[]>(() => (section ? [section] : []));
+  if (section && !opened.includes(section)) setOpened([...opened, section]);
+  const keepAlive = (s: "orders" | "leads") => opened.includes(s);
 
   /* Fetch data */
   const fetchPujas = async () => {
@@ -68,9 +60,7 @@ const AdminPanel = () => {
     if (data) setTemples(data as Temple[]);
   };
 
-  useEffect(() => {
-    if (!loading) { fetchPujas(); fetchChadhavas(); fetchTemples(); }
-  }, [loading]);
+  useEffect(() => { fetchPujas(); fetchChadhavas(); fetchTemples(); }, []);
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -79,12 +69,6 @@ const AdminPanel = () => {
 
   // Unknown tab in the URL (/admin/typo): go to the dashboard.
   if (!section) return <Navigate to="/admin" replace />;
-
-  if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-cream">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-gold border-t-saffron" />
-    </div>
-  );
 
   return (
     <div className="flex min-h-screen bg-cream font-body">
@@ -138,7 +122,7 @@ const AdminPanel = () => {
           puja name in an order card widened the whole admin page on phones. */}
       <div className="flex min-w-0 flex-1 flex-col lg:ml-60">
         {/* Header */}
-        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-gold/30 bg-ivory/95 px-4 py-3 backdrop-blur lg:px-6">
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-gold/30 bg-ivory px-4 py-3 lg:px-6">
           <div className="flex items-center gap-3">
             <button onClick={() => setMobileNav(true)} className="lg:hidden text-maroon"><Menu size={22} /></button>
             <h2 className="font-display text-lg text-maroon capitalize">{section}</h2>
@@ -165,13 +149,17 @@ const AdminPanel = () => {
           {section === "reviews" && (
             <ReviewManager pujas={pujas} chadhavas={chadhavas} />
           )}
-          {section === "orders" && (
-            <OrderManager />
-          )}
-          {section === "leads" && (
-            <LeadManager />
-          )}
           </ErrorBoundary>
+          {keepAlive("orders") && (
+            <div hidden={section !== "orders"}>
+              <ErrorBoundary><OrderManager /></ErrorBoundary>
+            </div>
+          )}
+          {keepAlive("leads") && (
+            <div hidden={section !== "leads"}>
+              <ErrorBoundary><LeadManager /></ErrorBoundary>
+            </div>
+          )}
         </main>
       </div>
     </div>

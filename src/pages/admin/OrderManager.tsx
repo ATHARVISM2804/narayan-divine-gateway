@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useDeferredValue, useRef } from "react";
+import { memo, useState, useEffect, useMemo, useDeferredValue, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { fetchAllRows } from "@/lib/fetchAll";
 import { checkOrderPayment } from "@/lib/orderStatus";
@@ -17,6 +17,7 @@ import { downloadPanditListPdf } from "@/lib/panditPdf";
 import { orderMatchesSearch, searchText } from "@/lib/orderSearch";
 import { Eye, X, RefreshCw, Download, Calendar, ChevronDown, ShieldCheck, CalendarClock, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useShowMore } from "@/hooks/useShowMore";
 
 /* Active pujas, used to move a booking to the same puja on another date. */
 interface PujaOption { id: string; name: string; date: string; location: string; prices: { label: string; price: number }[]; status: string }
@@ -147,6 +148,99 @@ const presets: { key: DatePreset; label: string }[] = [
 
 const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 
+/* Only what the cards, the detail view, the PDF and the search read. select("*") also
+   pulled meta_tracking (IP, browser, ad ids) and the payment signature of every order. */
+const ORDER_COLUMNS = "id, razorpay_order_id, razorpay_payment_id, customer_name, customer_email, customer_phone, customer_address, amount, status, items, puja_details, created_at, paid_at, payment_method, manual_payment, payment_error";
+
+// Built once: toLocaleString with options builds a new formatter on every call.
+const createdFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const paidTimeFmt = new Intl.DateTimeFormat("en-IN", { hour: "2-digit", minute: "2-digit" });
+
+/** One order in the list. Memoized: opening one order or checking one payment
+    re-draws only that card, not all of them. */
+const OrderCard = memo(function OrderCard({
+  order: o, duplicateOf, checking, onCheck, onOpen,
+}: {
+  order: Order;
+  duplicateOf: string | undefined;
+  checking: boolean;
+  onCheck: (o: Order) => void;
+  onOpen: (o: Order) => void;
+}) {
+  const sevaLines = (o.items || []).filter((i: any) => itemTypeOf(i) !== "addon") as OrderItem[];
+  return (
+    <div
+      className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-gold/30 bg-ivory p-4 shadow-soft hover:border-saffron/40 transition-colors">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="font-semibold text-maroon text-sm">{o.customer_name}</h3>
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusColors[o.status] || "bg-gray-100 text-gray-500"}`}>
+            {o.status.toUpperCase()}
+          </span>
+        </div>
+        <p className="text-xs text-brown/60 mt-0.5">{o.customer_email ? `${o.customer_email} • ` : ""}{o.customer_phone}</p>
+        {sevaLines.map((i, idx) => {
+          const when = orderItemWhen(i);
+          return (
+            <div key={idx} className="mt-1 max-w-sm">
+              <p className="text-xs font-semibold text-saffron truncate">{i.category === "chadhava" ? "🌺" : "🪔"} {i.name}</p>
+              {when
+                ? <p className="text-[11px] text-maroon/80 truncate">📅 {when}</p>
+                : (i.category === "puja" || i.category === "chadhava") && <p className="text-[11px] text-amber-600">📅 date not recorded</p>}
+            </div>
+          );
+        })}
+        {o.status !== "paid" && duplicateOf && (
+          <p className="text-[11px] font-semibold text-amber-700 mt-0.5">⚠️ Duplicate — already paid in order {duplicateOf.slice(0, 8).toUpperCase()}</p>
+        )}
+        {o.status === "paid" && o.payment_method && o.payment_method !== "razorpay" && (
+          <p className="text-[11px] font-semibold text-green-700 mt-0.5">💵 Paid offline ({o.payment_method === "bank_transfer" ? "bank transfer" : o.payment_method.toUpperCase() === "UPI" ? "UPI" : o.payment_method}) — marked by admin</p>
+        )}
+        {o.status !== "paid" && o.payment_error && (
+          <p className="text-[11px] text-red-600 mt-0.5">
+            ❌ {paymentErrorText(o.payment_error)}
+          </p>
+        )}
+        {o.status === "paid" && o.puja_details && !o.puja_details.gotra?.trim() && (
+          <p className="text-[11px] text-amber-600 mt-0.5">🕉️ Gotra not provided — open the order to add it</p>
+        )}
+        <p className="text-xs text-brown/40 mt-0.5">
+          {createdFmt.format(new Date(o.created_at))}
+          {o.status === "paid" && o.paid_at && (
+            <span className="ml-2 text-green-600">• paid {paidTimeFmt.format(new Date(o.paid_at))}</span>
+          )}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="font-bold text-saffron text-lg">₹{(o.amount / 100).toLocaleString("en-IN")}</span>
+        {o.status !== "paid" && o.razorpay_order_id && (
+          <button
+            onClick={() => onCheck(o)}
+            disabled={checking}
+            title="Check with Razorpay whether this order was paid"
+            className="flex items-center gap-1.5 rounded-xl border border-gold/40 bg-cream px-3 py-2 text-xs font-bold text-maroon hover:bg-gold/20 transition-colors shrink-0 disabled:opacity-50"
+          >
+            <RefreshCw size={12} className={checking ? "animate-spin" : ""} /> Check
+          </button>
+        )}
+        <a
+          href={waConfirmLink(o)}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Send order confirmation on WhatsApp"
+          className="flex items-center gap-1.5 rounded-xl bg-green-500 hover:bg-green-600 px-3 py-2 text-xs font-bold text-white transition-colors shrink-0"
+        >
+          <WhatsAppIcon className="h-3.5 w-3.5 fill-white shrink-0" />
+          Confirm
+        </a>
+        <button onClick={() => onOpen(o)} className="grid h-8 w-8 place-items-center rounded-lg bg-gold/15 text-maroon hover:bg-gold/30 transition-colors">
+          <Eye size={14} />
+        </button>
+      </div>
+    </div>
+  );
+});
+
 const OrderManager = (_props: Props) => {
   const [orders,       setOrders]       = useState<Order[]>([]);
   const [loading,      setLoading]      = useState(true);
@@ -167,7 +261,7 @@ const OrderManager = (_props: Props) => {
     const { data, error } = await fetchAllRows<Order>((from, to) =>
       supabase
         .from("orders")
-        .select("*")
+        .select(ORDER_COLUMNS)
         .order("created_at", { ascending: false })
         .order("id", { ascending: false })
         .range(from, to),
@@ -198,7 +292,7 @@ const OrderManager = (_props: Props) => {
     setSyncing(false);
   };
 
-  const checkOne = async (o: Order) => {
+  const checkOne = useCallback(async (o: Order) => {
     setCheckingId(o.id);
     const status = await checkOrderPayment(o.id);
     setCheckingId(null);
@@ -211,7 +305,7 @@ const OrderManager = (_props: Props) => {
     } else {
       toast.info("Razorpay has no captured payment for this order");
     }
-  };
+  }, []);
 
   /* ── Resolved date range ── */
   const dateRange = useMemo(() => {
@@ -281,7 +375,9 @@ const OrderManager = (_props: Props) => {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
       const typing = el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable);
-      if (e.key === "/" && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      // The Orders tab stays mounted while hidden; "/" belongs to it only when it is on screen.
+      const onScreen = searchRef.current?.offsetParent != null;
+      if (e.key === "/" && onScreen && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         searchRef.current?.focus();
       }
@@ -300,12 +396,22 @@ const OrderManager = (_props: Props) => {
   })();
 
   /* ── Stats (from filtered) ── */
-  const stats = {
-    total:   filtered.length,
-    paid:    filtered.filter((o) => o.status === "paid").length,
-    pending: filtered.filter((o) => o.status === "pending").length,
-    revenue: filtered.filter((o) => o.status === "paid").reduce((s, o) => s + o.amount, 0),
-  };
+  const stats = useMemo(() => {
+    const s = { total: filtered.length, paid: 0, pending: 0, revenue: 0 };
+    for (const o of filtered) {
+      if (o.status === "paid") { s.paid++; s.revenue += o.amount; }
+      else if (o.status === "pending") s.pending++;
+    }
+    return s;
+  }, [filtered]);
+
+  /* ── Only the first rows are drawn; "Show more" adds the next ones ── */
+  const { count: shown, remaining, showMore } = useShowMore(
+    filtered.length,
+    `${query}|${statusFilter}|${typeFilter}|${datePreset}|${customFrom}|${customTo}|${seva.sevaKey}|${seva.dateKey}|${seva.packageKey}`,
+  );
+
+  const openOrder = useCallback((o: Order) => { setDetail(o); setGotraDraft(null); }, []);
 
   /* ── PDF Export: name, members and gotra for Panditji, exactly the filtered orders ── */
   const [exporting, setExporting] = useState(false);
@@ -655,87 +761,31 @@ const OrderManager = (_props: Props) => {
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((o) => {
-            const sevaLines = (o.items || []).filter((i: any) => itemTypeOf(i) !== "addon") as OrderItem[];
-            return (
-              <div key={o.id}
-                className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-gold/30 bg-ivory p-4 shadow-soft hover:border-saffron/40 transition-colors">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-maroon text-sm">{o.customer_name}</h3>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusColors[o.status] || "bg-gray-100 text-gray-500"}`}>
-                      {o.status.toUpperCase()}
-                    </span>
-                  </div>
-                  <p className="text-xs text-brown/60 mt-0.5">{o.customer_email ? `${o.customer_email} • ` : ""}{o.customer_phone}</p>
-                  {sevaLines.map((i, idx) => {
-                    const when = orderItemWhen(i);
-                    return (
-                      <div key={idx} className="mt-1 max-w-sm">
-                        <p className="text-xs font-semibold text-saffron truncate">{i.category === "chadhava" ? "🌺" : "🪔"} {i.name}</p>
-                        {when
-                          ? <p className="text-[11px] text-maroon/80 truncate">📅 {when}</p>
-                          : (i.category === "puja" || i.category === "chadhava") && <p className="text-[11px] text-amber-600">📅 date not recorded</p>}
-                      </div>
-                    );
-                  })}
-                  {o.status !== "paid" && paidDuplicates.has(o.id) && (
-                    <p className="text-[11px] font-semibold text-amber-700 mt-0.5">⚠️ Duplicate — already paid in order {paidDuplicates.get(o.id)!.id.slice(0, 8).toUpperCase()}</p>
-                  )}
-                  {o.status === "paid" && o.payment_method && o.payment_method !== "razorpay" && (
-                    <p className="text-[11px] font-semibold text-green-700 mt-0.5">💵 Paid offline ({o.payment_method === "bank_transfer" ? "bank transfer" : o.payment_method.toUpperCase() === "UPI" ? "UPI" : o.payment_method}) — marked by admin</p>
-                  )}
-                  {o.status !== "paid" && o.payment_error && (
-                    <p className="text-[11px] text-red-600 mt-0.5">
-                      ❌ {paymentErrorText(o.payment_error)}
-                    </p>
-                  )}
-                  {o.status === "paid" && o.puja_details && !o.puja_details.gotra?.trim() && (
-                    <p className="text-[11px] text-amber-600 mt-0.5">🕉️ Gotra not provided — open the order to add it</p>
-                  )}
-                  <p className="text-xs text-brown/40 mt-0.5">
-                    {new Date(o.created_at).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" })}
-                    {o.status === "paid" && o.paid_at && (
-                      <span className="ml-2 text-green-600">• paid {new Date(o.paid_at).toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" })}</span>
-                    )}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="font-bold text-saffron text-lg">₹{(o.amount / 100).toLocaleString("en-IN")}</span>
-                  {o.status !== "paid" && o.razorpay_order_id && (
-                    <button
-                      onClick={() => checkOne(o)}
-                      disabled={checkingId === o.id}
-                      title="Check with Razorpay whether this order was paid"
-                      className="flex items-center gap-1.5 rounded-xl border border-gold/40 bg-cream px-3 py-2 text-xs font-bold text-maroon hover:bg-gold/20 transition-colors shrink-0 disabled:opacity-50"
-                    >
-                      <RefreshCw size={12} className={checkingId === o.id ? "animate-spin" : ""} /> Check
-                    </button>
-                  )}
-                  <a
-                    href={waConfirmLink(o)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Send order confirmation on WhatsApp"
-                    className="flex items-center gap-1.5 rounded-xl bg-green-500 hover:bg-green-600 px-3 py-2 text-xs font-bold text-white transition-colors shrink-0"
-                  >
-                    <WhatsAppIcon className="h-3.5 w-3.5 fill-white shrink-0" />
-                    Confirm
-                  </a>
-                  <button onClick={() => { setDetail(o); setGotraDraft(null); }} className="grid h-8 w-8 place-items-center rounded-lg bg-gold/15 text-maroon hover:bg-gold/30 transition-colors">
-                    <Eye size={14} />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          {filtered.slice(0, shown).map((o) => (
+            <OrderCard
+              key={o.id}
+              order={o}
+              duplicateOf={paidDuplicates.get(o.id)?.id}
+              checking={checkingId === o.id}
+              onCheck={checkOne}
+              onOpen={openOrder}
+            />
+          ))}
+          {remaining > 0 && (
+            <button
+              onClick={showMore}
+              className="w-full rounded-xl border border-gold/40 bg-ivory py-3 text-sm font-bold text-maroon hover:bg-gold/15 transition-colors"
+            >
+              Show more ({remaining} more)
+            </button>
+          )}
         </div>
       )}
 
       {/* ── Order detail modal ── */}
       {detail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setDetail(null); setGotraDraft(null); }} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => { setDetail(null); setGotraDraft(null); }} />
           <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-2xl bg-ivory shadow-2xl p-6 animate-fadeIn">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-display text-lg text-maroon">Order Details</h3>

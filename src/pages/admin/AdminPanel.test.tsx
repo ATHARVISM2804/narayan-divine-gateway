@@ -68,3 +68,17 @@ describe("AdminPanel tab in the URL", () => {
     expect(screen.getByTestId("path").textContent).toBe("/admin");
   });
 });
+
+describe("AdminPanel keeps Orders and Leads loaded", () => {
+  it("hides Orders on another tab instead of unmounting it (no re-download on return)", async () => {
+    openAt("/admin/orders");
+    await screen.findByText("ORDERS TAB");
+    fireEvent.click(screen.getAllByRole("button", { name: "Leads" })[0]);
+    expect(await screen.findByText("LEADS TAB")).toBeTruthy();
+    const orders = screen.getByText("ORDERS TAB");
+    expect(orders.closest("[hidden]")).not.toBeNull();
+    fireEvent.click(screen.getAllByRole("button", { name: "Orders" })[0]);
+    expect(screen.getByText("ORDERS TAB")).toBe(orders);
+    expect(orders.closest("[hidden]")).toBeNull();
+  });
+});

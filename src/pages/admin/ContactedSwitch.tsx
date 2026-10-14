@@ -1,11 +1,13 @@
 /* "Not contacted / Contacted" switch on a lead card. Switching it marks every lead (and,
    in the DB, every order) with the same phone number (see src/lib/contacted.ts). */
 
-const shortDateTime = (iso: string) =>
-  new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+import { memo } from "react";
 
-const shortDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+// Built once: toLocaleString with options builds a new formatter on every call.
+const dateTimeFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+const dateFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short" });
+const shortDateTime = (iso: string) => dateTimeFmt.format(new Date(iso));
+const shortDate = (iso: string) => dateFmt.format(new Date(iso));
 
 interface Props {
   contactedAt: string | null | undefined;
@@ -47,4 +49,4 @@ const ContactedSwitch = ({ contactedAt, saving, onToggle, numberContactedAt }: P
   );
 };
 
-export default ContactedSwitch;
+export default memo(ContactedSwitch);
