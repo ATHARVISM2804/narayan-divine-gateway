@@ -25,9 +25,9 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           vendor: ["react", "react-dom", "react-router-dom"],
           supabase: ["@supabase/supabase-js"],
-          query: ["@tanstack/react-query", "@tanstack/query-core"],
           i18n: ["i18next", "react-i18next"],
-          ui: ["lucide-react", "class-variance-authority", "clsx", "tailwind-merge"],
+          // lucide-react is left out on purpose: as one chunk it put every admin icon on every page.
+          ui: ["class-variance-authority", "clsx", "tailwind-merge"],
         },
       },
     },

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, CalendarDays, Check } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Puja } from "@/lib/supabase";
-import { bookingDeadline, useCountdown } from "@/lib/countdown";
+import { bookingDeadline } from "@/lib/countdown";
 import { prefetchProps } from "@/lib/prefetch";
 import { MIN_PROOF_COUNT, roundedCount, type SiteStats } from "@/lib/proof";
 import FitImage from "@/components/FitImage";
@@ -19,7 +19,6 @@ const Slide = ({ puja, priority }: { puja: Puja; priority: boolean }) => {
   const { t, lang } = useLanguage();
   const hi = lang === "hi";
   const deadline = useMemo(() => bookingDeadline(puja.date, puja.countdown_datetime), [puja]);
-  const left = useCountdown(deadline);
   const name = hi && puja.name_hi ? puja.name_hi : puja.name;
   const occasion = hi && puja.occasion_hi ? puja.occasion_hi : puja.occasion;
   const place = hi && puja.location_hi ? puja.location_hi : puja.location;
@@ -43,7 +42,7 @@ const Slide = ({ puja, priority }: { puja: Puja; priority: boolean }) => {
           {puja.date && <li className="flex items-center gap-2"><CalendarDays size={16} strokeWidth={1.75} className="shrink-0 text-saffron" /> <span className="line-clamp-1">{puja.date}</span></li>}
         </ul>
         <div className="mt-3">
-          <Countdown left={left} label={t("timer_label")} expiredLabel={t("timer_expired")} compact />
+          <Countdown deadline={deadline} label={t("timer_label")} expiredLabel={t("timer_expired")} compact />
         </div>
         <div className="mt-4 flex items-center gap-3">
           {minPrice != null && <Price amount={minPrice} prefix={t("pd_from")} className="text-lg" />}
@@ -63,12 +62,26 @@ const HomeHero = ({ pujas, stats }: { pujas: Puja[]; stats: SiteStats | null }) 
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchX = useRef<number | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  // Don't swap slides (a new image decode each time) while the hero is scrolled
+  // away or the tab is in the background: on phones that work landed mid-scroll.
+  const [onScreen, setOnScreen] = useState(true);
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    let inView = true;
+    const update = () => setOnScreen(inView && document.visibilityState === "visible");
+    const io = new IntersectionObserver(([entry]) => { inView = entry.isIntersecting; update(); });
+    io.observe(el);
+    document.addEventListener("visibilitychange", update);
+    return () => { io.disconnect(); document.removeEventListener("visibilitychange", update); };
+  }, []);
 
   useEffect(() => {
-    if (paused || slides.length < 2) return;
+    if (paused || !onScreen || slides.length < 2) return;
     const id = setInterval(() => setActive((i) => (i + 1) % slides.length), AUTOPLAY_MS);
     return () => clearInterval(id);
-  }, [paused, slides.length]);
+  }, [paused, onScreen, slides.length]);
 
   useEffect(() => {
     if (active >= slides.length) setActive(0);
@@ -78,7 +91,7 @@ const HomeHero = ({ pujas, stats }: { pujas: Puja[]; stats: SiteStats | null }) 
   const points = [t("hero_s1_t1"), t("hero_s1_t2"), t("hero_s1_t3")];
 
   return (
-    <section className="border-b border-line bg-surface-muted/60">
+    <section ref={sectionRef} className="border-b border-line bg-surface-muted/60">
       <div className="container grid grid-cols-1 items-center gap-6 py-6 md:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-12 lg:py-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,440px)] xl:gap-16">
         <div>
           <h1 className="text-[26px] font-bold leading-tight text-ink md:text-4xl lg:text-[42px] lg:leading-[1.15] xl:text-5xl">

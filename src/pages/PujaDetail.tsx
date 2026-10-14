@@ -9,7 +9,7 @@ import type { Puja } from "@/lib/supabase";
 import { trackViewContent } from "@/lib/metaPixel";
 import { useCatalog } from "@/lib/catalog";
 import { pujaCacheKey, pujaFetcher, pujaFromSnapshot } from "@/lib/catalogQueries";
-import { bookingDeadline, useCountdown } from "@/lib/countdown";
+import { bookingDeadline } from "@/lib/countdown";
 import { MIN_PROOF_COUNT, reviewsFor, useReviews, useSiteStats } from "@/lib/proof";
 import PujaGallery from "@/components/puja/PujaGallery";
 import PujaSectionNav, { type NavSection } from "@/components/puja/PujaSectionNav";
@@ -81,7 +81,6 @@ const PujaDetail = () => {
   const [showLead, setShowLead] = useState(false);
 
   const deadline = useMemo(() => (puja ? bookingDeadline(puja.date, puja.countdown_datetime) : null), [puja]);
-  const left = useCountdown(deadline);
 
   usePageTitle(puja ? `${lang === "hi" && puja.name_hi ? puja.name_hi : puja.name} | Narayan Kripa` : "Narayan Kripa");
 
@@ -213,7 +212,7 @@ const PujaDetail = () => {
                 </ul>
 
                 <div className="mt-5">
-                  <Countdown left={left} label={t("timer_label")} expiredLabel={t("timer_expired")} />
+                  <Countdown deadline={deadline} label={t("timer_label")} expiredLabel={t("timer_expired")} />
                 </div>
 
                 {(reviews.length > 0 || devotees) && (
@@ -300,7 +299,7 @@ const PujaDetail = () => {
             benefit={benefit}
             location={location}
             date={puja.date}
-            left={left}
+            deadline={deadline}
             reviews={reviews}
             devotees={devotees}
             tiers={prices}

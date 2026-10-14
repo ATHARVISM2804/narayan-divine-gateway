@@ -1,9 +1,7 @@
 import { Suspense, useEffect, useRef } from "react";
 import { lazyPage } from "@/lib/chunkReload";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useSearchParams } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { captureFbclid, trackPageView } from "@/lib/metaPixel";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
@@ -43,16 +41,6 @@ const AdminLogin = lazyPage(() => import("./pages/admin/AdminLogin"));
 const AdminPanel = lazyPage(() => import("./pages/admin/AdminPanel"));
 import ErrorBoundary from "@/components/ErrorBoundary";
 
-// ── QueryClient with sensible caching ──
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,   // 5 min: avoid refetching static-ish data on every focus
-      retry: 1,
-    },
-  },
-});
-
 /* Keeps ?lang= in the address bar across route changes, since React Router
    <Link>s navigate to a bare path and drop existing query params. This makes the
    current URL always shareable in the language the visitor is viewing. */
@@ -76,7 +64,9 @@ const ScrollToTop = () => {
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // Jump, don't glide: html has scroll-behavior: smooth (for in-page links), and an
+    // animated scroll on every page change made taps feel laggy.
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     // Track Meta Pixel pageview on route change (skip first render as it's tracked in index.html)
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -135,8 +125,7 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+  <>
       <Sonner />
       <LanguageProvider>
       <AuthProvider>
@@ -178,8 +167,7 @@ const App = () => (
       </CartProvider>
       </AuthProvider>
       </LanguageProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+  </>
 );
 
 export default App;

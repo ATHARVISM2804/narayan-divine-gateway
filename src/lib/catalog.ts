@@ -157,6 +157,8 @@ export interface CatalogState<T> {
 /**
  * React hook around loadCatalog. Shows the saved copy instantly, refreshes it
  * in the background, and retries by itself when the device comes back online.
+ * A first-time visitor (nothing saved yet) sees the build snapshot as soon as it
+ * arrives instead of a skeleton while Supabase answers; live data replaces it.
  * Pass `key = null` to wait (e.g. no id yet).
  */
 export function useCatalog<T>(
@@ -164,14 +166,11 @@ export function useCatalog<T>(
   fetcher: Fetcher<T>,
   fromSnapshot?: (s: Snapshot) => T | null | undefined,
 ): CatalogState<T> {
-  const initial = key ? readCache<T>(key) : null;
-  const [state, setState] = useState(() => ({
-    data: initial?.data ?? null,
-    loading: !initial,
-    degraded: false,
-    notFound: false,
-    failed: false,
-  }));
+  // Read the saved copy once, not on every render (this hook re-renders with its page).
+  const [state, setState] = useState(() => {
+    const initial = key ? readCache<T>(key) : null;
+    return { data: initial?.data ?? null, loading: !initial, degraded: false, notFound: false, failed: false };
+  });
   const fetcherRef = useRef(fetcher);
   const snapRef = useRef(fromSnapshot);
   fetcherRef.current = fetcher;
@@ -187,7 +186,17 @@ export function useCatalog<T>(
     }
     const id = ++run.current;
     if (cached) setState((s) => ({ ...s, data: cached.data, loading: false }));
-    else setState((s) => (s.data == null ? { ...s, loading: true, failed: false } : s));
+    else {
+      setState((s) => (s.data == null ? { ...s, loading: true, failed: false } : s));
+      const fromSnap = snapRef.current;
+      if (fromSnap) {
+        void loadSnapshot().then((snap) => {
+          const v = snap && id === run.current ? fromSnap(snap) : null;
+          // Only fills a page that is still waiting; it never replaces live data.
+          if (v != null) setState((s) => (s.loading && s.data == null ? { ...s, data: v, loading: false } : s));
+        });
+      }
+    }
     loadCatalog(key, fetcherRef.current, snapRef.current).then((r) => {
       if (id !== run.current) return; // a newer load started
       setState({

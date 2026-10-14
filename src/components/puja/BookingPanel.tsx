@@ -2,7 +2,6 @@ import { ArrowRight, CalendarDays, Check, ChevronDown, MessageCircle, ShoppingCa
 import { useLanguage } from "@/context/LanguageContext";
 import { whatsappLink } from "@/lib/whatsapp";
 import { trackContact } from "@/lib/metaPixel";
-import type { TimeLeft } from "@/lib/countdown";
 import type { Review } from "@/lib/proof";
 import Countdown from "@/components/shared/Countdown";
 import TrustRow from "@/components/shared/TrustRow";
@@ -70,7 +69,7 @@ const BookingPanel = ({
   benefit,
   location,
   date,
-  left,
+  deadline,
   reviews,
   devotees,
   tiers,
@@ -87,7 +86,7 @@ const BookingPanel = ({
   benefit?: string | null;
   location?: string | null;
   date?: string | null;
-  left: TimeLeft | null;
+  deadline: Date | null;
   reviews: Review[];
   devotees: number | null;
   tiers: Tier[];
@@ -120,7 +119,7 @@ const BookingPanel = ({
       </ul>
 
       <div className="mt-4 [@media(max-height:800px)]:mt-3">
-        <Countdown left={left} label={t("timer_label")} expiredLabel={t("timer_expired")} compact />
+        <Countdown deadline={deadline} label={t("timer_label")} expiredLabel={t("timer_expired")} compact />
       </div>
 
       {(reviews.length > 0 || devotees) && (

@@ -1,12 +1,14 @@
 import { supabase, type Temple } from "@/lib/supabase";
 import { useCatalog } from "@/lib/catalog";
 import { templesFromSnapshot } from "@/lib/catalogQueries";
-import fallbackTemple from "@/assets/hero-temple.jpg";
-import imgShiva from "@/assets/puja-shiva.jpg";
-import imgVishnu from "@/assets/puja-vishnu.jpg";
-import imgGanesh from "@/assets/puja-ganesh.jpg";
-import imgDurga from "@/assets/puja-durga.jpg";
-import imgDarshan from "@/assets/hero-darshan.jpg";
+// 720-px WebP copies (about 40 KB each) of the photos the site originally shipped
+// with; the full-size JPEGs were 106–238 KB each for a tile about 256 px wide.
+import fallbackTemple from "@/assets/temples/jagannath-puri.webp";
+import imgShiva from "@/assets/temples/mahakaleshwar.webp";
+import imgVishnu from "@/assets/temples/tirupati-balaji.webp";
+import imgGanesh from "@/assets/temples/siddhivinayak.webp";
+import imgDurga from "@/assets/temples/vaishno-devi.webp";
+import imgDarshan from "@/assets/temples/kashi-vishwanath.webp";
 
 /* Fallback photo per seeded temple, used only until an admin uploads a real
    image_url. Matches the images the site originally shipped with. */

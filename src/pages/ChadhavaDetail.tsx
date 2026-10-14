@@ -8,7 +8,7 @@ import { trackContact, trackViewContent } from "@/lib/metaPixel";
 import { whatsappLink } from "@/lib/whatsapp";
 import { useCatalog } from "@/lib/catalog";
 import { chadhavaCacheKey, chadhavaFetcher, chadhavaFromSnapshot, type ChadhavaWithOfferings } from "@/lib/catalogQueries";
-import { bookingDeadline, useCountdown } from "@/lib/countdown";
+import { bookingDeadline } from "@/lib/countdown";
 import { MIN_PROOF_COUNT, reviewsFor, useReviews, useSiteStats } from "@/lib/proof";
 import PujaGallery from "@/components/puja/PujaGallery";
 import PujaSectionNav, { type NavSection } from "@/components/puja/PujaSectionNav";
@@ -47,7 +47,6 @@ const ChadhavaDetail = () => {
   const offerings = useMemo(() => data?.offerings ?? [], [data]);
 
   const deadline = useMemo(() => (chadhava ? bookingDeadline(chadhava.date, chadhava.countdown_datetime) : null), [chadhava]);
-  const left = useCountdown(deadline);
 
   usePageTitle(chadhava ? `${lang === "hi" && chadhava.item_hi ? chadhava.item_hi : chadhava.item} | Narayan Kripa` : "Narayan Kripa");
 
@@ -181,7 +180,7 @@ const ChadhavaDetail = () => {
                 </ul>
 
                 <div className="mt-5">
-                  <Countdown left={left} label={t("timer_label_chadhava")} expiredLabel={t("timer_expired_chadhava")} />
+                  <Countdown deadline={deadline} label={t("timer_label_chadhava")} expiredLabel={t("timer_expired_chadhava")} />
                 </div>
 
                 {(reviews.length > 0 || (bookedCount ?? 0) >= MIN_PROOF_COUNT) && (
@@ -334,7 +333,7 @@ const ChadhavaDetail = () => {
               )}
             </ul>
             <div className="mt-4 [@media(max-height:800px)]:mt-3">
-              <Countdown left={left} label={t("timer_label_chadhava")} expiredLabel={t("timer_expired_chadhava")} compact />
+              <Countdown deadline={deadline} label={t("timer_label_chadhava")} expiredLabel={t("timer_expired_chadhava")} compact />
             </div>
             {(reviews.length > 0 || (bookedCount ?? 0) >= MIN_PROOF_COUNT) && (
               <div className="mt-4 space-y-1.5 [@media(max-height:960px)]:hidden">

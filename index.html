@@ -15,7 +15,7 @@
     <link rel="apple-touch-icon" href="/favicon.png" />
 
     <!-- Preconnect to external origins for faster resource loading -->
-    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="preconnect" href="https://res.cloudinary.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Payment: warm up Razorpay's origins so checkout opens faster on slow mobile networks -->
@@ -46,9 +46,13 @@
       {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
       n.callMethod.apply(n,arguments):n.queue.push(arguments)};
       if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window,document,'script',
+      n.queue=[];
+      // fbevents.js (about 200 KB with its config) used to download and run while the
+      // site itself was starting on slow phones. fbq() calls below are queued at once
+      // and sent when it arrives: after the page has loaded, or 2.5 s at the latest.
+      var go=function(){if(t)return;t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)};
+      f.addEventListener('load',go);setTimeout(go,2500)}(window,document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
       // The pixel normally sends a PageView on EVERY history change, including the
       // ?lang= / ?step= rewrites this app makes, which double-counted page views.

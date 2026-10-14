@@ -1,23 +1,25 @@
 import { Clock } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import type { TimeLeft } from "@/lib/countdown";
+import { useCountdown } from "@/lib/countdown";
 import { cn } from "@/lib/utils";
 
-/** "Booking closes in" boxes. Digits turn maroon on the final day. */
+/** "Booking closes in" boxes. Digits turn maroon on the final day.
+    It ticks by itself, so only these boxes re-render each second, not the whole page. */
 const Countdown = ({
-  left,
+  deadline,
   label,
   expiredLabel,
   compact = false,
   onDark = false,
 }: {
-  left: TimeLeft | null;
+  deadline: Date | null;
   label: string;
   expiredLabel: string;
   compact?: boolean;
   onDark?: boolean;
 }) => {
   const { t } = useLanguage();
+  const left = useCountdown(deadline);
   if (!left) return null;
 
   if (left.expired) {

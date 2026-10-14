@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchWithRetry, loadCatalog, readCache, resetSnapshotForTests, writeCache, type Fetcher } from "./catalog";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { fetchWithRetry, loadCatalog, readCache, resetSnapshotForTests, useCatalog, writeCache, type Fetcher } from "./catalog";
 
 const noWait = { sleep: () => Promise.resolve(), timeoutMs: 1000 };
 const ok = <T>(data: T) => ({ data, error: null });
@@ -82,5 +83,29 @@ describe("loadCatalog", () => {
     const r = await loadCatalog("pujas", scripted(ok([{ id: "a" }])), undefined, noWait);
     expect(r.data).toEqual([{ id: "a" }]);
     spy.mockRestore();
+  });
+});
+
+describe("useCatalog", () => {
+  it("shows the build snapshot to a first-time visitor while Supabase is still answering", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ pujas: [{ id: "snap" }] }))));
+    let answer!: (r: { data: unknown; error: null }) => void;
+    const slow: Fetcher<unknown> = () => new Promise((r) => { answer = r; });
+    const { result } = renderHook(() => useCatalog("pujas", slow, (s) => s.pujas));
+    await waitFor(() => expect(result.current.data).toEqual([{ id: "snap" }]));
+    expect(result.current.loading).toBe(false);
+
+    await act(async () => answer({ data: [{ id: "live" }], error: null }));
+    expect(result.current.data).toEqual([{ id: "live" }]);
+  });
+
+  it("never lets a late snapshot replace live data", async () => {
+    let send!: () => void;
+    const late = new Promise<void>((r) => { send = r; });
+    vi.stubGlobal("fetch", vi.fn(async () => { await late; return new Response(JSON.stringify({ pujas: [{ id: "snap" }] })); }));
+    const { result } = renderHook(() => useCatalog("pujas", async () => ok([{ id: "live" }]), (s) => s.pujas));
+    await waitFor(() => expect(result.current.data).toEqual([{ id: "live" }]));
+    await act(async () => { send(); await late; });
+    expect(result.current.data).toEqual([{ id: "live" }]);
   });
 });
