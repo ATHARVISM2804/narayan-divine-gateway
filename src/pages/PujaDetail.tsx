@@ -16,6 +16,7 @@ import PujaSectionNav, { type NavSection } from "@/components/puja/PujaSectionNa
 import PujaSections from "@/components/puja/PujaSections";
 import LeadCaptureModal from "@/components/puja/LeadCaptureModal";
 import BookingPanel, { PackageOption } from "@/components/puja/BookingPanel";
+import PackageSheet from "@/components/puja/PackageSheet";
 import Countdown from "@/components/shared/Countdown";
 import StickyActionBar from "@/components/shared/StickyActionBar";
 import TrustRow from "@/components/shared/TrustRow";
@@ -85,6 +86,7 @@ const PujaDetail = () => {
   const selected = puja?.prices?.find((t) => t.label === selectedLabel) ?? null;
   const setSelected = (tier: { label: string } | null) => setSelectedLabel(tier?.label ?? null);
   const [showLead, setShowLead] = useState(false);
+  const [showPackages, setShowPackages] = useState(false);
 
   const deadline = useMemo(() => (puja ? bookingDeadline(puja.date, puja.countdown_datetime) : null), [puja]);
 
@@ -171,7 +173,12 @@ const PujaDetail = () => {
     nav("/checkout");
   };
 
-  const onBarClick = () => (selected ? setShowLead(true) : scrollToId("packages"));
+  // Package popup (old site's flow): opens with a package already chosen, so it is one tap to continue.
+  const openPackages = () => {
+    if (!selected && prices[0]) setSelected(prices[0]);
+    setShowPackages(true);
+  };
+  const onBarClick = () => (selected ? setShowLead(true) : openPackages());
   const includeItems = includes && includes.length > 0 ? includes : [t("rcv1"), t("rcv2"), t("rcv4"), t("rcv3"), t("rcv5")];
 
   return (
@@ -232,7 +239,7 @@ const PujaDetail = () => {
                   </div>
                 )}
 
-                <button onClick={() => scrollToId("packages")} className="btn-primary mt-6 w-full md:max-w-sm">
+                <button onClick={openPackages} className="btn-primary mt-6 w-full md:max-w-sm">
                   {t("pd_select_btn")} <ArrowRight size={18} />
                 </button>
 
@@ -326,7 +333,22 @@ const PujaDetail = () => {
           subtitle={selected ? selected.label : t("pd_select_hint")}
           cta={selected ? t("btn_continue") : t("pd_tab_packages")}
           onClick={onBarClick}
+          onInfoClick={selected ? openPackages : undefined}
           className="lg:hidden"
+        />
+      )}
+
+      {showPackages && (
+        <PackageSheet
+          name={name}
+          tiers={prices}
+          tierImage={tierImage}
+          selected={selected}
+          onSelect={setSelected}
+          includes={includeItems}
+          onContinue={() => { setShowPackages(false); setShowLead(true); }}
+          onAddToCart={() => { addToCart(); setShowPackages(false); }}
+          onClose={() => setShowPackages(false)}
         />
       )}
 

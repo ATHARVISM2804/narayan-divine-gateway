@@ -60,7 +60,7 @@ describe("BottomSheet", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
 
     fireEvent.click(screen.getByText("Continue"));
-    fireEvent.click(screen.getByLabelText("Close"));
+    fireEvent.click(screen.getByRole("button", { name: /close/i }));
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 

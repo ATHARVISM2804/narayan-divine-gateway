@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowRight, CalendarDays, Check, ChevronRight, MessageCircle, Minus, Plus } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, ChevronRight, MessageCircle } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useCart } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -12,11 +12,12 @@ import { bookingDeadline } from "@/lib/countdown";
 import { MIN_PROOF_COUNT, reviewsFor, useReviews, useSiteStats } from "@/lib/proof";
 import PujaGallery from "@/components/puja/PujaGallery";
 import PujaSectionNav, { type NavSection } from "@/components/puja/PujaSectionNav";
-import FitImage from "@/components/FitImage";
 import Countdown from "@/components/shared/Countdown";
 import RichText from "@/components/shared/RichText";
 import ReadMore from "@/components/shared/ReadMore";
 import StickyActionBar from "@/components/shared/StickyActionBar";
+import OfferingRow from "@/components/chadhava/OfferingRow";
+import OfferingsSheet from "@/components/chadhava/OfferingsSheet";
 import TrustRow from "@/components/shared/TrustRow";
 import FaqList, { type Faq } from "@/components/shared/FaqList";
 import SectionHeading from "@/components/SectionHeading";
@@ -25,7 +26,6 @@ import ReviewsSection from "@/components/proof/ReviewsSection";
 import { DegradedBanner, LoadError } from "@/components/LoadError";
 import { Eyebrow, Highlight, formatInr } from "@/components/ui/typography";
 import { TempleIcon } from "@/components/icons";
-import { cn } from "@/lib/utils";
 
 const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -35,6 +35,8 @@ const ChadhavaDetail = () => {
   const { addItem } = useCart();
   const { t, lang } = useLanguage();
   const [selected, setSelected] = useState<Record<string, number>>({});
+  // Offerings popup (old site's package-popup flow): opened by the "Choose" buttons and the bar.
+  const [showOfferings, setShowOfferings] = useState(false);
 
   const { data, loading, degraded, failed, notFound, retry } = useCatalog<ChadhavaWithOfferings>(
     id ? chadhavaCacheKey(id) : null,
@@ -74,7 +76,7 @@ const ChadhavaDetail = () => {
   const totalPrice = offerings.reduce((sum, o) => sum + (selected[o.id] || 0) * o.price, 0);
 
   const handleProceed = () => {
-    if (!chadhava || selectedCount === 0) return scrollToId("offerings");
+    if (!chadhava || selectedCount === 0) return setShowOfferings(true);
     offerings.forEach((o) => {
       const qty = selected[o.id];
       if (!qty) return;
@@ -127,6 +129,7 @@ const ChadhavaDetail = () => {
 
   const reviews = reviewsFor(allReviews, { chadhavaId: chadhava.id });
   const bookedCount = stats?.by_item?.[chadhava.id];
+  const includeLines = [t("inc1"), t("inc2"), t("inc4"), t("inc3"), t("inc5")];
   const minPrice = offerings.length ? Math.min(...offerings.map((o) => o.price)) : chadhava.price;
 
   const sections: NavSection[] = [
@@ -194,7 +197,7 @@ const ChadhavaDetail = () => {
                   </div>
                 )}
 
-                <button onClick={() => scrollToId("offerings")} className="btn-primary mt-6 w-full md:max-w-sm">
+                <button onClick={() => setShowOfferings(true)} className="btn-primary mt-6 w-full md:max-w-sm">
                   {t("ch_choose_offering")} <ArrowRight size={18} />
                 </button>
 
@@ -213,54 +216,16 @@ const ChadhavaDetail = () => {
                 <p className="rounded-xl border border-line bg-surface p-8 text-center text-ink-muted">{t("ch_no_offerings")}</p>
               ) : (
                 <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
-                  {offerings.map((o) => {
-                    const qty = selected[o.id] || 0;
-                    const name = hi && o.name_hi ? o.name_hi : o.name;
-                    const odesc = hi && o.description_hi ? o.description_hi : o.description;
-                    return (
-                      <li key={o.id} className={cn("flex items-center gap-3 p-3 transition-colors md:p-4", qty > 0 && "bg-saffron-soft")}>
-                        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-surface-muted">
-                          {o.image_url ? (
-                            <FitImage src={o.image_url} alt={name} width={128} />
-                          ) : (
-                            <span className="grid h-full w-full place-items-center text-ink-soft">
-                              <TempleIcon size={22} />
-                            </span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[15px] font-semibold leading-snug text-ink">{name}</p>
-                          {odesc && <p className="mt-0.5 line-clamp-2 text-[13px] text-ink-soft">{odesc}</p>}
-                          <p className="tabular mt-1 text-base font-bold text-saffron-dark">{formatInr(o.price)}</p>
-                        </div>
-                        {qty === 0 ? (
-                          <button
-                            onClick={() => setQty(o.id, 1)}
-                            className="inline-flex h-10 shrink-0 items-center gap-1 rounded-[10px] border border-saffron px-4 text-sm font-semibold text-saffron-dark transition-colors hover:bg-saffron hover:text-white"
-                          >
-                            <Plus size={16} /> {t("ch_add")}
-                          </button>
-                        ) : (
-                          <div className="flex h-10 shrink-0 items-center overflow-hidden rounded-[10px] bg-saffron text-white">
-                            <button onClick={() => setQty(o.id, qty - 1)} className="grid h-full w-10 place-items-center hover:bg-saffron-dark" aria-label="Remove one">
-                              <Minus size={16} />
-                            </button>
-                            <span className="tabular w-6 text-center text-sm font-bold">{qty}</span>
-                            <button onClick={() => setQty(o.id, qty + 1)} className="grid h-full w-10 place-items-center hover:bg-saffron-dark" aria-label="Add one">
-                              <Plus size={16} />
-                            </button>
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
+                  {offerings.map((o) => (
+                    <OfferingRow key={o.id} offering={o} qty={selected[o.id] || 0} onQty={(q) => setQty(o.id, q)} />
+                  ))}
                 </ul>
               )}
 
               <div className="mt-6 rounded-xl border border-line bg-surface-muted/60 p-4 md:p-5">
                 <h3 className="mb-3 text-[15px] font-semibold text-ink">{t("whats_included")}</h3>
                 <ul className="space-y-2.5">
-                  {[t("inc1"), t("inc2"), t("inc4"), t("inc3"), t("inc5")].map((line) => (
+                  {includeLines.map((line) => (
                     <li key={line} className="flex items-start gap-2.5 text-[15px] text-ink-muted">
                       <Check size={16} strokeWidth={2.5} className="mt-0.5 shrink-0 text-success" /> {line}
                     </li>
@@ -400,8 +365,21 @@ const ChadhavaDetail = () => {
         subtitle={selectedCount > 0 ? `${selectedCount} ${t("ch_items_selected")}` : t("ch_select_hint")}
         cta={selectedCount > 0 ? t("ch_proceed") : t("ch_view_offerings")}
         onClick={handleProceed}
+        onInfoClick={selectedCount > 0 ? () => setShowOfferings(true) : undefined}
         className="lg:hidden"
       />
+
+      {showOfferings && (
+        <OfferingsSheet
+          name={item}
+          offerings={offerings}
+          selected={selected}
+          onQty={setQty}
+          includes={includeLines}
+          onContinue={() => { setShowOfferings(false); handleProceed(); }}
+          onClose={() => setShowOfferings(false)}
+        />
+      )}
     </main>
   );
 };

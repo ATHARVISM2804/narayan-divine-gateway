@@ -568,5 +568,7 @@
   "pay_closed_sub": "कृपया हमें WhatsApp पर संदेश भेजें, हम आपकी मदद करेंगे।",
   "pay_invalid": "यह भुगतान लिंक मान्य नहीं है।",
   "pay_retry": "फिर से कोशिश करें",
-  "pay_whatsapp": "WhatsApp पर संदेश भेजें"
+  "pay_whatsapp": "WhatsApp पर संदेश भेजें",
+  "ch_qty_add": "एक और जोड़ें",
+  "ch_qty_remove": "एक कम करें"
 }

@@ -568,5 +568,7 @@
   "pay_closed_sub": "Please message us on WhatsApp and we will help you.",
   "pay_invalid": "This payment link is not valid.",
   "pay_retry": "Try again",
-  "pay_whatsapp": "Message us on WhatsApp"
+  "pay_whatsapp": "Message us on WhatsApp",
+  "ch_qty_add": "Add one",
+  "ch_qty_remove": "Remove one"
 }

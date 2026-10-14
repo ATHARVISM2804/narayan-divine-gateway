@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 import { cn } from "@/lib/utils";
 
 /** Slides up from the bottom on phones, centred dialog on larger screens.
@@ -22,6 +23,7 @@ const BottomSheet = ({
   // second for its countdown). Read it from a ref so a re-render never re-runs the
   // effect below: re-running it pulled focus out of the input being typed in, which
   // closed the phone keyboard straight away.
+  const { t } = useLanguage();
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const close = () => onCloseRef.current();
@@ -60,7 +62,7 @@ const BottomSheet = ({
         <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-line sm:hidden" />
         <button
           onClick={close}
-          aria-label="Close"
+          aria-label={t("mo_close")}
           className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full text-ink-soft transition-colors hover:bg-surface-muted hover:text-ink"
         >
           <X size={18} />
