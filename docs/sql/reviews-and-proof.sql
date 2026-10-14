@@ -46,22 +46,22 @@ CREATE POLICY "Public read active reviews"
 DROP POLICY IF EXISTS "Admin read all reviews" ON reviews;
 CREATE POLICY "Admin read all reviews"
   ON reviews FOR SELECT
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 DROP POLICY IF EXISTS "Admin insert reviews" ON reviews;
 CREATE POLICY "Admin insert reviews"
   ON reviews FOR INSERT
-  WITH CHECK (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  WITH CHECK (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 DROP POLICY IF EXISTS "Admin update reviews" ON reviews;
 CREATE POLICY "Admin update reviews"
   ON reviews FOR UPDATE
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 DROP POLICY IF EXISTS "Admin delete reviews" ON reviews;
 CREATE POLICY "Admin delete reviews"
   ON reviews FOR DELETE
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 -- 2. Past puja video (YouTube link) shown as "Watch a past puja video".
 ALTER TABLE pujas ADD COLUMN IF NOT EXISTS past_video_url TEXT;

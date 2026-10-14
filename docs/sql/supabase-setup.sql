@@ -58,19 +58,19 @@ CREATE POLICY "Public read active pujas"
 
 CREATE POLICY "Admin read all pujas"
   ON pujas FOR SELECT
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 CREATE POLICY "Admin insert pujas"
   ON pujas FOR INSERT
-  WITH CHECK (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  WITH CHECK (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 CREATE POLICY "Admin update pujas"
   ON pujas FOR UPDATE
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 CREATE POLICY "Admin delete pujas"
   ON pujas FOR DELETE
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 CREATE POLICY "Public read active chadhavas"
   ON chadhavas FOR SELECT
@@ -78,19 +78,19 @@ CREATE POLICY "Public read active chadhavas"
 
 CREATE POLICY "Admin read all chadhavas"
   ON chadhavas FOR SELECT
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 CREATE POLICY "Admin insert chadhavas"
   ON chadhavas FOR INSERT
-  WITH CHECK (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  WITH CHECK (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 CREATE POLICY "Admin update chadhavas"
   ON chadhavas FOR UPDATE
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 CREATE POLICY "Admin delete chadhavas"
   ON chadhavas FOR DELETE
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 -- 6. Create storage bucket for product images
 INSERT INTO storage.buckets (id, name, public)
@@ -103,15 +103,15 @@ CREATE POLICY "Public read product images"
 
 CREATE POLICY "Admin upload product images"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'product-images' AND auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  WITH CHECK (bucket_id = 'product-images' AND auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 CREATE POLICY "Admin update product images"
   ON storage.objects FOR UPDATE
-  USING (bucket_id = 'product-images' AND auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (bucket_id = 'product-images' AND auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 CREATE POLICY "Admin delete product images"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'product-images' AND auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (bucket_id = 'product-images' AND auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 -- 8. Seed data — existing pujas
 INSERT INTO pujas (name, deity, location, date, prices, status, featured) VALUES

@@ -49,22 +49,22 @@ CREATE POLICY "Public read active temples"
 DROP POLICY IF EXISTS "Admin read all temples" ON temples;
 CREATE POLICY "Admin read all temples"
   ON temples FOR SELECT
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 DROP POLICY IF EXISTS "Admin insert temples" ON temples;
 CREATE POLICY "Admin insert temples"
   ON temples FOR INSERT
-  WITH CHECK (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  WITH CHECK (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 DROP POLICY IF EXISTS "Admin update temples" ON temples;
 CREATE POLICY "Admin update temples"
   ON temples FOR UPDATE
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 DROP POLICY IF EXISTS "Admin delete temples" ON temples;
 CREATE POLICY "Admin delete temples"
   ON temples FOR DELETE
-  USING (auth.jwt() ->> 'email' = 'nkripra0206@gmail.com');
+  USING (auth.jwt() ->> 'email' = 'nkripa0206@gmail.com');
 
 -- 5. Seed data — the 6 temples currently on the site.
 --    image_url is left NULL; upload each temple's photo via Admin → Temples.
