@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { trackAddToCart } from "@/lib/metaPixel";
+import { mergeCartItem } from "@/lib/cartMerge";
 
 export interface CartItem {
   id: string;
@@ -66,15 +67,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       quantity: initialQuantity,
       category: newItem.category,
     });
-    setItems((prev) => {
-      const existing = prev.find((i) => i.id === newItem.id);
-      if (existing) {
-        return prev.map((i) =>
-          i.id === newItem.id ? { ...i, quantity: i.quantity + initialQuantity } : i
-        );
-      }
-      return [...prev, { ...newItem, quantity: initialQuantity }];
-    });
+    setItems((prev) => mergeCartItem(prev, newItem, initialQuantity));
   }, []);
 
   const removeItem = useCallback((id: string) => {

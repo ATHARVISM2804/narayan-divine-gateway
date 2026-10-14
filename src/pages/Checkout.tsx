@@ -152,6 +152,7 @@ const Checkout = () => {
   // Puja bookings don't ask for the name again: the name from the lead form (or the account)
   // fills Member 1 once, and the booking is under that name (or Member 1 if there was none).
   const memberPrefilled = useRef(false);
+  const priceRechecked = useRef(false);
   useEffect(() => {
     if (memberPrefilled.current || !form.name.trim()) return;
     memberPrefilled.current = true;
@@ -322,6 +323,24 @@ const Checkout = () => {
           return;
         }
         throw new Error(errBody.error || "Failed to create order");
+      }
+
+      // The server charges the database price. If that differs from the total on screen (a
+      // price was changed while this page was open, or the check on arrival failed), show the
+      // real total first instead of Razorpay asking for a different amount. Once only, so a
+      // mismatch this can't explain never blocks paying; Razorpay always shows the true amount.
+      if (typeof fnData.amount === "number" && fnData.amount !== Math.round(totalPrice * 100) && !priceRechecked.current) {
+        priceRechecked.current = true;
+        const changes = await checkCartAgainstCatalog(items);
+        changes?.remove.forEach((id) => removeItem(id));
+        changes?.reprice.forEach(({ id, price }) => setItemPrice(id, price));
+        if (pujaId) {
+          const { data } = await supabase.from("puja_offerings").select("*").eq("puja_id", pujaId).eq("status", "active").order("sort_order");
+          if (data) setPujaOfferings(data as PujaOffering[]);
+        }
+        toast.info(t("co_price_updated"));
+        setLoading(false);
+        return;
       }
 
       // Fired once the order exists so the browser event can share its event id with

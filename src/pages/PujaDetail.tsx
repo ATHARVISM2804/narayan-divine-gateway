@@ -77,7 +77,13 @@ const PujaDetail = () => {
   const { data: allReviews } = useReviews();
   const { data: stats } = useSiteStats();
 
-  const [selected, setSelected] = useState<{ label: string; price: number } | null>(null);
+  // Only the package *name* is remembered; its price is read from the current data on every
+  // render. The page can first show a saved copy (device cache or build snapshot) and then
+  // live data: a stored {label, price} kept the old price (₹951) in the panel, bar, lead form
+  // and cart after the page itself showed the new one.
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+  const selected = puja?.prices?.find((t) => t.label === selectedLabel) ?? null;
+  const setSelected = (tier: { label: string } | null) => setSelectedLabel(tier?.label ?? null);
   const [showLead, setShowLead] = useState(false);
 
   const deadline = useMemo(() => (puja ? bookingDeadline(puja.date, puja.countdown_datetime) : null), [puja]);
