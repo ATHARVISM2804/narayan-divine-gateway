@@ -3,7 +3,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { supabase, type PujaOffering } from "@/lib/supabase";
+import { supabase, SUPABASE_URL, type PujaOffering } from "@/lib/supabase";
 import { getMetaTrackingContext, trackContact, trackInitiateCheckout, trackPurchase } from "@/lib/metaPixel";
 import { checkOrderPayment } from "@/lib/orderStatus";
 import { loadRazorpayScript } from "@/lib/razorpayScript";
@@ -367,11 +367,13 @@ const Checkout = () => {
         // In-app browsers (Facebook / Instagram / WhatsApp) often reload or kill this page
         // while the customer is in their UPI app, so the handler below never runs. There,
         // Razorpay posts the result to our server instead, which redirects back to the site.
-        ...(inApp && import.meta.env.VITE_SUPABASE_URL
+        // SUPABASE_URL goes through our own domain on the live site, so customers whose ISP
+        // blocks supabase.co still get back after paying.
+        ...(inApp && SUPABASE_URL
           ? {
               redirect: true,
               callback_url:
-                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-callback` +
+                `${SUPABASE_URL}/functions/v1/razorpay-callback` +
                 `?db=${encodeURIComponent(dbOrderId)}&o=${encodeURIComponent(window.location.origin)}`,
             }
           : {}),

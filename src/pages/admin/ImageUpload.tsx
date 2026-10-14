@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, SUPABASE_DIRECT_URL, SUPABASE_URL } from "@/lib/supabase";
 
 interface Props {
   value: string | null;
@@ -76,7 +76,9 @@ const ImageUpload = ({ value, onChange }: Props) => {
     }
 
     const { data } = supabase.storage.from("product-images").getPublicUrl(name);
-    onChange(data.publicUrl);
+    // On the live site the client talks through /sb (lib/supabase.ts); save the project's own
+    // address so the image is recognised and resized by Vercel instead of streamed through /sb.
+    onChange(data.publicUrl.replace(SUPABASE_URL, SUPABASE_DIRECT_URL));
     setUploading(false);
   }, [onChange]);
 

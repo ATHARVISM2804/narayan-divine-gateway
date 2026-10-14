@@ -1,9 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
+import { supabaseClientUrl } from './supabaseUrl';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+/** The project's own address. Stored image URLs and server-side callers use this one. */
+export const SUPABASE_DIRECT_URL: string = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const SUPABASE_URL = supabaseClientUrl(
+  SUPABASE_DIRECT_URL,
+  typeof window !== "undefined" ? window.location : undefined,
+);
+
+export const supabase = createClient(SUPABASE_URL, supabaseAnonKey, {
+  // supabase-js names the saved login after the URL's host; keep the old name so nobody
+  // (admin or customer) is logged out by the switch to /sb.
+  auth: { storageKey: "sb-opztoxuohtizymhwofas-auth-token" },
+});
 
 /* Type definitions for database tables */
 
