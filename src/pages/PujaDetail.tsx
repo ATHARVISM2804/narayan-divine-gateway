@@ -15,9 +15,8 @@ import { MIN_PROOF_COUNT, reviewsFor, useReviews, useSiteStats } from "@/lib/pro
 import PujaGallery from "@/components/puja/PujaGallery";
 import PujaSectionNav, { type NavSection } from "@/components/puja/PujaSectionNav";
 import PujaSections from "@/components/puja/PujaSections";
-import LeadCaptureModal from "@/components/puja/LeadCaptureModal";
 import BookingPanel, { PackageOption } from "@/components/puja/BookingPanel";
-import PackageSheet from "@/components/puja/PackageSheet";
+import PackageSheet, { type BookingStep } from "@/components/puja/PackageSheet";
 import Countdown from "@/components/shared/Countdown";
 import StickyActionBar from "@/components/shared/StickyActionBar";
 import TrustRow from "@/components/shared/TrustRow";
@@ -87,8 +86,8 @@ const PujaDetail = () => {
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const selected = puja?.prices?.find((t) => t.label === selectedLabel) ?? null;
   const setSelected = (tier: { label: string } | null) => setSelectedLabel(tier?.label ?? null);
-  const [showLead, setShowLead] = useState(false);
-  const [showPackages, setShowPackages] = useState(false);
+  // Booking popup: closed, or open on its package or details step.
+  const [sheet, setSheet] = useState<BookingStep | null>(null);
 
   // The sticky button shows only once the page's own button and the package list are off screen.
   const stickyFree = useAllOffscreen(["hero-cta", "packages"], !!puja);
@@ -175,14 +174,14 @@ const PujaDetail = () => {
   const handleLeadConfirm = () => {
     if (!selected) return;
     addItem(itemFor(selected));
-    setShowLead(false);
+    setSheet(null);
     nav("/checkout");
   };
 
   // Package popup (old site's flow): opens with a package already chosen, so it is one tap to continue.
   const openPackages = () => {
     if (!selected && prices[0]) setSelected(prices[0]);
-    setShowPackages(true);
+    setSheet("package");
   };
   const includeItems = includes && includes.length > 0 ? includes : [t("rcv1"), t("rcv2"), t("rcv4"), t("rcv3"), t("rcv5")];
 
@@ -262,7 +261,7 @@ const PujaDetail = () => {
                     selected={selected?.label === tier.label}
                     onSelect={() => setSelected(selected?.label === tier.label ? null : tier)}
                     action={
-                      <button onClick={() => setShowLead(true)} className="btn-primary w-full">
+                      <button onClick={() => setSheet("details")} className="btn-primary w-full">
                         {t("pd_book_pkg")} <ArrowRight size={18} />
                       </button>
                     }
@@ -321,7 +320,7 @@ const PujaDetail = () => {
             tierImage={tierImage}
             selected={selected}
             onSelect={setSelected}
-            onContinue={() => selected && setShowLead(true)}
+            onContinue={() => selected && setSheet("details")}
             onAddToCart={addToCart}
             onReviewsClick={toReviews}
             includes={includeItems}
@@ -333,27 +332,19 @@ const PujaDetail = () => {
         <StickyActionBar cta={t("pd_select_btn")} onClick={openPackages} hidden={!stickyFree} className="lg:hidden" />
       )}
 
-      {showPackages && (
+      {sheet && (
         <PackageSheet
           name={name}
+          pujaName={puja.name}
           tiers={prices}
-          tierImage={tierImage}
           selected={selected}
           onSelect={setSelected}
           includes={includeItems}
-          onContinue={() => { setShowPackages(false); setShowLead(true); }}
-          onAddToCart={() => { addToCart(); setShowPackages(false); }}
-          onClose={() => setShowPackages(false)}
-        />
-      )}
-
-      {showLead && selected && (
-        <LeadCaptureModal
-          pujaName={puja.name}
-          packageLabel={selected.label}
-          price={selected.price}
+          step={sheet}
+          onStep={setSheet}
           onConfirm={handleLeadConfirm}
-          onClose={() => setShowLead(false)}
+          onAddToCart={() => { addToCart(); setSheet(null); }}
+          onClose={() => setSheet(null)}
         />
       )}
     </main>

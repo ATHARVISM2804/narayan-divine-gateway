@@ -1,7 +1,18 @@
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
-import PackageSheet from "./PackageSheet";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+
+const invoke = vi.fn();
+vi.mock("@/lib/supabase", () => ({
+  supabase: { functions: { invoke: (...a: unknown[]) => invoke(...a) }, from: () => ({ insert: vi.fn() }) },
+}));
+vi.mock("@/lib/metaPixel", () => ({
+  getMetaTrackingContext: () => ({}),
+  newMetaEventId: () => "lead-1",
+  trackLead: vi.fn(),
+}));
+
+import PackageSheet, { type BookingStep } from "./PackageSheet";
 import type { Tier } from "./BookingPanel";
 import { tierMembers } from "@/lib/packages";
 
@@ -11,42 +22,79 @@ const tiers: Tier[] = [
   { label: "Family (4)", price: 2151 },
 ];
 
-/** Like PujaDetail: the page owns the choice and opens the sheet with the first package. */
-const Page = ({ onContinue = () => {}, onAddToCart = () => {} }: { onContinue?: (t: Tier | null) => void; onAddToCart?: () => void }) => {
+/** Like PujaDetail: the page owns the choice and the step, and opens with the first package. */
+const Page = ({
+  start = "package",
+  onConfirm = () => {},
+  onAddToCart = () => {},
+}: {
+  start?: BookingStep;
+  onConfirm?: (tier: Tier | null, name: string, phone: string) => void;
+  onAddToCart?: () => void;
+}) => {
   const [selected, setSelected] = useState<Tier | null>(tiers[0]);
-  const [open, setOpen] = useState(true);
-  return open ? (
+  const [step, setStep] = useState<BookingStep | null>(start);
+  return step ? (
     <PackageSheet
       name="Maa Baglamukhi Hawan"
+      pujaName="Maa Baglamukhi Hawan"
       tiers={tiers}
-      tierImage={() => "x.webp"}
       selected={selected}
       onSelect={setSelected}
       includes={["Video on WhatsApp"]}
-      onContinue={() => { onContinue(selected); setOpen(false); }}
-      onAddToCart={() => { onAddToCart(); setOpen(false); }}
-      onClose={() => setOpen(false)}
+      step={step}
+      onStep={setStep}
+      onConfirm={(name, phone) => { onConfirm(selected, name, phone); setStep(null); }}
+      onAddToCart={() => { onAddToCart(); setStep(null); }}
+      onClose={() => setStep(null)}
     />
   ) : null;
 };
 
 describe("PackageSheet", () => {
-  it("opens with the first package chosen and every package as a radio", () => {
+  beforeEach(() => {
+    invoke.mockReset().mockResolvedValue({ error: null });
+    localStorage.clear();
+  });
+
+  it("opens with what every package includes and the first package chosen", () => {
     render(<Page />);
+    expect(screen.getByText("Video on WhatsApp")).toBeInTheDocument();
     const radios = screen.getAllByRole("radio");
     expect(radios).toHaveLength(3);
     expect(radios[0]).toHaveAttribute("aria-checked", "true");
     expect(radios[1]).toHaveAttribute("aria-checked", "false");
   });
 
-  it("continues with the package the devotee picked", () => {
-    const onContinue = vi.fn();
-    render(<Page onContinue={onContinue} />);
+  it("Proceed shows the details step for the picked package, and ← keeps the choice", () => {
+    render(<Page />);
     fireEvent.click(screen.getByRole("radio", { name: /Couple/ }));
+    fireEvent.click(screen.getByRole("button", { name: /btn_proceed/ }));
+    expect(screen.getByText("lead_details_title")).toBeInTheDocument();
+    expect(screen.getByText(/Couple ·/)).toHaveTextContent("₹1,551");
+    expect(screen.queryByRole("radio")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "lead_back" }));
     expect(screen.getByRole("radio", { name: /Couple/ })).toHaveAttribute("aria-checked", "true");
-    fireEvent.click(screen.getByRole("button", { name: /btn_continue/ }));
-    expect(onContinue).toHaveBeenCalledWith(tiers[1]);
-    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("asks for a valid WhatsApp number before going on", () => {
+    render(<Page start="details" />);
+    fireEvent.click(screen.getByRole("button", { name: /lead_next/ }));
+    expect(screen.getByText("lead_err_phone")).toBeInTheDocument();
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it("saves the lead and continues with the chosen package", async () => {
+    const onConfirm = vi.fn();
+    render(<Page start="details" onConfirm={onConfirm} />);
+    fireEvent.change(screen.getByLabelText("lead_phone"), { target: { value: "98765 43210" } });
+    fireEvent.change(screen.getByLabelText("lead_name"), { target: { value: "Asha" } });
+    fireEvent.click(screen.getByRole("button", { name: /lead_next/ }));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith(tiers[0], "Asha", "9876543210"));
+    expect(invoke).toHaveBeenCalledWith("submit-lead", expect.objectContaining({
+      body: expect.objectContaining({ package_label: "Single", price: 951, phone: "9876543210" }),
+    }));
   });
 
   it("adds to cart and closes", () => {

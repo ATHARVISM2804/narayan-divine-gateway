@@ -12,52 +12,14 @@ import { cn } from "@/lib/utils";
 
 export interface Tier { label: string; price: number }
 
-/** Tall picture card for the package popup: art on top, member pill, name, price. */
-const PackageCard = ({ tier, image, selected, onSelect, badge }: {
-  tier: Tier; image: string; selected: boolean; onSelect: () => void; badge?: string;
-}) => (
-  <button
-    role="radio"
-    aria-checked={selected}
-    onClick={onSelect}
-    className={cn(
-      "flex flex-col overflow-hidden rounded-xl border-2 bg-surface text-left transition-all",
-      selected ? "border-saffron bg-saffron-soft shadow-card" : "border-line hover:border-saffron/50",
-    )}
-  >
-    <span className="relative block aspect-[4/3] w-full overflow-hidden bg-surface-muted">
-      <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
-      {badge && (
-        <span className="absolute left-2 top-2 rounded-full bg-ink/75 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur-sm">
-          {badge}
-        </span>
-      )}
-      <span
-        className={cn(
-          "absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full border-2 shadow-sm",
-          selected ? "border-saffron bg-saffron text-white" : "border-white bg-white/85",
-        )}
-      >
-        {selected && <Check size={14} strokeWidth={3} />}
-      </span>
-    </span>
-    <span className="block p-2.5 sm:p-3">
-      <span className="line-clamp-2 block text-sm font-semibold leading-snug text-ink">{tier.label}</span>
-      <span className="tabular mt-1 block text-lg font-bold text-saffron-dark">{formatInr(tier.price)}</span>
-    </span>
-  </button>
-);
-
-/** One selectable package. `compact` is the laptop booking panel, `card` the package
-    popup; the default is the phone/tablet package list. */
+/** One selectable package. `compact` is the laptop booking panel; the default is the
+    phone/tablet package list. The popup uses its own small buttons (PackageSheet). */
 export const PackageOption = ({
   tier,
   image,
   selected,
   onSelect,
   compact = false,
-  variant,
-  badge,
   action,
 }: {
   tier: Tier;
@@ -66,13 +28,9 @@ export const PackageOption = ({
   selected: boolean;
   onSelect: () => void;
   compact?: boolean;
-  variant?: "card";
-  /** Card only: a short pill over the art, e.g. "4 members". */
-  badge?: string;
   /** List only: shown inside the chosen package, e.g. its "Book this package" button. */
   action?: React.ReactNode;
 }) => {
-  if (variant === "card") return <PackageCard tier={tier} image={image} selected={selected} onSelect={onSelect} badge={badge} />;
   const expanded = selected && action != null;
   const row = (
     <button

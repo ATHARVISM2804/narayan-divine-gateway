@@ -14,6 +14,7 @@
   "btn_view_chadhava": "View chadhava", "btn_book_puja": "Book pooja",
   "btn_proceed_checkout": "Proceed to checkout",
   "btn_continue": "Continue",
+  "btn_proceed": "Proceed",
   "btn_see_all": "See all",
 
   "timer_label": "Booking closes in",
@@ -55,6 +56,7 @@
   "pd_packages": "Select pooja package",
   "pd_faqs": "Questions devotees ask",
   "pd_includes": "Every package includes",
+  "pkg_select_title": "Select your pooja package",
   "pd_select_btn": "Select pooja package",
   "pd_book_pkg": "Book this package",
   "feat_video_t": "Pooja video on WhatsApp",
@@ -506,7 +508,7 @@
 
   "breadcrumb_home": "Home",
 
-  "lead_title": "Where should we send updates?",
+  "lead_details_title": "Fill your details for the pooja",
   "lead_sub": "We send your booking details and pooja video on WhatsApp.",
   "lead_name": "Your name",
   "lead_name_ph": "Enter your name",
@@ -514,7 +516,8 @@
   "lead_phone_ph": "10-digit mobile number",
   "lead_err_name": "Please enter your name",
   "lead_err_phone": "Please enter a valid 10-digit mobile number",
-  "lead_submit": "Continue to booking",
+  "lead_next": "Next",
+  "lead_back": "Back to packages",
   "lead_saving": "Please wait…",
   "lead_privacy": "We only use your number for this booking.",
 
