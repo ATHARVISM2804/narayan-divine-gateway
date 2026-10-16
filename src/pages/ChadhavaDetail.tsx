@@ -22,10 +22,10 @@ import OfferingsSheet from "@/components/chadhava/OfferingsSheet";
 import TrustRow from "@/components/shared/TrustRow";
 import FaqList, { type Faq } from "@/components/shared/FaqList";
 import SectionHeading from "@/components/SectionHeading";
-import RatingSummary from "@/components/proof/RatingSummary";
+import SocialProofRow from "@/components/proof/SocialProofRow";
 import ReviewsSection from "@/components/proof/ReviewsSection";
 import { DegradedBanner, LoadError } from "@/components/LoadError";
-import { Eyebrow, Highlight, formatInr } from "@/components/ui/typography";
+import { Eyebrow, formatInr } from "@/components/ui/typography";
 import { TempleIcon } from "@/components/icons";
 
 const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -129,7 +129,9 @@ const ChadhavaDetail = () => {
   const faqs = [...dbFaqs, ...standardFaqs.filter((f) => !dbFaqs.some((d) => d.question === f.question))];
 
   const reviews = reviewsFor(allReviews, { chadhavaId: chadhava.id });
-  const bookedCount = stats?.by_item?.[chadhava.id];
+  const devotees = stats && stats.devotees >= MIN_PROOF_COUNT ? stats.devotees : null;
+  // The rating row scrolls to this chadhava's reviews, when it has any.
+  const toReviews = reviews.length ? () => scrollToId("reviews") : undefined;
   const includeLines = [t("inc1"), t("inc2"), t("inc4"), t("inc3"), t("inc5")];
   const minPrice = offerings.length ? Math.min(...offerings.map((o) => o.price)) : chadhava.price;
 
@@ -187,16 +189,7 @@ const ChadhavaDetail = () => {
                   <Countdown deadline={deadline} label={t("timer_label_chadhava")} expiredLabel={t("timer_expired_chadhava")} />
                 </div>
 
-                {(reviews.length > 0 || (bookedCount ?? 0) >= MIN_PROOF_COUNT) && (
-                  <div className="mt-5 space-y-2.5">
-                    <RatingSummary reviews={reviews} onClick={() => scrollToId("reviews")} />
-                    {bookedCount != null && bookedCount >= MIN_PROOF_COUNT && (
-                      <p className="text-[15px] text-ink-muted">
-                        <Highlight>{bookedCount.toLocaleString("en-IN")}</Highlight> {t("pd_booked_here")}
-                      </p>
-                    )}
-                  </div>
-                )}
+                <SocialProofRow reviews={allReviews ?? []} devotees={devotees} loading={!stats} onRatingClick={toReviews} className="mt-5" />
 
                 <button onClick={() => setShowOfferings(true)} className="btn-primary mt-6 w-full md:max-w-sm">
                   {t("ch_choose_offering")} <ArrowRight size={18} />
@@ -301,16 +294,13 @@ const ChadhavaDetail = () => {
             <div className="mt-4 [@media(max-height:800px)]:mt-3">
               <Countdown deadline={deadline} label={t("timer_label_chadhava")} expiredLabel={t("timer_expired_chadhava")} compact />
             </div>
-            {(reviews.length > 0 || (bookedCount ?? 0) >= MIN_PROOF_COUNT) && (
-              <div className="mt-4 space-y-1.5 [@media(max-height:960px)]:hidden">
-                <RatingSummary reviews={reviews} onClick={() => scrollToId("reviews")} />
-                {bookedCount != null && bookedCount >= MIN_PROOF_COUNT && (
-                  <p className="text-sm text-ink-muted">
-                    <Highlight>{bookedCount.toLocaleString("en-IN")}</Highlight> {t("pd_booked_here")}
-                  </p>
-                )}
-              </div>
-            )}
+            <SocialProofRow
+              reviews={allReviews ?? []}
+              devotees={devotees}
+              loading={!stats}
+              onRatingClick={toReviews}
+              className="mt-4 [@media(max-height:960px)]:hidden"
+            />
 
             <div className="mt-5 border-t border-line pt-5 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:pt-4">
               {selectedCount > 0 ? (

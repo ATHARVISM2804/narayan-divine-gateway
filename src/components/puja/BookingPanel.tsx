@@ -5,9 +5,9 @@ import { trackContact } from "@/lib/metaPixel";
 import type { Review } from "@/lib/proof";
 import Countdown from "@/components/shared/Countdown";
 import TrustRow from "@/components/shared/TrustRow";
-import RatingSummary from "@/components/proof/RatingSummary";
+import SocialProofRow from "@/components/proof/SocialProofRow";
 import { TempleIcon } from "@/components/icons";
-import { Eyebrow, Highlight, formatInr } from "@/components/ui/typography";
+import { Eyebrow, formatInr } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
 export interface Tier { label: string; price: number }
@@ -115,6 +115,7 @@ const BookingPanel = ({
   deadline,
   reviews,
   devotees,
+  statsLoading,
   tiers,
   tierImage,
   selected,
@@ -130,15 +131,18 @@ const BookingPanel = ({
   location?: string | null;
   date?: string | null;
   deadline: Date | null;
+  /** Site reviews: their photos fill the avatar stack. */
   reviews: Review[];
   devotees: number | null;
+  statsLoading: boolean;
   tiers: Tier[];
   tierImage: (label: string) => string;
   selected: Tier | null;
   onSelect: (tier: Tier | null) => void;
   onContinue: () => void;
   onAddToCart: () => void;
-  onReviewsClick: () => void;
+  /** Set when the page has a reviews section to scroll to. */
+  onReviewsClick?: () => void;
   includes: string[];
 }) => {
   const { t } = useLanguage();
@@ -165,16 +169,13 @@ const BookingPanel = ({
         <Countdown deadline={deadline} label={t("timer_label")} expiredLabel={t("timer_expired")} compact />
       </div>
 
-      {(reviews.length > 0 || devotees) && (
-        <div className="mt-4 space-y-1.5 [@media(max-height:960px)]:hidden">
-          <RatingSummary reviews={reviews} onClick={onReviewsClick} />
-          {devotees && (
-            <p className="text-sm text-ink-muted">
-              <Highlight>{devotees.toLocaleString("en-IN")} {t("pd_devotees_word")}</Highlight> {t("pd_devotees_line_post")}
-            </p>
-          )}
-        </div>
-      )}
+      <SocialProofRow
+        reviews={reviews}
+        devotees={devotees}
+        loading={statsLoading}
+        onRatingClick={onReviewsClick}
+        className="mt-4 [@media(max-height:960px)]:hidden"
+      />
 
       {tiers.length > 0 && (
         <div className="mt-5 border-t border-line pt-5 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:pt-4">

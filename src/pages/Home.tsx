@@ -55,7 +55,7 @@ const Home = () => {
           <DegradedBanner />
         </div>
       )}
-      <HomeHero pujas={heroPujas} stats={stats} reviews={reviews ?? []} onRatingClick={toReviews} loading={pujasQ.loading} />
+      <HomeHero pujas={heroPujas} stats={stats} loading={pujasQ.loading} />
       <TrustStrip stats={stats} />
       <FeaturedPujas pujas={pujas} loading={pujasQ.loading} failed={pujasQ.failed} retry={pujasQ.retry} stats={stats} />
       <WhatYouReceive devotees={devotees} onReviewsClick={toReviews} />

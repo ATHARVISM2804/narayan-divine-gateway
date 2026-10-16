@@ -18,13 +18,15 @@ const avatar = "h-9 w-9 rounded-full object-cover ring-2 ring-surface shadow-sm 
 
 /**
  * Avatar stack + "★ 4.9 (7K+ ratings)" + "Till now 20,000+ devotees have booked…".
- * The devotee line keeps its height while stats load (`loading`), so the hero doesn't jump.
+ * The devotee line keeps its height while stats load (`loading`), so the page doesn't jump.
+ * `showRating={false}` leaves only the devotee line (the homepage hero).
  */
 const SocialProofRow = ({
   reviews,
   devotees,
   loading,
   onRatingClick,
+  showRating = true,
   className,
 }: {
   reviews: Review[];
@@ -32,6 +34,7 @@ const SocialProofRow = ({
   loading: boolean;
   /** Set when there is a reviews section to scroll to. */
   onRatingClick?: () => void;
+  showRating?: boolean;
   className?: string;
 }) => {
   const { t, lang } = useLanguage();
@@ -50,23 +53,25 @@ const SocialProofRow = ({
 
   return (
     <div className={cn("space-y-2.5", className)}>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="flex -space-x-2.5" aria-hidden="true">
-          {photos.map((r) => (
-            <StorageImage key={r.id} src={r.photo_url!} width={80} alt="" className={avatar} />
-          ))}
-          {fill.map((src) => (
-            <img key={src} src={src} alt="" width={40} height={40} loading="lazy" decoding="async" className={avatar} />
-          ))}
-        </span>
-        {onRatingClick ? (
-          <button type="button" onClick={onRatingClick} className="inline-flex items-center gap-1.5 text-[15px]">
-            {rating}
-          </button>
-        ) : (
-          <p className="inline-flex items-center gap-1.5 text-[15px]">{rating}</p>
-        )}
-      </div>
+      {showRating && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span className="flex -space-x-2.5" aria-hidden="true">
+            {photos.map((r) => (
+              <StorageImage key={r.id} src={r.photo_url!} width={80} alt="" className={avatar} />
+            ))}
+            {fill.map((src) => (
+              <img key={src} src={src} alt="" width={40} height={40} loading="lazy" decoding="async" className={avatar} />
+            ))}
+          </span>
+          {onRatingClick ? (
+            <button type="button" onClick={onRatingClick} className="inline-flex items-center gap-1.5 text-[15px]">
+              {rating}
+            </button>
+          ) : (
+            <p className="inline-flex items-center gap-1.5 text-[15px]">{rating}</p>
+          )}
+        </div>
+      )}
       {devotees ? (
         <p className="text-[15px] text-ink-muted">
           {t("home_proof_pre")} <Highlight>{roundedCount(devotees)} {t("pd_devotees_word")}</Highlight> {t("home_proof_post")}

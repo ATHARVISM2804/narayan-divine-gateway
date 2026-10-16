@@ -5,7 +5,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import type { Puja } from "@/lib/supabase";
 import { bookingDeadline } from "@/lib/countdown";
 import { prefetchProps } from "@/lib/prefetch";
-import { MIN_PROOF_COUNT, type Review, type SiteStats } from "@/lib/proof";
+import { MIN_PROOF_COUNT, type SiteStats } from "@/lib/proof";
 import FitImage from "@/components/FitImage";
 import Countdown from "@/components/shared/Countdown";
 import { TempleIcon } from "@/components/icons";
@@ -73,9 +73,9 @@ const SlideSkeleton = () => (
 
 /** Home hero: what we do in one line, the proof, and the next pujas to book. */
 const HomeHero = ({
-  pujas, stats, reviews = [], onRatingClick, loading = false,
+  pujas, stats, loading = false,
 }: {
-  pujas: Puja[]; stats: SiteStats | null; reviews?: Review[]; onRatingClick?: () => void; loading?: boolean;
+  pujas: Puja[]; stats: SiteStats | null; loading?: boolean;
 }) => {
   const { t } = useLanguage();
   const slides = pujas.slice(0, 4);
@@ -125,8 +125,8 @@ const HomeHero = ({
               </li>
             ))}
           </ul>
-          {/* Rating + devotee count. Holds the count's line until stats arrive, so the page doesn't shift. */}
-          <SocialProofRow reviews={reviews} devotees={devotees} loading={!stats} onRatingClick={onRatingClick} className="mt-5" />
+          {/* Devotee count (the rating row lives on the pooja pages). Holds its line until stats arrive, so the page doesn't shift. */}
+          <SocialProofRow reviews={[]} devotees={devotees} loading={!stats} showRating={false} className="mt-5" />
           <div className="mt-6 hidden gap-3 sm:flex">
             <Link to="/puja" className="btn-primary">{t("featured_view_all")} <ArrowRight size={18} /></Link>
             <Link to="/chadhava" className="btn-secondary">{t("hero_book_chadhava")}</Link>

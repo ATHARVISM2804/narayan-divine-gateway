@@ -22,10 +22,10 @@ import StickyActionBar from "@/components/shared/StickyActionBar";
 import TrustRow from "@/components/shared/TrustRow";
 import FaqList, { type Faq } from "@/components/shared/FaqList";
 import SectionHeading from "@/components/SectionHeading";
-import RatingSummary from "@/components/proof/RatingSummary";
+import SocialProofRow from "@/components/proof/SocialProofRow";
 import ReviewsSection from "@/components/proof/ReviewsSection";
 import { DegradedBanner, LoadError } from "@/components/LoadError";
-import { Eyebrow, Highlight, formatInr } from "@/components/ui/typography";
+import { Eyebrow, formatInr } from "@/components/ui/typography";
 import { TempleIcon } from "@/components/icons";
 
 import pkgSingle from "@/assets/pkg-single.webp";
@@ -138,6 +138,8 @@ const PujaDetail = () => {
   const reviews = reviewsFor(allReviews, { pujaId: puja.id });
   const bookedCount = stats?.by_item?.[puja.id];
   const devotees = stats && stats.devotees >= MIN_PROOF_COUNT ? stats.devotees : null;
+  // The rating row scrolls to this pooja's reviews, when it has any.
+  const toReviews = reviews.length ? () => scrollToId("reviews") : undefined;
 
   const sections: NavSection[] = [
     ...(puja.about || puja.about_hi ? [{ id: "aboutPuja", labelKey: "pd_about" }] : []),
@@ -228,16 +230,7 @@ const PujaDetail = () => {
                   <Countdown deadline={deadline} label={t("timer_label")} expiredLabel={t("timer_expired")} />
                 </div>
 
-                {(reviews.length > 0 || devotees) && (
-                  <div className="mt-5 space-y-2.5">
-                    <RatingSummary reviews={reviews} onClick={() => scrollToId("reviews")} />
-                    {devotees && (
-                      <p className="text-[15px] text-ink-muted">
-                        <Highlight>{devotees.toLocaleString("en-IN")} {t("pd_devotees_word")}</Highlight> {t("pd_devotees_line_post")}
-                      </p>
-                    )}
-                  </div>
-                )}
+                <SocialProofRow reviews={allReviews ?? []} devotees={devotees} loading={!stats} onRatingClick={toReviews} className="mt-5" />
 
                 <button onClick={openPackages} className="btn-primary mt-6 w-full md:max-w-sm">
                   {t("pd_select_btn")} <ArrowRight size={18} />
@@ -313,15 +306,16 @@ const PujaDetail = () => {
             location={location}
             date={puja.date}
             deadline={deadline}
-            reviews={reviews}
+            reviews={allReviews ?? []}
             devotees={devotees}
+            statsLoading={!stats}
             tiers={prices}
             tierImage={tierImage}
             selected={selected}
             onSelect={setSelected}
             onContinue={() => selected && setShowLead(true)}
             onAddToCart={addToCart}
-            onReviewsClick={() => scrollToId("reviews")}
+            onReviewsClick={toReviews}
             includes={includeItems}
           />
         </aside>
