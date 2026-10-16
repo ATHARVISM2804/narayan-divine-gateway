@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, Check, ChevronDown, MessageCircle, ShoppingCart } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { whatsappLink } from "@/lib/whatsapp";
 import { trackContact } from "@/lib/metaPixel";
@@ -12,22 +12,18 @@ import { cn } from "@/lib/utils";
 
 export interface Tier { label: string; price: number }
 
-/** One selectable package. `compact` is the laptop booking panel; the default is the
-    phone/tablet package list. The popup uses its own small buttons (PackageSheet). */
+/** One package in the phone/tablet package list. The popup draws its own cards (PackageSheet). */
 export const PackageOption = ({
   tier,
   image,
   selected,
   onSelect,
-  compact = false,
   action,
 }: {
   tier: Tier;
-  /** Package art; the compact panel option leaves it out to make room for the label. */
   image: string;
   selected: boolean;
   onSelect: () => void;
-  compact?: boolean;
   /** List only: shown inside the chosen package, e.g. its "Book this package" button. */
   action?: React.ReactNode;
 }) => {
@@ -38,26 +34,24 @@ export const PackageOption = ({
       aria-checked={selected}
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center text-left transition-colors",
-        compact ? "gap-2 px-3 py-2.5" : "gap-3 p-3",
+        "flex w-full items-center gap-3 p-3 text-left transition-colors",
         // Expanded, the border and tint belong to the wrapper around the row and its action.
         !expanded && "rounded-xl border-2 bg-surface",
         !expanded && (selected ? "border-saffron bg-saffron-soft" : "border-line hover:border-saffron/50"),
       )}
     >
-      {!compact && <img src={image} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" loading="lazy" />}
+      <img src={image} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" loading="lazy" />
       <span className="min-w-0 flex-1">
-        <span className={cn("block font-semibold leading-snug text-ink", compact ? "text-sm" : "text-[15px]")}>{tier.label}</span>
-        <span className={cn("tabular mt-0.5 block font-bold text-saffron-dark", compact ? "text-base" : "text-lg")}>{formatInr(tier.price)}</span>
+        <span className="block text-[15px] font-semibold leading-snug text-ink">{tier.label}</span>
+        <span className="tabular mt-0.5 block text-lg font-bold text-saffron-dark">{formatInr(tier.price)}</span>
       </span>
       <span
         className={cn(
-          "grid shrink-0 place-items-center rounded-full border-2",
-          compact ? "h-5 w-5" : "h-6 w-6",
+          "grid h-6 w-6 shrink-0 place-items-center rounded-full border-2",
           selected ? "border-saffron bg-saffron text-white" : "border-input",
         )}
       >
-        {selected && <Check size={compact ? 12 : 14} strokeWidth={3} />}
+        {selected && <Check size={14} strokeWidth={3} />}
       </span>
     </button>
   );
@@ -72,12 +66,13 @@ export const PackageOption = ({
 };
 
 /**
- * Laptop booking panel (lg and up only): the facts, the countdown, the package
- * choice and the next step, kept in view beside the content while it scrolls.
+ * Laptop booking panel (lg and up only): the facts, the countdown, the rating and
+ * one "Select pooja package" button that opens the package popup (like Sri Mandir),
+ * kept in view beside the content while it scrolls.
  * Phones keep the summary + package section + bottom bar.
  *
  * On short laptop screens (max-height 800px, e.g. 1536x730 at 125% zoom) the
- * spacing and title tighten so the Continue button and trust row stay in view.
+ * spacing and title tighten so the button and trust row stay in view.
  */
 const BookingPanel = ({
   occasion,
@@ -89,14 +84,9 @@ const BookingPanel = ({
   reviews,
   devotees,
   statsLoading,
-  tiers,
-  tierImage,
-  selected,
-  onSelect,
-  onContinue,
-  onAddToCart,
+  hasPackages,
+  onSelectPackage,
   onReviewsClick,
-  includes,
 }: {
   occasion?: string | null;
   name: string;
@@ -108,15 +98,11 @@ const BookingPanel = ({
   reviews: Review[];
   devotees: number | null;
   statsLoading: boolean;
-  tiers: Tier[];
-  tierImage: (label: string) => string;
-  selected: Tier | null;
-  onSelect: (tier: Tier | null) => void;
-  onContinue: () => void;
-  onAddToCart: () => void;
+  hasPackages: boolean;
+  /** Opens the package popup, like Sri Mandir's "Select puja package". */
+  onSelectPackage: () => void;
   /** Set when the page has a reviews section to scroll to. */
   onReviewsClick?: () => void;
-  includes: string[];
 }) => {
   const { t } = useLanguage();
   return (
@@ -150,51 +136,10 @@ const BookingPanel = ({
         className="mt-4 [@media(max-height:960px)]:hidden"
       />
 
-      {tiers.length > 0 && (
-        <div className="mt-5 border-t border-line pt-5 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:pt-4">
-          <p className="mb-2.5 text-sm font-semibold text-ink">{t("pd_packages")}</p>
-          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("pd_packages")}>
-            {tiers.map((tier) => (
-              <PackageOption
-                key={tier.label}
-                tier={tier}
-                image={tierImage(tier.label)}
-                selected={selected?.label === tier.label}
-                onSelect={() => onSelect(selected?.label === tier.label ? null : tier)}
-                compact
-              />
-            ))}
-          </div>
-
-          <button onClick={onContinue} disabled={!selected} className="btn-primary mt-4 w-full [@media(max-height:800px)]:mt-3">
-            {selected ? (
-              <>
-                {t("btn_continue")} · {formatInr(selected.price)} <ArrowRight size={18} />
-              </>
-            ) : (
-              t("pd_select_hint")
-            )}
-          </button>
-          {selected && (
-            <button onClick={onAddToCart} className="mt-2.5 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-ink-muted hover:text-ink">
-              <ShoppingCart size={16} /> {t("btn_add_cart")}
-            </button>
-          )}
-
-          <details className="group mt-4 rounded-xl bg-surface-muted/70 px-4 py-3 [@media(max-height:800px)]:mt-3 [@media(max-height:800px)]:py-2.5">
-            <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
-              {t("pd_includes")}
-              <ChevronDown size={16} className="transition-transform group-open:rotate-180" />
-            </summary>
-            <ul className="mt-2.5 space-y-2">
-              {includes.map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-ink-muted">
-                  <Check size={15} strokeWidth={2.5} className="mt-0.5 shrink-0 text-success" /> {item}
-                </li>
-              ))}
-            </ul>
-          </details>
-        </div>
+      {hasPackages && (
+        <button onClick={onSelectPackage} className="btn-primary mt-5 w-full [@media(max-height:800px)]:mt-4">
+          {t("pd_select_btn")} <ArrowRight size={18} />
+        </button>
       )}
 
       <TrustRow className="mt-5 border-t border-line pt-4 sm:gap-x-4 [@media(max-height:800px)]:hidden" />

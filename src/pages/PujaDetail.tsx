@@ -28,23 +28,11 @@ import ReviewsSection from "@/components/proof/ReviewsSection";
 import { DegradedBanner, LoadError } from "@/components/LoadError";
 import { Eyebrow } from "@/components/ui/typography";
 import { TempleIcon } from "@/components/icons";
-
-import pkgSingle from "@/assets/pkg-single.webp";
-import pkgCouple from "@/assets/pkg-couple.webp";
-import pkgFamily4 from "@/assets/pkg-family4.webp";
-import pkgFamily6 from "@/assets/pkg-family6.webp";
-
-const tierImage = (label: string): string => {
-  const l = label.toLowerCase();
-  if (l.includes("6") || l.includes("joint")) return pkgFamily6;
-  if (l.includes("4") || l.includes("family")) return pkgFamily4;
-  if (l.includes("couple") || l.includes("2")) return pkgCouple;
-  return pkgSingle;
-};
+import { tierImage } from "@/lib/packages";
 
 const isLaptop = () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches;
 
-// On laptops the packages live in the sticky booking panel, not in the page flow.
+// On laptops the package button lives in the sticky booking panel, not in the page flow.
 const scrollToId = (id: string) => {
   const target = id === "packages" && isLaptop() ? "booking-panel" : id;
   document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -316,14 +304,9 @@ const PujaDetail = () => {
             reviews={allReviews ?? []}
             devotees={devotees}
             statsLoading={!stats}
-            tiers={prices}
-            tierImage={tierImage}
-            selected={selected}
-            onSelect={setSelected}
-            onContinue={() => selected && setSheet("details")}
-            onAddToCart={addToCart}
+            hasPackages={prices.length > 0}
+            onSelectPackage={openPackages}
             onReviewsClick={toReviews}
-            includes={includeItems}
           />
         </aside>
       </div>

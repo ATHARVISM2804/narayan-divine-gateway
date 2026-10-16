@@ -14,7 +14,7 @@ vi.mock("@/lib/metaPixel", () => ({
 
 import PackageSheet, { type BookingStep } from "./PackageSheet";
 import type { Tier } from "./BookingPanel";
-import { tierMembers } from "@/lib/packages";
+import { tierImage, tierMembers, tierTone } from "@/lib/packages";
 
 const tiers: Tier[] = [
   { label: "Single", price: 951 },
@@ -66,30 +66,43 @@ describe("PackageSheet", () => {
     expect(radios[1]).toHaveAttribute("aria-checked", "false");
   });
 
+  it("shows each package's photo, member pill and price", () => {
+    render(<Page />);
+    const couple = screen.getByRole("radio", { name: /Couple/ });
+    expect(couple).toHaveTextContent("2 pkg_person");
+    expect(couple).toHaveTextContent("₹1,551");
+    expect(couple.querySelector("img")).not.toBeNull();
+  });
+
   it("Proceed shows the details step for the picked package, and ← keeps the choice", () => {
     render(<Page />);
     fireEvent.click(screen.getByRole("radio", { name: /Couple/ }));
+    expect(screen.getByRole("button", { name: /btn_proceed/ })).toHaveTextContent("₹1,551");
     fireEvent.click(screen.getByRole("button", { name: /btn_proceed/ }));
     expect(screen.getByText("lead_details_title")).toBeInTheDocument();
-    expect(screen.getByText(/Couple ·/)).toHaveTextContent("₹1,551");
     expect(screen.queryByRole("radio")).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "lead_back" }));
     expect(screen.getByRole("radio", { name: /Couple/ })).toHaveAttribute("aria-checked", "true");
   });
 
-  it("asks for a valid WhatsApp number before going on", () => {
+  it("keeps Next disabled until a 10-digit number and a name are filled", () => {
     render(<Page start="details" />);
-    fireEvent.click(screen.getByRole("button", { name: /lead_next/ }));
-    expect(screen.getByText("lead_err_phone")).toBeInTheDocument();
+    const next = screen.getByRole("button", { name: /lead_next/ });
+    expect(next).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("lead_phone_title"), { target: { value: "98765" } });
+    fireEvent.change(screen.getByLabelText("lead_name_title"), { target: { value: "Asha" } });
+    expect(next).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("lead_phone_title"), { target: { value: "9876543210" } });
+    expect(next).toBeEnabled();
     expect(invoke).not.toHaveBeenCalled();
   });
 
   it("saves the lead and continues with the chosen package", async () => {
     const onConfirm = vi.fn();
     render(<Page start="details" onConfirm={onConfirm} />);
-    fireEvent.change(screen.getByLabelText("lead_phone"), { target: { value: "98765 43210" } });
-    fireEvent.change(screen.getByLabelText("lead_name"), { target: { value: "Asha" } });
+    fireEvent.change(screen.getByLabelText("lead_phone_title"), { target: { value: "98765 43210" } });
+    fireEvent.change(screen.getByLabelText("lead_name_title"), { target: { value: "Asha" } });
     fireEvent.click(screen.getByRole("button", { name: /lead_next/ }));
     await waitFor(() => expect(onConfirm).toHaveBeenCalledWith(tiers[0], "Asha", "9876543210"));
     expect(invoke).toHaveBeenCalledWith("submit-lead", expect.objectContaining({
@@ -113,5 +126,13 @@ describe("tierMembers", () => {
     expect(tierMembers("Single")).toBe(1);
     expect(tierMembers("Joint family")).toBe(6);
     expect(tierMembers("Special")).toBeNull();
+  });
+
+  it("gives each package size its own photo and colour", () => {
+    expect(tierImage("Single")).not.toBe(tierImage("Couple"));
+    expect(tierImage("4 Members")).not.toBe(tierImage("6 Members"));
+    expect(tierTone("Couple").price).toContain("rose");
+    expect(tierTone("4 Members").price).toContain("emerald");
+    expect(tierTone("Special").price).toContain("saffron");
   });
 });

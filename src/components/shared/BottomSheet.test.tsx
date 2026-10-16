@@ -76,4 +76,14 @@ describe("BottomSheet", () => {
     fireEvent.keyDown(window, { key: "Escape" });
     expect(document.body.style.overflow).toBe("auto");
   });
+
+  it("bare leaves out the drag handle and close button for a child that draws its own", () => {
+    render(
+      <BottomSheet open onClose={() => {}} title="Packages" bare centerFrom="md">
+        <p>body</p>
+      </BottomSheet>,
+    );
+    expect(screen.getByRole("dialog")).toHaveClass("md:items-center");
+    expect(screen.queryByRole("button", { name: "mo_close" })).toBeNull();
+  });
 });
