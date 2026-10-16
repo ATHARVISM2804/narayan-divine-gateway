@@ -58,6 +58,7 @@ export const PackageOption = ({
   compact = false,
   variant,
   badge,
+  action,
 }: {
   tier: Tier;
   /** Package art; the compact panel option leaves it out to make room for the label. */
@@ -68,35 +69,49 @@ export const PackageOption = ({
   variant?: "card";
   /** Card only: a short pill over the art, e.g. "4 members". */
   badge?: string;
-}) => variant === "card" ? (
-  <PackageCard tier={tier} image={image} selected={selected} onSelect={onSelect} badge={badge} />
-) : (
-  <button
-    role="radio"
-    aria-checked={selected}
-    onClick={onSelect}
-    className={cn(
-      "flex items-center rounded-xl border-2 bg-surface text-left transition-colors",
-      compact ? "gap-2 px-3 py-2.5" : "gap-3 p-3",
-      selected ? "border-saffron bg-saffron-soft" : "border-line hover:border-saffron/50",
-    )}
-  >
-    {!compact && <img src={image} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" loading="lazy" />}
-    <span className="min-w-0 flex-1">
-      <span className={cn("block font-semibold leading-snug text-ink", compact ? "text-sm" : "text-[15px]")}>{tier.label}</span>
-      <span className={cn("tabular mt-0.5 block font-bold text-saffron-dark", compact ? "text-base" : "text-lg")}>{formatInr(tier.price)}</span>
-    </span>
-    <span
+  /** List only: shown inside the chosen package, e.g. its "Book this package" button. */
+  action?: React.ReactNode;
+}) => {
+  if (variant === "card") return <PackageCard tier={tier} image={image} selected={selected} onSelect={onSelect} badge={badge} />;
+  const expanded = selected && action != null;
+  const row = (
+    <button
+      role="radio"
+      aria-checked={selected}
+      onClick={onSelect}
       className={cn(
-        "grid shrink-0 place-items-center rounded-full border-2",
-        compact ? "h-5 w-5" : "h-6 w-6",
-        selected ? "border-saffron bg-saffron text-white" : "border-input",
+        "flex w-full items-center text-left transition-colors",
+        compact ? "gap-2 px-3 py-2.5" : "gap-3 p-3",
+        // Expanded, the border and tint belong to the wrapper around the row and its action.
+        !expanded && "rounded-xl border-2 bg-surface",
+        !expanded && (selected ? "border-saffron bg-saffron-soft" : "border-line hover:border-saffron/50"),
       )}
     >
-      {selected && <Check size={compact ? 12 : 14} strokeWidth={3} />}
-    </span>
-  </button>
-);
+      {!compact && <img src={image} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" loading="lazy" />}
+      <span className="min-w-0 flex-1">
+        <span className={cn("block font-semibold leading-snug text-ink", compact ? "text-sm" : "text-[15px]")}>{tier.label}</span>
+        <span className={cn("tabular mt-0.5 block font-bold text-saffron-dark", compact ? "text-base" : "text-lg")}>{formatInr(tier.price)}</span>
+      </span>
+      <span
+        className={cn(
+          "grid shrink-0 place-items-center rounded-full border-2",
+          compact ? "h-5 w-5" : "h-6 w-6",
+          selected ? "border-saffron bg-saffron text-white" : "border-input",
+        )}
+      >
+        {selected && <Check size={compact ? 12 : 14} strokeWidth={3} />}
+      </span>
+    </button>
+  );
+  return expanded ? (
+    <div className="rounded-xl border-2 border-saffron bg-saffron-soft">
+      {row}
+      <div className="px-3 pb-3">{action}</div>
+    </div>
+  ) : (
+    row
+  );
+};
 
 /**
  * Laptop booking panel (lg and up only): the facts, the countdown, the package

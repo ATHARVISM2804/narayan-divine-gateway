@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { CalendarDays, Check, ChevronRight, ShoppingCart, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { useAllOffscreen } from "@/hooks/use-offscreen";
 import { useCart } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Puja } from "@/lib/supabase";
@@ -20,12 +21,13 @@ import PackageSheet from "@/components/puja/PackageSheet";
 import Countdown from "@/components/shared/Countdown";
 import StickyActionBar from "@/components/shared/StickyActionBar";
 import TrustRow from "@/components/shared/TrustRow";
+import FeatureChips from "@/components/shared/FeatureChips";
 import FaqList, { type Faq } from "@/components/shared/FaqList";
 import SectionHeading from "@/components/SectionHeading";
 import SocialProofRow from "@/components/proof/SocialProofRow";
 import ReviewsSection from "@/components/proof/ReviewsSection";
 import { DegradedBanner, LoadError } from "@/components/LoadError";
-import { Eyebrow, formatInr } from "@/components/ui/typography";
+import { Eyebrow } from "@/components/ui/typography";
 import { TempleIcon } from "@/components/icons";
 
 import pkgSingle from "@/assets/pkg-single.webp";
@@ -88,6 +90,9 @@ const PujaDetail = () => {
   const [showLead, setShowLead] = useState(false);
   const [showPackages, setShowPackages] = useState(false);
 
+  // The sticky button shows only once the page's own button and the package list are off screen.
+  const stickyFree = useAllOffscreen(["hero-cta", "packages"], !!puja);
+
   const deadline = useMemo(() => (puja ? bookingDeadline(puja.date, puja.countdown_datetime) : null), [puja]);
 
   usePageTitle(puja ? `${lang === "hi" && puja.name_hi ? puja.name_hi : puja.name} | Narayan Kripa` : "Narayan Kripa");
@@ -134,7 +139,6 @@ const PujaDetail = () => {
   const faqs = [...dbFaqs, ...standardFaqs.filter((f) => !dbFaqs.some((d) => d.question === f.question))];
 
   const prices = puja.prices ?? [];
-  const minPrice = prices.length ? Math.min(...prices.map((p) => p.price)) : null;
   const reviews = reviewsFor(allReviews, { pujaId: puja.id });
   const bookedCount = stats?.by_item?.[puja.id];
   const devotees = stats && stats.devotees >= MIN_PROOF_COUNT ? stats.devotees : null;
@@ -180,7 +184,6 @@ const PujaDetail = () => {
     if (!selected && prices[0]) setSelected(prices[0]);
     setShowPackages(true);
   };
-  const onBarClick = () => (selected ? setShowLead(true) : openPackages());
   const includeItems = includes && includes.length > 0 ? includes : [t("rcv1"), t("rcv2"), t("rcv4"), t("rcv3"), t("rcv5")];
 
   return (
@@ -232,11 +235,11 @@ const PujaDetail = () => {
 
                 <SocialProofRow reviews={allReviews ?? []} devotees={devotees} loading={!stats} onRatingClick={toReviews} className="mt-5" />
 
-                <button onClick={openPackages} className="btn-primary mt-6 w-full md:max-w-sm">
+                <FeatureChips kind="puja" className="mt-5" />
+
+                <button id="hero-cta" onClick={openPackages} className="btn-primary mt-6 w-full md:max-w-sm">
                   {t("pd_select_btn")} <ArrowRight size={18} />
                 </button>
-
-                <TrustRow className="mt-5 border-t border-line pt-4" />
               </div>
             </div>
           </section>
@@ -258,6 +261,11 @@ const PujaDetail = () => {
                     image={tierImage(tier.label)}
                     selected={selected?.label === tier.label}
                     onSelect={() => setSelected(selected?.label === tier.label ? null : tier)}
+                    action={
+                      <button onClick={() => setShowLead(true)} className="btn-primary w-full">
+                        {t("pd_book_pkg")} <ArrowRight size={18} />
+                      </button>
+                    }
                   />
                 ))}
               </div>
@@ -322,14 +330,7 @@ const PujaDetail = () => {
       </div>
 
       {prices.length > 0 && (
-        <StickyActionBar
-          title={selected ? formatInr(selected.price) : minPrice != null ? `${t("pd_from")} ${formatInr(minPrice)}` : name}
-          subtitle={selected ? selected.label : t("pd_select_hint")}
-          cta={selected ? t("btn_continue") : t("pd_tab_packages")}
-          onClick={onBarClick}
-          onInfoClick={selected ? openPackages : undefined}
-          className="lg:hidden"
-        />
+        <StickyActionBar cta={t("pd_select_btn")} onClick={openPackages} hidden={!stickyFree} className="lg:hidden" />
       )}
 
       {showPackages && (

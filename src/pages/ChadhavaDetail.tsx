@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowRight, CalendarDays, Check, ChevronRight, MessageCircle } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { useAllOffscreen } from "@/hooks/use-offscreen";
 import { useCart } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { trackContact, trackViewContent } from "@/lib/metaPixel";
@@ -20,6 +21,7 @@ import OfferingRow from "@/components/shared/OfferingRow";
 import { MAX_QTY } from "@/lib/orderLimits";
 import OfferingsSheet from "@/components/chadhava/OfferingsSheet";
 import TrustRow from "@/components/shared/TrustRow";
+import FeatureChips from "@/components/shared/FeatureChips";
 import FaqList, { type Faq } from "@/components/shared/FaqList";
 import SectionHeading from "@/components/SectionHeading";
 import SocialProofRow from "@/components/proof/SocialProofRow";
@@ -48,6 +50,9 @@ const ChadhavaDetail = () => {
   const { data: stats } = useSiteStats();
   const chadhava = data?.chadhava ?? null;
   const offerings = useMemo(() => data?.offerings ?? [], [data]);
+
+  // The sticky button shows only once the page's own button and the offerings list are off screen.
+  const stickyFree = useAllOffscreen(["hero-cta", "offerings"], !!chadhava);
 
   const deadline = useMemo(() => (chadhava ? bookingDeadline(chadhava.date, chadhava.countdown_datetime) : null), [chadhava]);
 
@@ -191,11 +196,11 @@ const ChadhavaDetail = () => {
 
                 <SocialProofRow reviews={allReviews ?? []} devotees={devotees} loading={!stats} onRatingClick={toReviews} className="mt-5" />
 
-                <button onClick={() => setShowOfferings(true)} className="btn-primary mt-6 w-full md:max-w-sm">
+                <FeatureChips kind="chadhava" className="mt-5" />
+
+                <button id="hero-cta" onClick={() => setShowOfferings(true)} className="btn-primary mt-6 w-full md:max-w-sm">
                   {t("ch_choose_offering")} <ArrowRight size={18} />
                 </button>
-
-                <TrustRow className="mt-5 border-t border-line pt-4" />
               </div>
             </div>
           </section>
@@ -214,6 +219,13 @@ const ChadhavaDetail = () => {
                     <OfferingRow key={o.id} offering={o} qty={selected[o.id] || 0} onQty={(q) => setQty(o.id, q)} max={MAX_QTY} />
                   ))}
                 </ul>
+              )}
+
+              {/* The sticky button hides over this list, so the next step sits right under it. */}
+              {selectedCount > 0 && (
+                <button onClick={handleProceed} className="btn-primary mt-4 w-full lg:hidden">
+                  {t("ch_proceed")} · {formatInr(totalPrice)} <ArrowRight size={18} />
+                </button>
               )}
 
               <div className="mt-6 rounded-xl border border-line bg-surface-muted/60 p-4 md:p-5">
@@ -351,14 +363,7 @@ const ChadhavaDetail = () => {
         </aside>
       </div>
 
-      <StickyActionBar
-        title={selectedCount > 0 ? formatInr(totalPrice) : `${t("pd_from")} ${formatInr(minPrice)}`}
-        subtitle={selectedCount > 0 ? `${selectedCount} ${t("ch_items_selected")}` : t("ch_select_hint")}
-        cta={selectedCount > 0 ? t("ch_proceed") : t("ch_view_offerings")}
-        onClick={handleProceed}
-        onInfoClick={selectedCount > 0 ? () => setShowOfferings(true) : undefined}
-        className="lg:hidden"
-      />
+      <StickyActionBar cta={t("ch_choose_offering")} onClick={() => setShowOfferings(true)} hidden={!stickyFree} className="lg:hidden" />
 
       {showOfferings && (
         <OfferingsSheet

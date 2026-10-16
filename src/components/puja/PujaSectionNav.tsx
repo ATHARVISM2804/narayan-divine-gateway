@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ const PujaSectionNav = ({ sections }: { sections: NavSection[] }) => {
   const { t } = useLanguage();
   const [activeId, setActiveId] = useState("");
   const ids = useMemo(() => sections.map((s) => s.id).join(","), [sections]);
+  const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -26,16 +27,25 @@ const PujaSectionNav = ({ sections }: { sections: NavSection[] }) => {
     return () => observer.disconnect();
   }, [ids]);
 
+  // Slide the strip so the active tab stays in view on phones. scrollTo on the strip
+  // only, so the page itself never moves.
+  useEffect(() => {
+    const list = listRef.current;
+    const tab = list?.querySelector<HTMLElement>(`[data-section="${activeId}"]`);
+    if (!list || !tab || list.scrollWidth <= list.clientWidth) return;
+    list.scrollTo({ left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2, behavior: "smooth" });
+  }, [activeId]);
+
   if (sections.length < 2) return null;
 
   return (
     <div className="sticky top-16 z-30 border-b border-line bg-surface">
       <nav className="container px-0 sm:px-4 lg:px-0" aria-label="Sections">
-        <ul className="flex overflow-x-auto scrollbar-hide">
+        <ul ref={listRef} className="relative flex overflow-x-auto scrollbar-hide">
           {sections.map((s) => {
             const active = activeId === s.id;
             return (
-              <li key={s.id} className={cn("shrink-0 md:flex-1", s.mobileOnly && "lg:hidden")}>
+              <li key={s.id} data-section={s.id} className={cn("shrink-0 md:flex-1", s.mobileOnly && "lg:hidden")}>
                 <button
                   onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
                   className={cn(
