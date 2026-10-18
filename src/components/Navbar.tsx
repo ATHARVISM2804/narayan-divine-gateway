@@ -57,6 +57,7 @@ const Navbar = React.memo(() => {
   const { pathname } = useLocation();
 
   const links = [
+    { to: "/", label: t("nav_home") },
     { to: "/puja", label: t("nav_puja") },
     { to: "/chadhava", label: t("nav_chadhava") },
     { to: "/temples", label: t("nav_temples") },
@@ -99,9 +100,10 @@ const Navbar = React.memo(() => {
             <li key={l.to}>
               <NavLink
                 to={l.to}
+                end={l.to === "/"}
                 className={({ isActive }) =>
                   cn(
-                    "rounded-lg px-3 py-2 text-[15px] font-medium transition-colors",
+                    "rounded-lg px-2 py-2 text-[15px] font-medium transition-colors xl:px-3",
                     isActive ? "text-saffron-dark" : "text-ink hover:bg-surface-muted",
                   )
                 }
@@ -133,7 +135,7 @@ const Navbar = React.memo(() => {
                 <span className="grid h-7 w-7 place-items-center rounded-full bg-maroon text-xs font-semibold text-white">
                   {userName.charAt(0).toUpperCase()}
                 </span>
-                <span className="max-w-[100px] truncate font-medium">{userName}</span>
+                <span className="hidden max-w-[100px] truncate font-medium min-[1360px]:inline">{userName}</span>
               </button>
               {userMenu && (
                 <div
@@ -193,7 +195,7 @@ const Navbar = React.memo(() => {
       {open && (
         <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-line bg-background lg:hidden safe-bottom">
           <ul className="container py-2">
-            {[{ to: "/", label: t("nav_home") }, ...links, { to: "/my-orders", label: t("nav_my_orders") }, { to: "/contact", label: t("nav_contact") }].map((l) => (
+            {[...links, { to: "/my-orders", label: t("nav_my_orders") }, { to: "/contact", label: t("nav_contact") }].map((l) => (
               <li key={l.to} className="border-b border-line last:border-0">
                 <NavLink
                   to={l.to}
