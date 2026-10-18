@@ -25,7 +25,7 @@ const Footer = React.memo(() => {
     { to: "/grievance", label: t("footer_grievance") },
   ];
   const social = [
-    { Icon: Facebook, label: "Facebook", href: "https://www.facebook.com/share/18S8PGfHQ8/?mibextid=wwXIfr" },
+    { Icon: Facebook, label: "Facebook", href: "https://www.facebook.com/share/1GoNEZKNVK/?mibextid=wwXIfr" },
     { Icon: Instagram, label: "Instagram", href: "https://www.instagram.com/narayankripa.in?igsh=aHBjd2QybnBpemdi" },
   ];
   const promises = [

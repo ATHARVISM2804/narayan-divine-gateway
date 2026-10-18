@@ -55,7 +55,7 @@ const Contact = () => {
           <div className="mt-5 flex items-center gap-3">
             <span className="text-sm font-semibold text-ink">{t("ct_follow")}</span>
             {[
-              { Icon: Facebook, label: "Facebook", href: "https://www.facebook.com/share/18S8PGfHQ8/?mibextid=wwXIfr" },
+              { Icon: Facebook, label: "Facebook", href: "https://www.facebook.com/share/1GoNEZKNVK/?mibextid=wwXIfr" },
               { Icon: Instagram, label: "Instagram", href: "https://www.instagram.com/narayankripa.in?igsh=aHBjd2QybnBpemdi" },
             ].map(({ Icon, label, href }) => (
               <a
