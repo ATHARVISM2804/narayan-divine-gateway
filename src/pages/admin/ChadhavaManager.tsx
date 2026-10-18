@@ -359,7 +359,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                 <>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Main Image</label>
-                    <ImageUpload value={editing.image_url || null} onChange={form.guard((url: string | null) => patch({ image_url: url }))} />
+                    <ImageUpload poster value={editing.image_url || null} onChange={form.guard((url: string | null) => patch({ image_url: url }))} />
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-maroon">Chadhava Name *</label>
@@ -450,7 +450,7 @@ const ChadhavaManager = ({ chadhavas, onRefresh }: Props) => {
                     ))}
                     {(editing.gallery || []).length < 6 && (
                       <div className="rounded-xl border-2 border-dashed border-gold/40 aspect-square flex items-center justify-center">
-                        <ImageUpload value={null} onChange={form.guard((url: string | null) => { if (url) addGalleryImage(url); })} />
+                        <ImageUpload poster value={null} onChange={form.guard((url: string | null) => { if (url) addGalleryImage(url); })} />
                       </div>
                     )}
                   </div>

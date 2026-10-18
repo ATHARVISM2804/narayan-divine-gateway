@@ -10,7 +10,7 @@ import { useReviews, useSiteStats } from "@/lib/proof";
 import { DegradedBanner, LoadError } from "@/components/LoadError";
 import ListingHeader from "@/components/shared/ListingHeader";
 import { CardSkeleton, PujaCard } from "@/components/cards/PujaCard";
-import { cardGridClass, isWideGrid } from "@/components/cards/cardGrid";
+import { cardGridClass } from "@/components/cards/cardGrid";
 import HowItWorks from "@/components/home/HowItWorks";
 import ReviewsSection from "@/components/proof/ReviewsSection";
 import { cn } from "@/lib/utils";
@@ -91,7 +91,7 @@ const Puja = () => {
                 {place ? t("filter_none") : t("puja_empty")}
               </p>
             ) : (
-              shown.map((p, i) => <PujaCard key={p.id} puja={p} booked={stats?.by_item?.[p.id]} priority={i === 0} wide={isWideGrid(shown.length)} />)
+              shown.map((p, i) => <PujaCard key={p.id} puja={p} booked={stats?.by_item?.[p.id]} priority={i === 0} />)
             )}
           </div>
         </div>

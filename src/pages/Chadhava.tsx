@@ -19,7 +19,7 @@ import { DegradedBanner, LoadError } from "@/components/LoadError";
 import ListingHeader from "@/components/shared/ListingHeader";
 import TrustRow from "@/components/shared/TrustRow";
 import { CardSkeleton, ChadhavaCard, PujaCard } from "@/components/cards/PujaCard";
-import { cardGridClass, isWideGrid } from "@/components/cards/cardGrid";
+import { cardGridClass } from "@/components/cards/cardGrid";
 import ReviewsSection from "@/components/proof/ReviewsSection";
 import SectionHeading from "@/components/SectionHeading";
 
@@ -83,7 +83,7 @@ const Chadhava = () => {
               </div>
             ) : (
               chadhavas.map((c, i) => (
-                <ChadhavaCard key={c.id} chadhava={c} minPrice={minPrices[c.id]} booked={stats?.by_item?.[c.id]} priority={i === 0} wide={isWideGrid(chadhavas.length)} />
+                <ChadhavaCard key={c.id} chadhava={c} minPrice={minPrices[c.id]} booked={stats?.by_item?.[c.id]} priority={i === 0} />
               ))
             )}
           </div>
@@ -93,7 +93,7 @@ const Chadhava = () => {
               <SectionHeading title={t("featured_title")} subtitle={t("featured_sub")} />
               <div className={cardGridClass(suggested.length)}>
                 {suggested.map((p) => (
-                  <PujaCard key={p.id} puja={p} booked={stats?.by_item?.[p.id]} wide={isWideGrid(suggested.length)} />
+                  <PujaCard key={p.id} puja={p} booked={stats?.by_item?.[p.id]} />
                 ))}
               </div>
             </div>

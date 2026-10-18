@@ -9,7 +9,7 @@ import SectionHeading from "@/components/SectionHeading";
 import FitImage from "@/components/FitImage";
 import FaqList from "@/components/shared/FaqList";
 import { CardSkeleton, ChadhavaCard, PujaCard } from "@/components/cards/PujaCard";
-import { cardGridClass, isWideGrid } from "@/components/cards/cardGrid";
+import { cardGridClass } from "@/components/cards/cardGrid";
 import { LoadError } from "@/components/LoadError";
 import { NamasteIcon, PrasadBoxIcon, SankalpIcon, TempleIcon } from "@/components/icons";
 
@@ -73,7 +73,7 @@ export const FeaturedPujas = ({
           ) : failed ? (
             <LoadError onRetry={retry} />
           ) : (
-            pujas.slice(0, 6).map((p) => <PujaCard key={p.id} puja={p} booked={stats?.by_item?.[p.id]} wide={isWideGrid(pujas.length)} />)
+            pujas.slice(0, 6).map((p) => <PujaCard key={p.id} puja={p} booked={stats?.by_item?.[p.id]} />)
           )}
         </div>
       </div>
@@ -103,7 +103,7 @@ export const FeaturedChadhavas = ({
         />
         <div className={cardGridClass(Math.min(chadhavas.length, 3))}>
           {chadhavas.slice(0, 3).map((c) => (
-            <ChadhavaCard key={c.id} chadhava={c} minPrice={minPrices[c.id]} booked={stats?.by_item?.[c.id]} wide={isWideGrid(chadhavas.length)} />
+            <ChadhavaCard key={c.id} chadhava={c} minPrice={minPrices[c.id]} booked={stats?.by_item?.[c.id]} />
           ))}
         </div>
       </div>

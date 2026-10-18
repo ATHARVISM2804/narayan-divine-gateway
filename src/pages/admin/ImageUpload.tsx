@@ -1,10 +1,28 @@
 import { useState, useRef, useCallback } from "react";
 import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { supabase, SUPABASE_DIRECT_URL, SUPABASE_URL } from "@/lib/supabase";
+import { POSTER_HEIGHT, POSTER_WIDTH, isPosterShape } from "@/lib/posterShape";
 
 interface Props {
   value: string | null;
   onChange: (url: string | null) => void;
+  /** Pooja/chadhava poster: only the standard 1483 x 1061 shape is accepted, so the
+      site always shows it whole (no cropping, no filler bands). */
+  poster?: boolean;
+}
+
+const POSTER_SIZE = `${POSTER_WIDTH} × ${POSTER_HEIGHT} px`;
+
+/** Width and height of an image file, or null when the browser can't read it. */
+async function imageSize(file: File): Promise<{ width: number; height: number } | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const size = { width: bitmap.width, height: bitmap.height };
+    bitmap.close();
+    return size;
+  } catch {
+    return null;
+  }
 }
 
 const MAX_WIDTH = 1600;
@@ -42,7 +60,7 @@ async function compressImage(file: File): Promise<File> {
   }
 }
 
-const ImageUpload = ({ value, onChange }: Props) => {
+const ImageUpload = ({ value, onChange, poster = false }: Props) => {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState("");
@@ -64,6 +82,17 @@ const ImageUpload = ({ value, onChange }: Props) => {
     setUploading(true);
 
     try {
+      if (poster) {
+        const size = await imageSize(file);
+        if (!size) {
+          setError(`Could not read this image. Please upload a PNG or JPG of ${POSTER_SIZE}.`);
+          return;
+        }
+        if (!isPosterShape(size.width, size.height)) {
+          setError(`This image is ${size.width} × ${size.height} px. Please upload ${POSTER_SIZE} so it shows fully on the site.`);
+          return;
+        }
+      }
       const compressed = await compressImage(file);
       const ext = compressed.name.split(".").pop() || "jpg";
       const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -86,7 +115,7 @@ const ImageUpload = ({ value, onChange }: Props) => {
     } finally {
       setUploading(false); // always, or the spinner stayed forever after a network error
     }
-  }, [onChange]);
+  }, [onChange, poster]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -104,7 +133,11 @@ const ImageUpload = ({ value, onChange }: Props) => {
   if (value) {
     return (
       <div className="relative overflow-hidden rounded-xl border border-gold/40">
-        <img src={value} alt="Product" className="h-48 w-full object-cover" />
+        {poster ? (
+          <img src={value} alt="Poster" className="aspect-[1483/1061] w-full bg-cream object-contain" />
+        ) : (
+          <img src={value} alt="Product" className="h-48 w-full object-cover" />
+        )}
         <button
           type="button"
           onClick={() => onChange(null)}
@@ -140,7 +173,9 @@ const ImageUpload = ({ value, onChange }: Props) => {
           <p className="text-sm font-medium text-maroon">
             {uploading ? "Uploading…" : dragOver ? "Drop image here" : "Click or drag image"}
           </p>
-          <p className="mt-1 text-xs text-brown/50">PNG, JPG up to 5 MB</p>
+          <p className="mt-1 text-xs text-brown/50">
+            {poster ? `Use ${POSTER_SIZE} (same shape as all pooja posters) · PNG, JPG up to 5 MB` : "PNG, JPG up to 5 MB"}
+          </p>
         </div>
       </div>
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}

@@ -1,15 +1,8 @@
 /**
- * Grid classes for puja/chadhava cards.
+ * Grid classes for puja/chadhava cards: 1 / 2 / 3 columns for any count.
  *
- * Three or more cards: the usual 1 / 2 / 3 columns. With only one or two cards a
- * three-column row leaves an empty slot on laptops, so from lg up those cards
- * switch to a wide, horizontal layout (see BookingCard `wide`) that fills the row.
- * Below lg the classes are identical in every case.
+ * One or two cards keep the normal card size (poster on top) instead of a wide
+ * side-by-side layout: a side-by-side poster box is taller than the poster, which
+ * left blurred filler above and below it.
  */
-export const isWideGrid = (count: number): boolean => count > 0 && count <= 2;
-
-export const cardGridClass = (count: number): string => {
-  if (count === 1) return "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:max-w-4xl lg:grid-cols-1";
-  if (count === 2) return "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6";
-  return "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3";
-};
+export const cardGridClass = (_count?: number): string => "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3";

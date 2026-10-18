@@ -111,7 +111,7 @@ const GalleryEditor = ({ images, onChange, onAdd }: { images: string[]; onChange
       ))}
     </div>
     {images.length < 6 && (
-      <ImageUpload value={null} onChange={(url) => { if (url) onAdd(url); }} />
+      <ImageUpload poster value={null} onChange={(url) => { if (url) onAdd(url); }} />
     )}
     <p className="text-[11px] text-brown/40">{images.length}/6 images</p>
   </div>
@@ -404,7 +404,7 @@ const PujaManager = ({ pujas, onRefresh }: Props) => {
             <div className="flex-1 overflow-y-auto space-y-5 p-4 sm:p-6">
               {/* Core fields */}
               <Section title="📷 Main Image" defaultOpen>
-                <ImageUpload value={editing.image_url || null} onChange={form.guard((url: string | null) => patch({ image_url: url }))} />
+                <ImageUpload poster value={editing.image_url || null} onChange={form.guard((url: string | null) => patch({ image_url: url }))} />
               </Section>
 
               <Section title="📝 Basic Info" defaultOpen>
