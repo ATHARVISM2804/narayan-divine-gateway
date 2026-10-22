@@ -224,7 +224,7 @@ const PujaDetail = () => {
 
                 <FeatureChips kind="puja" className="mt-5" />
 
-                <button id="hero-cta" onClick={openPackages} className="btn-primary mt-6 w-full md:max-w-sm">
+                <button id="hero-cta" onClick={openPackages} className="btn-book mt-6 w-full md:max-w-sm">
                   {t("pd_select_btn")} <ArrowRight size={18} />
                 </button>
               </div>
@@ -312,7 +312,7 @@ const PujaDetail = () => {
       </div>
 
       {prices.length > 0 && (
-        <StickyActionBar cta={t("pd_select_btn")} onClick={openPackages} hidden={!stickyFree} className="lg:hidden" />
+        <StickyActionBar cta={t("pd_select_btn")} onClick={openPackages} buttonClass="btn-book" hidden={!stickyFree} className="lg:hidden" />
       )}
 
       {sheet && (

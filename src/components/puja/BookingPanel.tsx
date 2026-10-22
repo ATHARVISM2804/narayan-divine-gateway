@@ -137,7 +137,7 @@ const BookingPanel = ({
       />
 
       {hasPackages && (
-        <button onClick={onSelectPackage} className="btn-primary mt-5 w-full [@media(max-height:800px)]:mt-4">
+        <button onClick={onSelectPackage} className="btn-book mt-5 w-full [@media(max-height:800px)]:mt-4">
           {t("pd_select_btn")} <ArrowRight size={18} />
         </button>
       )}

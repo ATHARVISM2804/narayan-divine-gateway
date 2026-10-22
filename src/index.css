@@ -19,6 +19,7 @@
     --surface: 0 0% 100%;           /* cards */
     --surface-muted: 38 71% 94%;    /* #FBF3E6 section bands */
     --success: 152 60% 32%;         /* #217A52 */
+    --success-dark: 152 60% 25%;    /* #1A5F40 hover */
 
     /* Brand */
     --saffron: 26 82% 47%;          /* #D97316 the single accent and CTA */
@@ -137,6 +138,10 @@
   /* Buttons. Saffron is reserved for the action that moves a booking forward. */
   .btn-primary {
     @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[10px] bg-saffron px-6 text-[15px] font-semibold text-white transition-colors duration-200 hover:bg-saffron-dark active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none;
+  }
+  /* Green "book now" button: the client asked for green on the select-package step. */
+  .btn-book {
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[10px] bg-success px-6 text-[15px] font-semibold text-white transition-colors duration-200 hover:bg-success-dark active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none;
   }
   .btn-secondary {
     @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[10px] border border-maroon/30 bg-white px-6 text-[15px] font-semibold text-maroon transition-colors duration-200 hover:border-maroon hover:bg-surface-muted active:scale-[0.98];

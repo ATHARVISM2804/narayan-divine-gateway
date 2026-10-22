@@ -49,7 +49,10 @@ export default {
           DEFAULT: "hsl(var(--surface))",
           muted: "hsl(var(--surface-muted))",
         },
-        success: "hsl(var(--success))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          dark: "hsl(var(--success-dark))",
+        },
         // Brand
         saffron: {
           DEFAULT: "hsl(var(--saffron))",

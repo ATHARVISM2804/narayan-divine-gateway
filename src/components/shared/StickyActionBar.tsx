@@ -14,6 +14,7 @@ const StickyActionBar = ({
   onInfoClick,
   disabled,
   hidden = false,
+  buttonClass = "btn-primary",
   className,
 }: {
   title?: React.ReactNode;
@@ -24,6 +25,8 @@ const StickyActionBar = ({
   onInfoClick?: () => void;
   disabled?: boolean;
   hidden?: boolean;
+  /** "btn-book" for the green select-package button on pooja pages. */
+  buttonClass?: string;
   className?: string;
 }) => {
   const info = (
@@ -59,7 +62,7 @@ const StickyActionBar = ({
         <button
           onClick={onClick}
           disabled={disabled}
-          className={cn("btn-primary", title == null ? "w-full" : "shrink-0 px-5 sm:px-8")}
+          className={cn(buttonClass, title == null ? "w-full" : "shrink-0 px-5 sm:px-8")}
         >
           {cta} <ArrowRight size={18} />
         </button>
