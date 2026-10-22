@@ -6,13 +6,11 @@ import ListingHeader from "@/components/shared/ListingHeader";
 const PageHero = ({
   title,
   subtitle,
-  breadcrumb,
 }: {
   title: string;
   subtitle?: string;
   variant?: "maroon" | "saffron" | "brown" | "ivory";
-  breadcrumb?: string;
   bgImage?: string;
-}) => <ListingHeader title={title} subtitle={subtitle} crumb={breadcrumb ?? title} />;
+}) => <ListingHeader title={title} subtitle={subtitle} />;
 
 export default PageHero;

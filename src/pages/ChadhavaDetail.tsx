@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowRight, CalendarDays, Check, ChevronRight, MessageCircle } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowRight, CalendarDays, Check, MessageCircle } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useAllOffscreen } from "@/hooks/use-offscreen";
 import { useCart } from "@/context/CartContext";
@@ -161,14 +161,6 @@ const ChadhavaDetail = () => {
       <div className="lg:container lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-10 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-14">
         <div className="min-w-0">
           <section className="container pb-8 pt-4 md:pb-12 md:pt-6 lg:px-0 lg:pb-8">
-            <nav aria-label="Breadcrumb" className="mb-4 hidden items-center gap-1.5 text-sm text-ink-soft md:flex">
-              <Link to="/" className="hover:text-ink">{t("breadcrumb_home")}</Link>
-              <ChevronRight size={14} />
-              <Link to="/chadhava" className="hover:text-ink">{t("breadcrumb_chadhava")}</Link>
-              <ChevronRight size={14} />
-              <span className="truncate text-ink">{item}</span>
-            </nav>
-
             <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-8 lg:block">
               <PujaGallery images={chadhava.gallery?.length ? chadhava.gallery : []} fallbackUrl={chadhava.image_url} name={item} />
 

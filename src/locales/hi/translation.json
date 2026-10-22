@@ -98,7 +98,6 @@
   "orders_load_error": "आपकी बुकिंग लोड नहीं हो पाई। कृपया फिर से कोशिश करें।",
   "puja_starting": "शुरुआत",
 
-  "breadcrumb_chadhava": "चढ़ावा",
   "sacred_at": "चढ़ावा",
   "per_offering": "प्रति चढ़ावा",
   "offering_price": "चढ़ावे की राशि",
@@ -362,7 +361,6 @@
   "os_go_home": "होम पर जाएं", "os_continue": "एक और पूजा बुक करें",
 
   "ct_hero": "संपर्क करें", "ct_hero_sub": "बुकिंग के बारे में सवाल? हम WhatsApp, फोन और ईमेल पर जवाब देते हैं।",
-  "ct_breadcrumb": "संपर्क",
   "ct_address_title": "पता", "ct_address_text": "नारायण कृपा, सेक्टर 66, गुरुग्राम, हरियाणा, भारत",
   "ct_phone_title": "फोन", "ct_phone_text": "+91 92863 45941",
   "ct_email_title": "ईमेल", "ct_email_text": "Asknarayankripa@gmail.com",
@@ -377,7 +375,6 @@
 
   "ast_hero": "पंडित जी से बात करें",
   "ast_hero_sub": "कुंडली, विवाह, करियर, सेहत या वास्तु के बारे में अनुभवी पंडित जी से पूछें।",
-  "ast_breadcrumb": "पंडित जी से बात",
   "ast_section_title": "आप किस बारे में पूछ सकते हैं",
   "ast_section_sub": "WhatsApp पर अपनी परेशानी बताएं, हम आपको सही पंडित जी से जोड़ेंगे।",
   "ast_s1": "कुंडली", "ast_s1_desc": "जन्म कुंडली, दोष और उपाय",
@@ -454,7 +451,6 @@
 
   "tmp_hero": "मंदिर",
   "tmp_hero_sub": "भारत के प्रसिद्ध मंदिरों में पूजा या चढ़ावा बुक करें।",
-  "tmp_breadcrumb": "मंदिर",
   "tmp_search": "मंदिर या शहर खोजें",
   "tmp_book_chadhava": "चढ़ावा बुक करें", "tmp_details": "जानकारी",
   "tmp_spot_title": "खास मंदिर",
@@ -510,7 +506,6 @@
   "nf_title": "404", "nf_subtitle": "यह पेज नहीं मिला", "nf_back": "होम पर जाएं",
   "nf_desc": "लिंक पुराना या गलत हो सकता है। आप फिर भी हमारी आने वाली कोई भी पूजा बुक कर सकते हैं।",
 
-  "breadcrumb_home": "होम",
 
   "lead_details_title": "पूजा के लिए अपनी जानकारी भरें",
   "lead_phone_title": "अपना WhatsApp मोबाइल नंबर लिखें",

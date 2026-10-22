@@ -20,7 +20,7 @@ const Contact = () => {
 
   return (
     <main>
-      <ListingHeader title={t("ct_hero")} subtitle={t("ct_hero_sub")} crumb={t("ct_breadcrumb")} />
+      <ListingHeader title={t("ct_hero")} subtitle={t("ct_hero_sub")} />
 
       <section className="py-8 md:py-12">
         <div className="container">

@@ -1,35 +1,24 @@
-import { Link } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
-import { useLanguage } from "@/context/LanguageContext";
 import { cn } from "@/lib/utils";
 
-/** Plain page header for listing and info pages: breadcrumb, title, one promise.
+/** Plain page header for listing and info pages: title, one promise.
     `centered`: title in capitals and centred, with the promise centred under it.
     `aside` fills the empty right side on laptops (hidden below lg); with
     `centered` it sits centred under the promise instead. */
 const ListingHeader = ({
   title,
   subtitle,
-  crumb,
   centered,
   aside,
 }: {
   title: string;
   subtitle?: string;
-  crumb: string;
   centered?: boolean;
   aside?: React.ReactNode;
 }) => {
-  const { t } = useLanguage();
   return (
     <header className="border-b border-line bg-surface-muted/60">
       <div className={cn("container py-6 md:py-10 lg:py-12", !centered && "lg:flex lg:items-end lg:justify-between lg:gap-10")}>
         <div className="min-w-0">
-          <nav aria-label="Breadcrumb" className="mb-3 flex items-center gap-1.5 text-sm text-ink-soft">
-            <Link to="/" className="hover:text-ink">{t("breadcrumb_home")}</Link>
-            <ChevronRight size={14} />
-            <span className="text-ink">{crumb}</span>
-          </nav>
           <h1
             className={cn(
               "text-[22px] font-bold text-ink md:text-[28px] lg:text-4xl lg:leading-tight",

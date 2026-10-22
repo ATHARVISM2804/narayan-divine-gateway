@@ -53,7 +53,6 @@ const Puja = () => {
       <ListingHeader
         title={t("puja_hero_title")}
         subtitle={t("puja_hero_sub")}
-        crumb={t("nav_puja")}
         centered
       />
 

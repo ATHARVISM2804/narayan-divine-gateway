@@ -57,7 +57,6 @@ const Astrology = () => {
       <ListingHeader
         title={t("ast_hero")}
         subtitle={t("ast_hero_sub")}
-        crumb={t("ast_breadcrumb")}
         aside={
           <div className="w-[440px]">
             <Actions />

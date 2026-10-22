@@ -50,7 +50,6 @@ const Chadhava = () => {
       <ListingHeader
         title={t("chadhava_hero_title")}
         subtitle={t("chadhava_hero_sub")}
-        crumb={t("breadcrumb_chadhava")}
         aside={<TrustRow className="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:gap-y-3" />}
       />
 

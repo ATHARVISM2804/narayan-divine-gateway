@@ -38,7 +38,7 @@ const Cart = () => {
 
   return (
     <main className="pb-24 lg:pb-0">
-      <ListingHeader title={t("cart_title")} subtitle={t("cart_subtitle")} crumb={t("cart_title")} />
+      <ListingHeader title={t("cart_title")} subtitle={t("cart_subtitle")} />
 
       <div className="container py-6 md:py-10">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">

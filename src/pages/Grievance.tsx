@@ -6,7 +6,7 @@ const Grievance = () => {
 
   return (
     <main>
-      <PageHero title="Grievance Redressal" breadcrumb="Grievance Redressal" />
+      <PageHero title="Grievance Redressal" />
       <section className="container max-w-3xl py-8 md:py-12">
         <p className="text-sm mb-6 text-ink-soft">Last updated: 11 May 2026</p>
 

@@ -24,7 +24,7 @@ const About = () => {
 
   return (
     <main>
-      <ListingHeader title={t("about_title")} subtitle={t("about_sub")} crumb={t("nav_about")} />
+      <ListingHeader title={t("about_title")} subtitle={t("about_sub")} />
 
       <section className="py-10 md:py-14">
         <div className="container grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-12 lg:gap-16">

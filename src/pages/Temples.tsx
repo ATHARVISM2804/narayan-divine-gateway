@@ -47,7 +47,7 @@ const Temples = () => {
 
   return (
     <main>
-      <ListingHeader title={t("tmp_hero")} subtitle={t("tmp_hero_sub")} crumb={t("tmp_breadcrumb")} />
+      <ListingHeader title={t("tmp_hero")} subtitle={t("tmp_hero_sub")} />
 
       <section className="py-6 md:py-10">
         <div className="container">

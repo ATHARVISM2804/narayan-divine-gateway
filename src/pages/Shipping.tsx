@@ -6,7 +6,7 @@ const Shipping = () => {
 
   return (
     <main>
-      <PageHero title="Shipping & Delivery Policy" breadcrumb="Shipping Policy" />
+      <PageHero title="Shipping & Delivery Policy" />
       <section className="container max-w-3xl py-8 md:py-12">
         <p className="text-sm mb-6 text-ink-soft">Last updated: 11 May 2026</p>
 

@@ -98,7 +98,6 @@
   "orders_load_error": "We could not load your orders. Please try again.",
   "puja_starting": "From",
 
-  "breadcrumb_chadhava": "Chadhava",
   "sacred_at": "Offering at",
   "per_offering": "per offering",
   "offering_price": "Offering price",
@@ -362,7 +361,6 @@
   "os_go_home": "Go to home", "os_continue": "Book another pooja",
 
   "ct_hero": "Contact us", "ct_hero_sub": "Questions about a booking? We reply on WhatsApp, phone and email.",
-  "ct_breadcrumb": "Contact",
   "ct_address_title": "Address", "ct_address_text": "Narayan Kripa, Sector 66, Gurugram, Haryana, India",
   "ct_phone_title": "Phone", "ct_phone_text": "+91 92863 45941",
   "ct_email_title": "Email", "ct_email_text": "Asknarayankripa@gmail.com",
@@ -377,7 +375,6 @@
 
   "ast_hero": "Talk to a pandit",
   "ast_hero_sub": "Ask an experienced pandit about kundali, marriage, career, health or vastu.",
-  "ast_breadcrumb": "Talk to Pandit",
   "ast_section_title": "What you can ask about",
   "ast_section_sub": "Tell us your concern on WhatsApp and we will connect you with the right pandit.",
   "ast_s1": "Kundali", "ast_s1_desc": "Your birth chart, doshas and remedies",
@@ -454,7 +451,6 @@
 
   "tmp_hero": "Temples",
   "tmp_hero_sub": "Book a pooja or chadhava at famous temples across India.",
-  "tmp_breadcrumb": "Temples",
   "tmp_search": "Search temple or city",
   "tmp_book_chadhava": "Book chadhava", "tmp_details": "Details",
   "tmp_spot_title": "Featured temple",
@@ -510,7 +506,6 @@
   "nf_title": "404", "nf_subtitle": "We could not find this page", "nf_back": "Go to home",
   "nf_desc": "The link may be old or mistyped. You can still book any of our upcoming poojas.",
 
-  "breadcrumb_home": "Home",
 
   "lead_details_title": "Fill your details for the pooja",
   "lead_phone_title": "Enter your WhatsApp mobile number",

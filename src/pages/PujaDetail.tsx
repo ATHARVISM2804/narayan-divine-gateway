@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { CalendarDays, Check, ChevronRight, ShoppingCart, ArrowRight } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { CalendarDays, Check, ShoppingCart, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { useAllOffscreen } from "@/hooks/use-offscreen";
@@ -187,14 +187,6 @@ const PujaDetail = () => {
         <div className="min-w-0">
           {/* Summary: gallery + the facts a visitor needs before deciding */}
           <section className="container pb-8 pt-4 md:pb-12 md:pt-6 lg:px-0 lg:pb-8">
-            <nav aria-label="Breadcrumb" className="mb-4 hidden items-center gap-1.5 text-sm text-ink-soft md:flex">
-              <Link to="/" className="hover:text-ink">{t("breadcrumb_home")}</Link>
-              <ChevronRight size={14} />
-              <Link to="/puja" className="hover:text-ink">{t("nav_puja")}</Link>
-              <ChevronRight size={14} />
-              <span className="truncate text-ink">{name}</span>
-            </nav>
-
             <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-8 lg:block">
               <PujaGallery images={puja.gallery?.length ? puja.gallery : []} fallbackUrl={puja.image_url} name={name} />
 
